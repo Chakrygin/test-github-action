@@ -19201,7 +19201,7 @@ function getImage(content) {
         const url = $['url'];
         const medium = $['medium'];
         if (medium == 'image') {
-            return item;
+            return url;
         }
     }
 }

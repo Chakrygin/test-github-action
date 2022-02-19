@@ -65,7 +65,7 @@ function getImage(content: any[]): string | undefined {
     const url: string = $['url'];
     const medium: string = $['medium'];
     if (medium == 'image') {
-      return item;
+      return url;
     }
   }
 }
