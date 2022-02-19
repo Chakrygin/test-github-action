@@ -4,3 +4,12 @@ description: Test action
 runs:
   using: node12
   main: dist/index.js
+
+inputs:
+  TELEGRAM_TOKEN:
+    required: true
+    description: TELEGRAM_TOKEN
+
+  GITHUB_TOKEN:
+    required: true
+    description: GITHUB_TOKEN
