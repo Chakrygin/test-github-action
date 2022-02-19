@@ -13,16 +13,25 @@ async function main() {
     const telegraf = new Telegraf(TELEGRAM_TOKEN);
 
     const rss = new Parser({
-      customFields:{
-        item :[
-          ['media:content', 'media:content', {keepArray: true}],
+      customFields: {
+        item: [
+          ['media:content', 'media:content', { keepArray: true }],
         ]
       }
     });
+
     const feed = await rss.parseURL('https://andrewlock.net/rss.xml')
 
     for (const item of feed.items) {
-      const json = JSON.stringify(item, null, 4); // Indented 4 spaces
+      const creator = item.creator;
+      const title = item.title;
+      const link = item.link;
+      const content = item.content;
+      const image = getImage(item['media:content'])
+
+      const data = { creator, title, link, content, image };
+
+      const json = JSON.stringify(data, null, 4); // Indented 4 spaces
       console.log(json);
       console.log();
     }
@@ -47,6 +56,17 @@ async function main() {
 
   } catch (error: any) {
     core.setFailed(error.message)
+  }
+}
+
+function getImage(content: any[]): string | undefined {
+  for (const item of content) {
+    const $ = item['$'];
+    const url: string = $['url'];
+    const medium: string = $['medium'];
+    if (medium == 'image') {
+      return item;
+    }
   }
 }
 

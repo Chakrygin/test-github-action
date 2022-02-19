@@ -19170,7 +19170,13 @@ function main() {
             });
             const feed = yield rss.parseURL('https://andrewlock.net/rss.xml');
             for (const item of feed.items) {
-                const json = JSON.stringify(item, null, 4); // Indented 4 spaces
+                const creator = item.creator;
+                const title = item.title;
+                const link = item.link;
+                const content = item.content;
+                const image = getImage(item['media:content']);
+                const data = { creator, title, link, content, image };
+                const json = JSON.stringify(data, null, 4); // Indented 4 spaces
                 console.log(json);
                 console.log();
             }
@@ -19188,6 +19194,16 @@ function main() {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
         }
     });
+}
+function getImage(content) {
+    for (const item of content) {
+        const $ = item['$'];
+        const url = $['url'];
+        const medium = $['medium'];
+        if (medium == 'image') {
+            return item;
+        }
+    }
 }
 main();
 
