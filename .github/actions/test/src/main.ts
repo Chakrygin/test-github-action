@@ -35,16 +35,26 @@ async function main() {
       console.log(json);
       console.log();
 
+
+
+      const chatId = -1001767919878;
+
+      // await telegraf.telegram.sendMessage(chatId, message.join('\n\n'), {
+      //   parse_mode: 'Markdown',
+      // });
+
+      if (image == undefined)
+        continue;
+
       var message = [];
-      message.push(`![${title}](${image})`);
       message.push(`*${creator}*`);
       message.push(`*[${title}](${link})*`);
       message.push(content);
 
-      await telegraf.telegram.sendMessage(-1001767919878, message.join('\n\n'), {
+      await telegraf.telegram.sendPhoto(chatId, image, {
+        caption: message.join('\n\n'),
         parse_mode: 'Markdown',
       })
-
 
       break;
     }
