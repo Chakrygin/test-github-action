@@ -19190,7 +19190,7 @@ function main() {
                 message.push(`<b><a href="${link}">${title}</a></b>`);
                 message.push(content);
                 yield telegraf.telegram.sendPhoto(chatId, image, {
-                    caption: message.join('<br>'),
+                    caption: message.join('<br />'),
                     parse_mode: 'HTML',
                 });
                 const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));

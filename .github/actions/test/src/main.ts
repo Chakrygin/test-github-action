@@ -52,7 +52,7 @@ async function main() {
       message.push(content);
 
       await telegraf.telegram.sendPhoto(chatId, image, {
-        caption: message.join('<br>'),
+        caption: message.join('<br />'),
         parse_mode: 'HTML',
       });
 
