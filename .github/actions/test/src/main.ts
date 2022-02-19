@@ -17,15 +17,26 @@ async function main() {
 
     // })
 
-    const rss = new Parser();
+    // const rss = new Parser();
 
-    let feed = await rss.parseURL('https://andrewlock.net/rss.xml')
+    // let feed = await rss.parseURL('https://andrewlock.net/rss.xml')
 
-    console.log(feed.title);
+    // console.log(feed.title);
 
-    feed.items.forEach(item => {
-      console.log(item.title + ':' + item.link)
+    // feed.items.forEach(item => {
+    //   console.log(item.title + ':' + item.link)
+    // });
+
+    const octokit = github.getOctokit(GITHUB_TOKEN);
+
+    const repo = await octokit.repos.get({
+      owner: 'ThreeMammals',
+      repo: 'Ocelot'
     });
+
+    const json = JSON.stringify(repo, null, 4); // Indented 4 spaces
+
+    console.log(json);
 
   } catch (error: any) {
     core.setFailed(error.message)
