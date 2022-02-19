@@ -10,7 +10,7 @@ async function main() {
   try {
 
     const telegraf = new Telegraf(TELEGRAM_TOKEN);
-    telegraf.telegram.sendMessage('chakrygin-sandbox', 'Hello, World!', {
+    await telegraf.telegram.sendMessage('@chakrygin-sandbox', 'Hello, World!', {
 
     })
 
