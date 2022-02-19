@@ -19186,14 +19186,15 @@ function main() {
                 if (image == undefined)
                     continue;
                 var message = [];
-                message.push(`[*${title}*](${link})`);
-                message.push(`*${creator}*`);
+                message.push(`<b>${creator}</b>`);
+                message.push(`<b><a href="${link}">${title}</a></b>`);
                 message.push(content);
                 yield telegraf.telegram.sendPhoto(chatId, image, {
-                    caption: message.join('\n\n'),
-                    parse_mode: 'Markdown',
+                    caption: message.join('<br>'),
+                    parse_mode: 'HTML',
                 });
-                break;
+                const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+                yield sleep(1000);
             }
             // const octokit = github.getOctokit(GITHUB_TOKEN);
             // const repo = await octokit.repos.get({
