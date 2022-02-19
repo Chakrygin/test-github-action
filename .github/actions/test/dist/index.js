@@ -19186,8 +19186,8 @@ function main() {
                 if (image == undefined)
                     continue;
                 var message = [];
+                message.push(`[*${title}*](${link})`);
                 message.push(`*${creator}*`);
-                message.push(`*[${title}](${link})*`);
                 message.push(content);
                 yield telegraf.telegram.sendPhoto(chatId, image, {
                     caption: message.join('\n\n'),

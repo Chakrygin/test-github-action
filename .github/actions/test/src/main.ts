@@ -47,8 +47,8 @@ async function main() {
         continue;
 
       var message = [];
+      message.push(`[*${title}*](${link})`);
       message.push(`*${creator}*`);
-      message.push(`*[${title}](${link})*`);
       message.push(content);
 
       await telegraf.telegram.sendPhoto(chatId, image, {
