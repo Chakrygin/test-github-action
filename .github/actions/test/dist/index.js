@@ -11691,8 +11691,8 @@ const TELEGRAM_TOKEN = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('TELE
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const telegraf = new telegraf__WEBPACK_IMPORTED_MODULE_1__/* .Telegraf */ .mC(TELEGRAM_TOKEN);
-            yield telegraf.telegram.sendMessage('@chakrygin-sandbox', 'Hello, World!', {});
+            const telegraf = new telegraf__WEBPACK_IMPORTED_MODULE_1__/* .Telegraf */ .mC(TELEGRAM_TOKEN, {});
+            yield telegraf.telegram.sendMessage(-1001767919878, 'Hello, World!', {});
         }
         catch (error) {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);

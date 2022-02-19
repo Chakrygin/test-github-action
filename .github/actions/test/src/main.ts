@@ -9,8 +9,10 @@ const TELEGRAM_TOKEN = core.getInput('TELEGRAM_TOKEN');
 async function main() {
   try {
 
-    const telegraf = new Telegraf(TELEGRAM_TOKEN);
-    await telegraf.telegram.sendMessage('@chakrygin-sandbox', 'Hello, World!', {
+    const telegraf = new Telegraf(TELEGRAM_TOKEN, {
+
+    });
+    await telegraf.telegram.sendMessage(-1001767919878, 'Hello, World!', {
 
     })
 
