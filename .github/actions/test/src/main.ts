@@ -42,7 +42,7 @@ async function main() {
       message.push(content);
 
       await telegraf.telegram.sendMessage(-1001767919878, message.join('\n\n'), {
-
+        parse_mode: 'MarkdownV2',
       })
 
 

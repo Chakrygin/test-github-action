@@ -19184,7 +19184,9 @@ function main() {
                 message.push(`*${creator}*`);
                 message.push(`*[${title}](${link})*`);
                 message.push(content);
-                yield telegraf.telegram.sendMessage(-1001767919878, message.join('\n\n'), {});
+                yield telegraf.telegram.sendMessage(-1001767919878, message.join('\n\n'), {
+                    parse_mode: 'MarkdownV2',
+                });
                 break;
             }
             // const octokit = github.getOctokit(GITHUB_TOKEN);
