@@ -19161,7 +19161,13 @@ function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const telegraf = new telegraf__WEBPACK_IMPORTED_MODULE_1__/* .Telegraf */ .mC(TELEGRAM_TOKEN);
-            const rss = new rss_parser__WEBPACK_IMPORTED_MODULE_2__();
+            const rss = new rss_parser__WEBPACK_IMPORTED_MODULE_2__({
+                customFields: {
+                    item: [
+                        ['media:content', 'media:content', { keepArray: true }],
+                    ]
+                }
+            });
             const feed = yield rss.parseURL('https://andrewlock.net/rss.xml');
             for (const item of feed.items) {
                 const json = JSON.stringify(item, null, 4); // Indented 4 spaces

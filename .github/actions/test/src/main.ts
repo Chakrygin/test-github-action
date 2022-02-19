@@ -12,7 +12,13 @@ async function main() {
 
     const telegraf = new Telegraf(TELEGRAM_TOKEN);
 
-    const rss = new Parser();
+    const rss = new Parser({
+      customFields:{
+        item :[
+          ['media:content', 'media:content', {keepArray: true}],
+        ]
+      }
+    });
     const feed = await rss.parseURL('https://andrewlock.net/rss.xml')
 
     for (const item of feed.items) {
