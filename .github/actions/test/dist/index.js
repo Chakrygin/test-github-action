@@ -19185,7 +19185,7 @@ function main() {
                 message.push(`*[${title}](${link})*`);
                 message.push(content);
                 yield telegraf.telegram.sendMessage(-1001767919878, message.join('\n\n'), {
-                    parse_mode: 'MarkdownV2',
+                    parse_mode: 'Markdown',
                 });
                 break;
             }
