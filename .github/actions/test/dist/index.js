@@ -19179,9 +19179,14 @@ function main() {
                 const json = JSON.stringify(data, null, 4); // Indented 4 spaces
                 console.log(json);
                 console.log();
+                var message = [];
+                message.push(`![${title}](${image})`);
+                message.push(`*${creator}*`);
+                message.push(`*[${title}](${link})*`);
+                message.push(content);
+                yield telegraf.telegram.sendMessage(-1001767919878, message.join('\n\n'), {});
+                break;
             }
-            // await telegraf.telegram.sendMessage(-1001767919878, 'Hello, World!', {
-            // })
             // const octokit = github.getOctokit(GITHUB_TOKEN);
             // const repo = await octokit.repos.get({
             //   owner: 'ThreeMammals',
