@@ -10102,8 +10102,8 @@ function main() {
             var repo = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo;
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["config", "--global", "user.name", "Automated Publisher"], options);
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["config", "--global", "user.email", "actions@users.noreply.github.com"], options);
-            // await exec.exec('git', ["add", "--all"]);
-            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["commit", "-am", "Commit message..."], options);
+            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["add", "--all"]);
+            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["commit", "-m", "Commit message..."], options);
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["remote", "set-url", "origin", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["push"], options);
         }

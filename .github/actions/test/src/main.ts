@@ -123,8 +123,8 @@ async function main() {
 
     await exec.exec('git', ["config", "--global", "user.name", "Automated Publisher"], options);
     await exec.exec('git', ["config", "--global", "user.email", "actions@users.noreply.github.com"], options);
-    // await exec.exec('git', ["add", "--all"]);
-    await exec.exec('git', ["commit", "-am", "Commit message..."], options);
+    await exec.exec('git', ["add", "--all"]);
+    await exec.exec('git', ["commit", "-m", "Commit message..."], options);
     await exec.exec('git', ["remote", "set-url", "origin", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);
     await exec.exec('git', ["push"], options);
 
