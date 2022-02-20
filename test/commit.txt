@@ -9,9 +9,9 @@
         "content-encoding": "gzip",
         "content-security-policy": "default-src 'none'",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sun, 20 Feb 2022 13:25:50 GMT",
-        "etag": "W/\"ed4751af2855bf1e498748e593d1a72263e00278048957e45ad6a583c2476931\"",
-        "last-modified": "Sun, 20 Feb 2022 13:25:33 GMT",
+        "date": "Sun, 20 Feb 2022 14:10:15 GMT",
+        "etag": "W/\"3bcb95c7c40a725f41f3e5c1d8e22b9a01d937d3dfe69ae0497d0d00b45f316f\"",
+        "last-modified": "Sun, 20 Feb 2022 13:48:37 GMT",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "GitHub.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
@@ -20,34 +20,34 @@
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
         "x-github-media-type": "github.v3; format=json",
-        "x-github-request-id": "07C1:66FE:72DC7E:D88E47:6212415E",
+        "x-github-request-id": "0401:2BC2:775D8A:DBC6EE:62124BC7",
         "x-ratelimit-limit": "1000",
-        "x-ratelimit-remaining": "992",
-        "x-ratelimit-reset": "1645364993",
+        "x-ratelimit-remaining": "999",
+        "x-ratelimit-reset": "1645369815",
         "x-ratelimit-resource": "core",
-        "x-ratelimit-used": "8",
+        "x-ratelimit-used": "1",
         "x-xss-protection": "0"
     },
     "data": {
-        "sha": "6fa40b8e08e1688b4601eea06d84f20142568b25",
-        "node_id": "C_kwDOG34LgNoAKDZmYTQwYjhlMDhlMTY4OGI0NjAxZWVhMDZkODRmMjAxNDI1NjhiMjU",
+        "sha": "764e2f9ba6483fabe252477cecb308e89b0e9f7f",
+        "node_id": "C_kwDOG34LgNoAKDc2NGUyZjliYTY0ODNmYWJlMjUyNDc3Y2VjYjMwOGU4OWIwZTlmN2Y",
         "commit": {
             "author": {
                 "name": "Igor Chakrygin",
                 "email": "igor@chakrygin.ru",
-                "date": "2022-02-20T13:25:33Z"
+                "date": "2022-02-20T13:48:37Z"
             },
             "committer": {
                 "name": "Igor Chakrygin",
                 "email": "igor@chakrygin.ru",
-                "date": "2022-02-20T13:25:33Z"
+                "date": "2022-02-20T13:48:37Z"
             },
-            "message": "test",
+            "message": "Commit message...",
             "tree": {
-                "sha": "b922546c38aa09d1faa921d8b33123af40b10fab",
-                "url": "https://api.github.com/repos/Chakrygin/test-github-action/git/trees/b922546c38aa09d1faa921d8b33123af40b10fab"
+                "sha": "e0c0be90a549e61607132477c4b5091534d2147a",
+                "url": "https://api.github.com/repos/Chakrygin/test-github-action/git/trees/e0c0be90a549e61607132477c4b5091534d2147a"
             },
-            "url": "https://api.github.com/repos/Chakrygin/test-github-action/git/commits/6fa40b8e08e1688b4601eea06d84f20142568b25",
+            "url": "https://api.github.com/repos/Chakrygin/test-github-action/git/commits/764e2f9ba6483fabe252477cecb308e89b0e9f7f",
             "comment_count": 0,
             "verification": {
                 "verified": false,
@@ -56,9 +56,9 @@
                 "payload": null
             }
         },
-        "url": "https://api.github.com/repos/Chakrygin/test-github-action/commits/6fa40b8e08e1688b4601eea06d84f20142568b25",
-        "html_url": "https://github.com/Chakrygin/test-github-action/commit/6fa40b8e08e1688b4601eea06d84f20142568b25",
-        "comments_url": "https://api.github.com/repos/Chakrygin/test-github-action/commits/6fa40b8e08e1688b4601eea06d84f20142568b25/comments",
+        "url": "https://api.github.com/repos/Chakrygin/test-github-action/commits/764e2f9ba6483fabe252477cecb308e89b0e9f7f",
+        "html_url": "https://github.com/Chakrygin/test-github-action/commit/764e2f9ba6483fabe252477cecb308e89b0e9f7f",
+        "comments_url": "https://api.github.com/repos/Chakrygin/test-github-action/commits/764e2f9ba6483fabe252477cecb308e89b0e9f7f/comments",
         "author": {
             "login": "Chakrygin",
             "id": 6216874,
@@ -101,40 +101,39 @@
         },
         "parents": [
             {
-                "sha": "531544d387f3b5a188943e86e7f63543e0dd23fa",
-                "url": "https://api.github.com/repos/Chakrygin/test-github-action/commits/531544d387f3b5a188943e86e7f63543e0dd23fa",
-                "html_url": "https://github.com/Chakrygin/test-github-action/commit/531544d387f3b5a188943e86e7f63543e0dd23fa"
+                "sha": "40c8c02e8dfc7ce2acb3c037a6f54b93c4fb89f1",
+                "url": "https://api.github.com/repos/Chakrygin/test-github-action/commits/40c8c02e8dfc7ce2acb3c037a6f54b93c4fb89f1",
+                "html_url": "https://github.com/Chakrygin/test-github-action/commit/40c8c02e8dfc7ce2acb3c037a6f54b93c4fb89f1"
             }
         ],
         "stats": {
-            "total": 59,
-            "additions": 26,
-            "deletions": 33
+            "total": 80,
+            "additions": 40,
+            "deletions": 40
         },
         "files": [
             {
-                "sha": "af0aa11a6df3ec735d6c5f888445b3819ca3055c",
-                "filename": ".github/actions/test/dist/index.js",
+                "sha": "bd0c7c2db4cec8513a144fd2ef523ae694d0723d",
+                "filename": "test/commit.txt",
                 "status": "modified",
-                "additions": 12,
-                "deletions": 15,
-                "changes": 27,
-                "blob_url": "https://github.com/Chakrygin/test-github-action/blob/6fa40b8e08e1688b4601eea06d84f20142568b25/.github/actions/test/dist/index.js",
-                "raw_url": "https://github.com/Chakrygin/test-github-action/raw/6fa40b8e08e1688b4601eea06d84f20142568b25/.github/actions/test/dist/index.js",
-                "contents_url": "https://api.github.com/repos/Chakrygin/test-github-action/contents/.github/actions/test/dist/index.js?ref=6fa40b8e08e1688b4601eea06d84f20142568b25",
-                "patch": "@@ -10023,6 +10023,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume\n const GITHUB_TOKEN = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('GITHUB_TOKEN');\n const TELEGRAM_TOKEN = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('TELEGRAM_TOKEN');\n function main() {\n+    var _a, _b;\n     return __awaiter(this, void 0, void 0, function* () {\n         try {\n             // const telegraf = new Telegraf(TELEGRAM_TOKEN);\n@@ -10076,19 +10077,15 @@ function main() {\n             console.log(json);\n             console.log();\n             fs__WEBPACK_IMPORTED_MODULE_3__.writeFileSync(\"test/context.txt\", json);\n-            try {\n-                var commit = yield octokit.repos.getCommit({\n-                    owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,\n-                    repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,\n-                    ref: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.ref,\n-                });\n-                const json2 = JSON.stringify(commit, null, 4);\n-                console.log(json2);\n-                console.log();\n-                fs__WEBPACK_IMPORTED_MODULE_3__.writeFileSync(\"test/commit.txt\", json2);\n-            }\n-            catch (_a) {\n-            }\n+            var commit = yield octokit.repos.getCommit({\n+                owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,\n+                repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,\n+                ref: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.ref,\n+            });\n+            const json2 = JSON.stringify(commit, null, 4);\n+            console.log(json2);\n+            console.log();\n+            fs__WEBPACK_IMPORTED_MODULE_3__.writeFileSync(\"test/commit.txt\", json2);\n             const options = {};\n             options.listeners = {\n                 stdout: (data) => {\n@@ -10100,8 +10097,8 @@ function main() {\n             };\n             var owner = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner;\n             var repo = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo;\n-            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', [\"config\", \"--global\", \"user.name\", \"Automated Publisher\"], options);\n-            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', [\"config\", \"--global\", \"user.email\", \"actions@users.noreply.github.com\"], options);\n+            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', [\"config\", \"--global\", \"user.name\", (_a = commit.data.commit.author) === null || _a === void 0 ? void 0 : _a.name], options);\n+            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', [\"config\", \"--global\", \"user.email\", (_b = commit.data.commit.author) === null || _b === void 0 ? void 0 : _b.email], options);\n             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', [\"add\", \"--all\"]);\n             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', [\"commit\", \"-m\", \"Commit message...\"], options);\n             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', [\"remote\", \"set-url\", \"origin\", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);"
+                "additions": 37,
+                "deletions": 37,
+                "changes": 74,
+                "blob_url": "https://github.com/Chakrygin/test-github-action/blob/764e2f9ba6483fabe252477cecb308e89b0e9f7f/test/commit.txt",
+                "raw_url": "https://github.com/Chakrygin/test-github-action/raw/764e2f9ba6483fabe252477cecb308e89b0e9f7f/test/commit.txt",
+                "contents_url": "https://api.github.com/repos/Chakrygin/test-github-action/contents/test/commit.txt?ref=764e2f9ba6483fabe252477cecb308e89b0e9f7f"
             },
             {
-                "sha": "627911d3d675455e71c98934094bf0795c558376",
-                "filename": ".github/actions/test/src/main.ts",
+                "sha": "4690aee4f7afa6c20baaa2b4009c6ed9efa9250e",
+                "filename": "test/context.txt",
                 "status": "modified",
-                "additions": 14,
-                "deletions": 18,
-                "changes": 32,
-                "blob_url": "https://github.com/Chakrygin/test-github-action/blob/6fa40b8e08e1688b4601eea06d84f20142568b25/.github/actions/test/src/main.ts",
-                "raw_url": "https://github.com/Chakrygin/test-github-action/raw/6fa40b8e08e1688b4601eea06d84f20142568b25/.github/actions/test/src/main.ts",
-                "contents_url": "https://api.github.com/repos/Chakrygin/test-github-action/contents/.github/actions/test/src/main.ts?ref=6fa40b8e08e1688b4601eea06d84f20142568b25",
-                "patch": "@@ -91,22 +91,17 @@ async function main() {\n \n     fs.writeFileSync(\"test/context.txt\", json)\n \n-    try {\n-      var commit = await octokit.repos.getCommit({\n-        owner: github.context.repo.owner,\n-        repo: github.context.repo.repo,\n-        ref: github.context.ref,\n-      });\n-\n-      const json2 = JSON.stringify(commit, null, 4);\n-      console.log(json2);\n-      console.log();\n-\n-      fs.writeFileSync(\"test/commit.txt\", json2)\n-    }\n-    catch\n-    {\n-    }\n+    var commit = await octokit.repos.getCommit({\n+      owner: github.context.repo.owner,\n+      repo: github.context.repo.repo,\n+      ref: github.context.ref,\n+    });\n+\n+    const json2 = JSON.stringify(commit, null, 4);\n+    console.log(json2);\n+    console.log();\n+\n+    fs.writeFileSync(\"test/commit.txt\", json2)\n \n     const options: exec.ExecOptions = {};\n     options.listeners = {\n@@ -121,8 +116,9 @@ async function main() {\n     var owner = github.context.repo.owner;\n     var repo = github.context.repo.repo;\n \n-    await exec.exec('git', [\"config\", \"--global\", \"user.name\", \"Automated Publisher\"], options);\n-    await exec.exec('git', [\"config\", \"--global\", \"user.email\", \"actions@users.noreply.github.com\"], options);\n+\n+    await exec.exec('git', [\"config\", \"--global\", \"user.name\", commit.data.commit.author?.name!], options);\n+    await exec.exec('git', [\"config\", \"--global\", \"user.email\", commit.data.commit.author?.email!], options);\n     await exec.exec('git', [\"add\", \"--all\"]);\n     await exec.exec('git', [\"commit\", \"-m\", \"Commit message...\"], options);\n     await exec.exec('git', [\"remote\", \"set-url\", \"origin\", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);"
+                "additions": 3,
+                "deletions": 3,
+                "changes": 6,
+                "blob_url": "https://github.com/Chakrygin/test-github-action/blob/764e2f9ba6483fabe252477cecb308e89b0e9f7f/test/context.txt",
+                "raw_url": "https://github.com/Chakrygin/test-github-action/raw/764e2f9ba6483fabe252477cecb308e89b0e9f7f/test/context.txt",
+                "contents_url": "https://api.github.com/repos/Chakrygin/test-github-action/contents/test/context.txt?ref=764e2f9ba6483fabe252477cecb308e89b0e9f7f",
+                "patch": "@@ -3,12 +3,12 @@\n         \"schedule\": \"*/15 * * * *\"\n     },\n     \"eventName\": \"schedule\",\n-    \"sha\": \"62f7053b16be24cce17ae5a0ba249b369c9d1814\",\n+    \"sha\": \"40c8c02e8dfc7ce2acb3c037a6f54b93c4fb89f1\",\n     \"ref\": \"refs/heads/main\",\n     \"workflow\": \"Hello\",\n     \"action\": \"__self\",\n     \"actor\": \"Chakrygin\",\n     \"job\": \"Hello\",\n-    \"runNumber\": 31,\n-    \"runId\": 1872040064\n+    \"runNumber\": 32,\n+    \"runId\": 1872071085\n }\n\\ No newline at end of file"
             }
         ]
     }
