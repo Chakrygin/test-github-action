@@ -599,6 +599,217 @@ exports.toCommandProperties = toCommandProperties;
 
 /***/ }),
 
+/***/ 4087:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Context = void 0;
+const fs_1 = __nccwpck_require__(5747);
+const os_1 = __nccwpck_require__(2087);
+class Context {
+    /**
+     * Hydrate the context from the environment
+     */
+    constructor() {
+        this.payload = {};
+        if (process.env.GITHUB_EVENT_PATH) {
+            if (fs_1.existsSync(process.env.GITHUB_EVENT_PATH)) {
+                this.payload = JSON.parse(fs_1.readFileSync(process.env.GITHUB_EVENT_PATH, { encoding: 'utf8' }));
+            }
+            else {
+                const path = process.env.GITHUB_EVENT_PATH;
+                process.stdout.write(`GITHUB_EVENT_PATH ${path} does not exist${os_1.EOL}`);
+            }
+        }
+        this.eventName = process.env.GITHUB_EVENT_NAME;
+        this.sha = process.env.GITHUB_SHA;
+        this.ref = process.env.GITHUB_REF;
+        this.workflow = process.env.GITHUB_WORKFLOW;
+        this.action = process.env.GITHUB_ACTION;
+        this.actor = process.env.GITHUB_ACTOR;
+        this.job = process.env.GITHUB_JOB;
+        this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
+        this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
+    }
+    get issue() {
+        const payload = this.payload;
+        return Object.assign(Object.assign({}, this.repo), { number: (payload.issue || payload.pull_request || payload).number });
+    }
+    get repo() {
+        if (process.env.GITHUB_REPOSITORY) {
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            return { owner, repo };
+        }
+        if (this.payload.repository) {
+            return {
+                owner: this.payload.repository.owner.login,
+                repo: this.payload.repository.name
+            };
+        }
+        throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
+    }
+}
+exports.Context = Context;
+//# sourceMappingURL=context.js.map
+
+/***/ }),
+
+/***/ 5438:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getOctokit = exports.context = void 0;
+const Context = __importStar(__nccwpck_require__(4087));
+const utils_1 = __nccwpck_require__(3030);
+exports.context = new Context.Context();
+/**
+ * Returns a hydrated octokit ready to use for GitHub Actions
+ *
+ * @param     token    the repo PAT or GITHUB_TOKEN
+ * @param     options  other options to set
+ */
+function getOctokit(token, options) {
+    return new utils_1.GitHub(utils_1.getOctokitOptions(token, options));
+}
+exports.getOctokit = getOctokit;
+//# sourceMappingURL=github.js.map
+
+/***/ }),
+
+/***/ 7914:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getApiBaseUrl = exports.getProxyAgent = exports.getAuthString = void 0;
+const httpClient = __importStar(__nccwpck_require__(9925));
+function getAuthString(token, options) {
+    if (!token && !options.auth) {
+        throw new Error('Parameter token or opts.auth is required');
+    }
+    else if (token && options.auth) {
+        throw new Error('Parameters token and opts.auth may not both be specified');
+    }
+    return typeof options.auth === 'string' ? options.auth : `token ${token}`;
+}
+exports.getAuthString = getAuthString;
+function getProxyAgent(destinationUrl) {
+    const hc = new httpClient.HttpClient();
+    return hc.getAgent(destinationUrl);
+}
+exports.getProxyAgent = getProxyAgent;
+function getApiBaseUrl() {
+    return process.env['GITHUB_API_URL'] || 'https://api.github.com';
+}
+exports.getApiBaseUrl = getApiBaseUrl;
+//# sourceMappingURL=utils.js.map
+
+/***/ }),
+
+/***/ 3030:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getOctokitOptions = exports.GitHub = exports.context = void 0;
+const Context = __importStar(__nccwpck_require__(4087));
+const Utils = __importStar(__nccwpck_require__(7914));
+// octokit + plugins
+const core_1 = __nccwpck_require__(6762);
+const plugin_rest_endpoint_methods_1 = __nccwpck_require__(3044);
+const plugin_paginate_rest_1 = __nccwpck_require__(4193);
+exports.context = new Context.Context();
+const baseUrl = Utils.getApiBaseUrl();
+const defaults = {
+    baseUrl,
+    request: {
+        agent: Utils.getProxyAgent(baseUrl)
+    }
+};
+exports.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(defaults);
+/**
+ * Convience function to correctly format Octokit Options to pass into the constructor.
+ *
+ * @param     token    the repo PAT or GITHUB_TOKEN
+ * @param     options  other options to set
+ */
+function getOctokitOptions(token, options) {
+    const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
+    // Auth
+    const auth = Utils.getAuthString(token, opts);
+    if (auth) {
+        opts.auth = auth;
+    }
+    return opts;
+}
+exports.getOctokitOptions = getOctokitOptions;
+//# sourceMappingURL=utils.js.map
+
+/***/ }),
+
 /***/ 3702:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -1275,2520 +1486,2753 @@ exports.checkBypass = checkBypass;
 
 /***/ }),
 
-/***/ 1659:
-/***/ ((module, exports, __nccwpck_require__) => {
+/***/ 334:
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
-/**
- * @author Toru Nagashima <https://github.com/mysticatea>
- * See LICENSE file in root directory for full license.
- */
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
-var eventTargetShim = __nccwpck_require__(4697);
-
-/**
- * The signal class.
- * @see https://dom.spec.whatwg.org/#abortsignal
- */
-class AbortSignal extends eventTargetShim.EventTarget {
-    /**
-     * AbortSignal cannot be constructed directly.
-     */
-    constructor() {
-        super();
-        throw new TypeError("AbortSignal cannot be constructed directly");
-    }
-    /**
-     * Returns `true` if this `AbortSignal`'s `AbortController` has signaled to abort, and `false` otherwise.
-     */
-    get aborted() {
-        const aborted = abortedFlags.get(this);
-        if (typeof aborted !== "boolean") {
-            throw new TypeError(`Expected 'this' to be an 'AbortSignal' object, but got ${this === null ? "null" : typeof this}`);
-        }
-        return aborted;
-    }
-}
-eventTargetShim.defineEventAttribute(AbortSignal.prototype, "abort");
-/**
- * Create an AbortSignal object.
- */
-function createAbortSignal() {
-    const signal = Object.create(AbortSignal.prototype);
-    eventTargetShim.EventTarget.call(signal);
-    abortedFlags.set(signal, false);
-    return signal;
-}
-/**
- * Abort a given signal.
- */
-function abortSignal(signal) {
-    if (abortedFlags.get(signal) !== false) {
-        return;
-    }
-    abortedFlags.set(signal, true);
-    signal.dispatchEvent({ type: "abort" });
-}
-/**
- * Aborted flag for each instances.
- */
-const abortedFlags = new WeakMap();
-// Properties should be enumerable.
-Object.defineProperties(AbortSignal.prototype, {
-    aborted: { enumerable: true },
-});
-// `toString()` should return `"[object AbortSignal]"`
-if (typeof Symbol === "function" && typeof Symbol.toStringTag === "symbol") {
-    Object.defineProperty(AbortSignal.prototype, Symbol.toStringTag, {
-        configurable: true,
-        value: "AbortSignal",
-    });
+const REGEX_IS_INSTALLATION_LEGACY = /^v1\./;
+const REGEX_IS_INSTALLATION = /^ghs_/;
+const REGEX_IS_USER_TO_SERVER = /^ghu_/;
+async function auth(token) {
+  const isApp = token.split(/\./).length === 3;
+  const isInstallation = REGEX_IS_INSTALLATION_LEGACY.test(token) || REGEX_IS_INSTALLATION.test(token);
+  const isUserToServer = REGEX_IS_USER_TO_SERVER.test(token);
+  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
+  return {
+    type: "token",
+    token: token,
+    tokenType
+  };
 }
 
 /**
- * The AbortController.
- * @see https://dom.spec.whatwg.org/#abortcontroller
- */
-class AbortController {
-    /**
-     * Initialize this controller.
-     */
-    constructor() {
-        signals.set(this, createAbortSignal());
-    }
-    /**
-     * Returns the `AbortSignal` object associated with this object.
-     */
-    get signal() {
-        return getSignal(this);
-    }
-    /**
-     * Abort and signal to any observers that the associated activity is to be aborted.
-     */
-    abort() {
-        abortSignal(getSignal(this));
-    }
-}
-/**
- * Associated signals.
- */
-const signals = new WeakMap();
-/**
- * Get the associated signal of a given controller.
- */
-function getSignal(controller) {
-    const signal = signals.get(controller);
-    if (signal == null) {
-        throw new TypeError(`Expected 'this' to be an 'AbortController' object, but got ${controller === null ? "null" : typeof controller}`);
-    }
-    return signal;
-}
-// Properties should be enumerable.
-Object.defineProperties(AbortController.prototype, {
-    signal: { enumerable: true },
-    abort: { enumerable: true },
-});
-if (typeof Symbol === "function" && typeof Symbol.toStringTag === "symbol") {
-    Object.defineProperty(AbortController.prototype, Symbol.toStringTag, {
-        configurable: true,
-        value: "AbortController",
-    });
-}
-
-exports.AbortController = AbortController;
-exports.AbortSignal = AbortSignal;
-exports.default = AbortController;
-
-module.exports = AbortController
-module.exports.AbortController = module.exports.default = AbortController
-module.exports.AbortSignal = AbortSignal
-//# sourceMappingURL=abort-controller.js.map
-
-
-/***/ }),
-
-/***/ 6726:
-/***/ ((module) => {
-
-function allocUnsafe (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('"size" argument must be a number')
-  }
-
-  if (size < 0) {
-    throw new RangeError('"size" argument must not be negative')
-  }
-
-  if (Buffer.allocUnsafe) {
-    return Buffer.allocUnsafe(size)
-  } else {
-    return new Buffer(size)
-  }
-}
-
-module.exports = allocUnsafe
-
-
-/***/ }),
-
-/***/ 6615:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var bufferFill = __nccwpck_require__(2852)
-var allocUnsafe = __nccwpck_require__(6726)
-
-module.exports = function alloc (size, fill, encoding) {
-  if (typeof size !== 'number') {
-    throw new TypeError('"size" argument must be a number')
-  }
-
-  if (size < 0) {
-    throw new RangeError('"size" argument must not be negative')
-  }
-
-  if (Buffer.alloc) {
-    return Buffer.alloc(size, fill, encoding)
-  }
-
-  var buffer = allocUnsafe(size)
-
-  if (size === 0) {
-    return buffer
-  }
-
-  if (fill === undefined) {
-    return bufferFill(buffer, 0)
-  }
-
-  if (typeof encoding !== 'string') {
-    encoding = undefined
-  }
-
-  return bufferFill(buffer, fill, encoding)
-}
-
-
-/***/ }),
-
-/***/ 2852:
-/***/ ((module) => {
-
-/* Node.js 6.4.0 and up has full support */
-var hasFullSupport = (function () {
-  try {
-    if (!Buffer.isEncoding('latin1')) {
-      return false
-    }
-
-    var buf = Buffer.alloc ? Buffer.alloc(4) : new Buffer(4)
-
-    buf.fill('ab', 'ucs2')
-
-    return (buf.toString('hex') === '61006200')
-  } catch (_) {
-    return false
-  }
-}())
-
-function isSingleByte (val) {
-  return (val.length === 1 && val.charCodeAt(0) < 256)
-}
-
-function fillWithNumber (buffer, val, start, end) {
-  if (start < 0 || end > buffer.length) {
-    throw new RangeError('Out of range index')
-  }
-
-  start = start >>> 0
-  end = end === undefined ? buffer.length : end >>> 0
-
-  if (end > start) {
-    buffer.fill(val, start, end)
-  }
-
-  return buffer
-}
-
-function fillWithBuffer (buffer, val, start, end) {
-  if (start < 0 || end > buffer.length) {
-    throw new RangeError('Out of range index')
-  }
-
-  if (end <= start) {
-    return buffer
-  }
-
-  start = start >>> 0
-  end = end === undefined ? buffer.length : end >>> 0
-
-  var pos = start
-  var len = val.length
-  while (pos <= (end - len)) {
-    val.copy(buffer, pos)
-    pos += len
-  }
-
-  if (pos !== end) {
-    val.copy(buffer, pos, 0, end - pos)
-  }
-
-  return buffer
-}
-
-function fill (buffer, val, start, end, encoding) {
-  if (hasFullSupport) {
-    return buffer.fill(val, start, end, encoding)
-  }
-
-  if (typeof val === 'number') {
-    return fillWithNumber(buffer, val, start, end)
-  }
-
-  if (typeof val === 'string') {
-    if (typeof start === 'string') {
-      encoding = start
-      start = 0
-      end = buffer.length
-    } else if (typeof end === 'string') {
-      encoding = end
-      end = buffer.length
-    }
-
-    if (encoding !== undefined && typeof encoding !== 'string') {
-      throw new TypeError('encoding must be a string')
-    }
-
-    if (encoding === 'latin1') {
-      encoding = 'binary'
-    }
-
-    if (typeof encoding === 'string' && !Buffer.isEncoding(encoding)) {
-      throw new TypeError('Unknown encoding: ' + encoding)
-    }
-
-    if (val === '') {
-      return fillWithNumber(buffer, 0, start, end)
-    }
-
-    if (isSingleByte(val)) {
-      return fillWithNumber(buffer, val.charCodeAt(0), start, end)
-    }
-
-    val = new Buffer(val, encoding)
-  }
-
-  if (Buffer.isBuffer(val)) {
-    return fillWithBuffer(buffer, val, start, end)
-  }
-
-  // Other values (e.g. undefined, boolean, object) results in zero-fill
-  return fillWithNumber(buffer, 0, start, end)
-}
-
-module.exports = fill
-
-
-/***/ }),
-
-/***/ 8222:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-/* eslint-env browser */
-
-/**
- * This is the web browser implementation of `debug()`.
- */
-
-exports.formatArgs = formatArgs;
-exports.save = save;
-exports.load = load;
-exports.useColors = useColors;
-exports.storage = localstorage();
-exports.destroy = (() => {
-	let warned = false;
-
-	return () => {
-		if (!warned) {
-			warned = true;
-			console.warn('Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.');
-		}
-	};
-})();
-
-/**
- * Colors.
- */
-
-exports.colors = [
-	'#0000CC',
-	'#0000FF',
-	'#0033CC',
-	'#0033FF',
-	'#0066CC',
-	'#0066FF',
-	'#0099CC',
-	'#0099FF',
-	'#00CC00',
-	'#00CC33',
-	'#00CC66',
-	'#00CC99',
-	'#00CCCC',
-	'#00CCFF',
-	'#3300CC',
-	'#3300FF',
-	'#3333CC',
-	'#3333FF',
-	'#3366CC',
-	'#3366FF',
-	'#3399CC',
-	'#3399FF',
-	'#33CC00',
-	'#33CC33',
-	'#33CC66',
-	'#33CC99',
-	'#33CCCC',
-	'#33CCFF',
-	'#6600CC',
-	'#6600FF',
-	'#6633CC',
-	'#6633FF',
-	'#66CC00',
-	'#66CC33',
-	'#9900CC',
-	'#9900FF',
-	'#9933CC',
-	'#9933FF',
-	'#99CC00',
-	'#99CC33',
-	'#CC0000',
-	'#CC0033',
-	'#CC0066',
-	'#CC0099',
-	'#CC00CC',
-	'#CC00FF',
-	'#CC3300',
-	'#CC3333',
-	'#CC3366',
-	'#CC3399',
-	'#CC33CC',
-	'#CC33FF',
-	'#CC6600',
-	'#CC6633',
-	'#CC9900',
-	'#CC9933',
-	'#CCCC00',
-	'#CCCC33',
-	'#FF0000',
-	'#FF0033',
-	'#FF0066',
-	'#FF0099',
-	'#FF00CC',
-	'#FF00FF',
-	'#FF3300',
-	'#FF3333',
-	'#FF3366',
-	'#FF3399',
-	'#FF33CC',
-	'#FF33FF',
-	'#FF6600',
-	'#FF6633',
-	'#FF9900',
-	'#FF9933',
-	'#FFCC00',
-	'#FFCC33'
-];
-
-/**
- * Currently only WebKit-based Web Inspectors, Firefox >= v31,
- * and the Firebug extension (any Firefox version) are known
- * to support "%c" CSS customizations.
+ * Prefix token for usage in the Authorization header
  *
- * TODO: add a `localStorage` variable to explicitly enable/disable colors
+ * @param token OAuth token or JSON Web Token
  */
+function withAuthorizationPrefix(token) {
+  if (token.split(/\./).length === 3) {
+    return `bearer ${token}`;
+  }
 
-// eslint-disable-next-line complexity
-function useColors() {
-	// NB: In an Electron preload script, document will be defined but not fully
-	// initialized. Since we know we're in Chrome, we'll just detect this case
-	// explicitly
-	if (typeof window !== 'undefined' && window.process && (window.process.type === 'renderer' || window.process.__nwjs)) {
-		return true;
-	}
-
-	// Internet Explorer and Edge do not support colors.
-	if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
-		return false;
-	}
-
-	// Is webkit? http://stackoverflow.com/a/16459606/376773
-	// document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
-	return (typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance) ||
-		// Is firebug? http://stackoverflow.com/a/398120/376773
-		(typeof window !== 'undefined' && window.console && (window.console.firebug || (window.console.exception && window.console.table))) ||
-		// Is firefox >= v31?
-		// https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-		(typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31) ||
-		// Double check webkit in userAgent just in case we are in a worker
-		(typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/));
+  return `token ${token}`;
 }
 
-/**
- * Colorize log arguments if enabled.
- *
- * @api public
- */
-
-function formatArgs(args) {
-	args[0] = (this.useColors ? '%c' : '') +
-		this.namespace +
-		(this.useColors ? ' %c' : ' ') +
-		args[0] +
-		(this.useColors ? '%c ' : ' ') +
-		'+' + module.exports.humanize(this.diff);
-
-	if (!this.useColors) {
-		return;
-	}
-
-	const c = 'color: ' + this.color;
-	args.splice(1, 0, c, 'color: inherit');
-
-	// The final "%c" is somewhat tricky, because there could be other
-	// arguments passed either before or after the %c, so we need to
-	// figure out the correct index to insert the CSS into
-	let index = 0;
-	let lastC = 0;
-	args[0].replace(/%[a-zA-Z%]/g, match => {
-		if (match === '%%') {
-			return;
-		}
-		index++;
-		if (match === '%c') {
-			// We only are interested in the *last* %c
-			// (the user may have provided their own)
-			lastC = index;
-		}
-	});
-
-	args.splice(lastC, 0, c);
+async function hook(token, request, route, parameters) {
+  const endpoint = request.endpoint.merge(route, parameters);
+  endpoint.headers.authorization = withAuthorizationPrefix(token);
+  return request(endpoint);
 }
 
-/**
- * Invokes `console.debug()` when available.
- * No-op when `console.debug` is not a "function".
- * If `console.debug` is not available, falls back
- * to `console.log`.
- *
- * @api public
- */
-exports.log = console.debug || console.log || (() => {});
+const createTokenAuth = function createTokenAuth(token) {
+  if (!token) {
+    throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
+  }
 
-/**
- * Save `namespaces`.
- *
- * @param {String} namespaces
- * @api private
- */
-function save(namespaces) {
-	try {
-		if (namespaces) {
-			exports.storage.setItem('debug', namespaces);
-		} else {
-			exports.storage.removeItem('debug');
-		}
-	} catch (error) {
-		// Swallow
-		// XXX (@Qix-) should we be logging these?
-	}
-}
+  if (typeof token !== "string") {
+    throw new Error("[@octokit/auth-token] Token passed to createTokenAuth is not a string");
+  }
 
-/**
- * Load `namespaces`.
- *
- * @return {String} returns the previously persisted debug modes
- * @api private
- */
-function load() {
-	let r;
-	try {
-		r = exports.storage.getItem('debug');
-	} catch (error) {
-		// Swallow
-		// XXX (@Qix-) should we be logging these?
-	}
-
-	// If debug isn't set in LS, and we're in Electron, try to load $DEBUG
-	if (!r && typeof process !== 'undefined' && 'env' in process) {
-		r = process.env.DEBUG;
-	}
-
-	return r;
-}
-
-/**
- * Localstorage attempts to return the localstorage.
- *
- * This is necessary because safari throws
- * when a user disables cookies/localstorage
- * and you attempt to access it.
- *
- * @return {LocalStorage}
- * @api private
- */
-
-function localstorage() {
-	try {
-		// TVMLKit (Apple TV JS Runtime) does not have a window object, just localStorage in the global context
-		// The Browser also has localStorage in the global context.
-		return localStorage;
-	} catch (error) {
-		// Swallow
-		// XXX (@Qix-) should we be logging these?
-	}
-}
-
-module.exports = __nccwpck_require__(6243)(exports);
-
-const {formatters} = module.exports;
-
-/**
- * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
- */
-
-formatters.j = function (v) {
-	try {
-		return JSON.stringify(v);
-	} catch (error) {
-		return '[UnexpectedJSONParseError]: ' + error.message;
-	}
+  token = token.replace(/^(token|bearer) +/i, "");
+  return Object.assign(auth.bind(null, token), {
+    hook: hook.bind(null, token)
+  });
 };
 
-
-/***/ }),
-
-/***/ 6243:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-
-/**
- * This is the common logic for both the Node.js and web browser
- * implementations of `debug()`.
- */
-
-function setup(env) {
-	createDebug.debug = createDebug;
-	createDebug.default = createDebug;
-	createDebug.coerce = coerce;
-	createDebug.disable = disable;
-	createDebug.enable = enable;
-	createDebug.enabled = enabled;
-	createDebug.humanize = __nccwpck_require__(900);
-	createDebug.destroy = destroy;
-
-	Object.keys(env).forEach(key => {
-		createDebug[key] = env[key];
-	});
-
-	/**
-	* The currently active debug mode names, and names to skip.
-	*/
-
-	createDebug.names = [];
-	createDebug.skips = [];
-
-	/**
-	* Map of special "%n" handling functions, for the debug "format" argument.
-	*
-	* Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
-	*/
-	createDebug.formatters = {};
-
-	/**
-	* Selects a color for a debug namespace
-	* @param {String} namespace The namespace string for the debug instance to be colored
-	* @return {Number|String} An ANSI color code for the given namespace
-	* @api private
-	*/
-	function selectColor(namespace) {
-		let hash = 0;
-
-		for (let i = 0; i < namespace.length; i++) {
-			hash = ((hash << 5) - hash) + namespace.charCodeAt(i);
-			hash |= 0; // Convert to 32bit integer
-		}
-
-		return createDebug.colors[Math.abs(hash) % createDebug.colors.length];
-	}
-	createDebug.selectColor = selectColor;
-
-	/**
-	* Create a debugger with the given `namespace`.
-	*
-	* @param {String} namespace
-	* @return {Function}
-	* @api public
-	*/
-	function createDebug(namespace) {
-		let prevTime;
-		let enableOverride = null;
-		let namespacesCache;
-		let enabledCache;
-
-		function debug(...args) {
-			// Disabled?
-			if (!debug.enabled) {
-				return;
-			}
-
-			const self = debug;
-
-			// Set `diff` timestamp
-			const curr = Number(new Date());
-			const ms = curr - (prevTime || curr);
-			self.diff = ms;
-			self.prev = prevTime;
-			self.curr = curr;
-			prevTime = curr;
-
-			args[0] = createDebug.coerce(args[0]);
-
-			if (typeof args[0] !== 'string') {
-				// Anything else let's inspect with %O
-				args.unshift('%O');
-			}
-
-			// Apply any `formatters` transformations
-			let index = 0;
-			args[0] = args[0].replace(/%([a-zA-Z%])/g, (match, format) => {
-				// If we encounter an escaped % then don't increase the array index
-				if (match === '%%') {
-					return '%';
-				}
-				index++;
-				const formatter = createDebug.formatters[format];
-				if (typeof formatter === 'function') {
-					const val = args[index];
-					match = formatter.call(self, val);
-
-					// Now we need to remove `args[index]` since it's inlined in the `format`
-					args.splice(index, 1);
-					index--;
-				}
-				return match;
-			});
-
-			// Apply env-specific formatting (colors, etc.)
-			createDebug.formatArgs.call(self, args);
-
-			const logFn = self.log || createDebug.log;
-			logFn.apply(self, args);
-		}
-
-		debug.namespace = namespace;
-		debug.useColors = createDebug.useColors();
-		debug.color = createDebug.selectColor(namespace);
-		debug.extend = extend;
-		debug.destroy = createDebug.destroy; // XXX Temporary. Will be removed in the next major release.
-
-		Object.defineProperty(debug, 'enabled', {
-			enumerable: true,
-			configurable: false,
-			get: () => {
-				if (enableOverride !== null) {
-					return enableOverride;
-				}
-				if (namespacesCache !== createDebug.namespaces) {
-					namespacesCache = createDebug.namespaces;
-					enabledCache = createDebug.enabled(namespace);
-				}
-
-				return enabledCache;
-			},
-			set: v => {
-				enableOverride = v;
-			}
-		});
-
-		// Env-specific initialization logic for debug instances
-		if (typeof createDebug.init === 'function') {
-			createDebug.init(debug);
-		}
-
-		return debug;
-	}
-
-	function extend(namespace, delimiter) {
-		const newDebug = createDebug(this.namespace + (typeof delimiter === 'undefined' ? ':' : delimiter) + namespace);
-		newDebug.log = this.log;
-		return newDebug;
-	}
-
-	/**
-	* Enables a debug mode by namespaces. This can include modes
-	* separated by a colon and wildcards.
-	*
-	* @param {String} namespaces
-	* @api public
-	*/
-	function enable(namespaces) {
-		createDebug.save(namespaces);
-		createDebug.namespaces = namespaces;
-
-		createDebug.names = [];
-		createDebug.skips = [];
-
-		let i;
-		const split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
-		const len = split.length;
-
-		for (i = 0; i < len; i++) {
-			if (!split[i]) {
-				// ignore empty strings
-				continue;
-			}
-
-			namespaces = split[i].replace(/\*/g, '.*?');
-
-			if (namespaces[0] === '-') {
-				createDebug.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
-			} else {
-				createDebug.names.push(new RegExp('^' + namespaces + '$'));
-			}
-		}
-	}
-
-	/**
-	* Disable debug output.
-	*
-	* @return {String} namespaces
-	* @api public
-	*/
-	function disable() {
-		const namespaces = [
-			...createDebug.names.map(toNamespace),
-			...createDebug.skips.map(toNamespace).map(namespace => '-' + namespace)
-		].join(',');
-		createDebug.enable('');
-		return namespaces;
-	}
-
-	/**
-	* Returns true if the given mode name is enabled, false otherwise.
-	*
-	* @param {String} name
-	* @return {Boolean}
-	* @api public
-	*/
-	function enabled(name) {
-		if (name[name.length - 1] === '*') {
-			return true;
-		}
-
-		let i;
-		let len;
-
-		for (i = 0, len = createDebug.skips.length; i < len; i++) {
-			if (createDebug.skips[i].test(name)) {
-				return false;
-			}
-		}
-
-		for (i = 0, len = createDebug.names.length; i < len; i++) {
-			if (createDebug.names[i].test(name)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	* Convert regexp to namespace
-	*
-	* @param {RegExp} regxep
-	* @return {String} namespace
-	* @api private
-	*/
-	function toNamespace(regexp) {
-		return regexp.toString()
-			.substring(2, regexp.toString().length - 2)
-			.replace(/\.\*\?$/, '*');
-	}
-
-	/**
-	* Coerce `val`.
-	*
-	* @param {Mixed} val
-	* @return {Mixed}
-	* @api private
-	*/
-	function coerce(val) {
-		if (val instanceof Error) {
-			return val.stack || val.message;
-		}
-		return val;
-	}
-
-	/**
-	* XXX DO NOT USE. This is a temporary stub function.
-	* XXX It WILL be removed in the next major release.
-	*/
-	function destroy() {
-		console.warn('Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.');
-	}
-
-	createDebug.enable(createDebug.load());
-
-	return createDebug;
-}
-
-module.exports = setup;
+exports.createTokenAuth = createTokenAuth;
+//# sourceMappingURL=index.js.map
 
 
 /***/ }),
 
-/***/ 8237:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-/**
- * Detect Electron renderer / nwjs process, which is node, but we should
- * treat as a browser.
- */
-
-if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true || process.__nwjs) {
-	module.exports = __nccwpck_require__(8222);
-} else {
-	module.exports = __nccwpck_require__(5332);
-}
-
-
-/***/ }),
-
-/***/ 5332:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-/**
- * Module dependencies.
- */
-
-const tty = __nccwpck_require__(3867);
-const util = __nccwpck_require__(1669);
-
-/**
- * This is the Node.js implementation of `debug()`.
- */
-
-exports.init = init;
-exports.log = log;
-exports.formatArgs = formatArgs;
-exports.save = save;
-exports.load = load;
-exports.useColors = useColors;
-exports.destroy = util.deprecate(
-	() => {},
-	'Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.'
-);
-
-/**
- * Colors.
- */
-
-exports.colors = [6, 2, 3, 4, 5, 1];
-
-try {
-	// Optional dependency (as in, doesn't need to be installed, NOT like optionalDependencies in package.json)
-	// eslint-disable-next-line import/no-extraneous-dependencies
-	const supportsColor = __nccwpck_require__(132);
-
-	if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
-		exports.colors = [
-			20,
-			21,
-			26,
-			27,
-			32,
-			33,
-			38,
-			39,
-			40,
-			41,
-			42,
-			43,
-			44,
-			45,
-			56,
-			57,
-			62,
-			63,
-			68,
-			69,
-			74,
-			75,
-			76,
-			77,
-			78,
-			79,
-			80,
-			81,
-			92,
-			93,
-			98,
-			99,
-			112,
-			113,
-			128,
-			129,
-			134,
-			135,
-			148,
-			149,
-			160,
-			161,
-			162,
-			163,
-			164,
-			165,
-			166,
-			167,
-			168,
-			169,
-			170,
-			171,
-			172,
-			173,
-			178,
-			179,
-			184,
-			185,
-			196,
-			197,
-			198,
-			199,
-			200,
-			201,
-			202,
-			203,
-			204,
-			205,
-			206,
-			207,
-			208,
-			209,
-			214,
-			215,
-			220,
-			221
-		];
-	}
-} catch (error) {
-	// Swallow - we only care if `supports-color` is available; it doesn't have to be.
-}
-
-/**
- * Build up the default `inspectOpts` object from the environment variables.
- *
- *   $ DEBUG_COLORS=no DEBUG_DEPTH=10 DEBUG_SHOW_HIDDEN=enabled node script.js
- */
-
-exports.inspectOpts = Object.keys(process.env).filter(key => {
-	return /^debug_/i.test(key);
-}).reduce((obj, key) => {
-	// Camel-case
-	const prop = key
-		.substring(6)
-		.toLowerCase()
-		.replace(/_([a-z])/g, (_, k) => {
-			return k.toUpperCase();
-		});
-
-	// Coerce string value into JS value
-	let val = process.env[key];
-	if (/^(yes|on|true|enabled)$/i.test(val)) {
-		val = true;
-	} else if (/^(no|off|false|disabled)$/i.test(val)) {
-		val = false;
-	} else if (val === 'null') {
-		val = null;
-	} else {
-		val = Number(val);
-	}
-
-	obj[prop] = val;
-	return obj;
-}, {});
-
-/**
- * Is stdout a TTY? Colored output is enabled when `true`.
- */
-
-function useColors() {
-	return 'colors' in exports.inspectOpts ?
-		Boolean(exports.inspectOpts.colors) :
-		tty.isatty(process.stderr.fd);
-}
-
-/**
- * Adds ANSI color escape codes if enabled.
- *
- * @api public
- */
-
-function formatArgs(args) {
-	const {namespace: name, useColors} = this;
-
-	if (useColors) {
-		const c = this.color;
-		const colorCode = '\u001B[3' + (c < 8 ? c : '8;5;' + c);
-		const prefix = `  ${colorCode};1m${name} \u001B[0m`;
-
-		args[0] = prefix + args[0].split('\n').join('\n' + prefix);
-		args.push(colorCode + 'm+' + module.exports.humanize(this.diff) + '\u001B[0m');
-	} else {
-		args[0] = getDate() + name + ' ' + args[0];
-	}
-}
-
-function getDate() {
-	if (exports.inspectOpts.hideDate) {
-		return '';
-	}
-	return new Date().toISOString() + ' ';
-}
-
-/**
- * Invokes `util.format()` with the specified arguments and writes to stderr.
- */
-
-function log(...args) {
-	return process.stderr.write(util.format(...args) + '\n');
-}
-
-/**
- * Save `namespaces`.
- *
- * @param {String} namespaces
- * @api private
- */
-function save(namespaces) {
-	if (namespaces) {
-		process.env.DEBUG = namespaces;
-	} else {
-		// If you set a process.env field to null or undefined, it gets cast to the
-		// string 'null' or 'undefined'. Just delete instead.
-		delete process.env.DEBUG;
-	}
-}
-
-/**
- * Load `namespaces`.
- *
- * @return {String} returns the previously persisted debug modes
- * @api private
- */
-
-function load() {
-	return process.env.DEBUG;
-}
-
-/**
- * Init logic for `debug` instances.
- *
- * Create a new `inspectOpts` object in case `useColors` is set
- * differently for a particular `debug` instance.
- */
-
-function init(debug) {
-	debug.inspectOpts = {};
-
-	const keys = Object.keys(exports.inspectOpts);
-	for (let i = 0; i < keys.length; i++) {
-		debug.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
-	}
-}
-
-module.exports = __nccwpck_require__(6243)(exports);
-
-const {formatters} = module.exports;
-
-/**
- * Map %o to `util.inspect()`, all on a single line.
- */
-
-formatters.o = function (v) {
-	this.inspectOpts.colors = this.useColors;
-	return util.inspect(v, this.inspectOpts)
-		.split('\n')
-		.map(str => str.trim())
-		.join(' ');
-};
-
-/**
- * Map %O to `util.inspect()`, allowing multiple lines if needed.
- */
-
-formatters.O = function (v) {
-	this.inspectOpts.colors = this.useColors;
-	return util.inspect(v, this.inspectOpts);
-};
-
-
-/***/ }),
-
-/***/ 5107:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.decodeHTML = exports.decodeHTMLStrict = exports.decodeXML = void 0;
-var entities_json_1 = __importDefault(__nccwpck_require__(4007));
-var legacy_json_1 = __importDefault(__nccwpck_require__(7802));
-var xml_json_1 = __importDefault(__nccwpck_require__(2228));
-var decode_codepoint_1 = __importDefault(__nccwpck_require__(1227));
-var strictEntityRe = /&(?:[a-zA-Z0-9]+|#[xX][\da-fA-F]+|#\d+);/g;
-exports.decodeXML = getStrictDecoder(xml_json_1.default);
-exports.decodeHTMLStrict = getStrictDecoder(entities_json_1.default);
-function getStrictDecoder(map) {
-    var replace = getReplacer(map);
-    return function (str) { return String(str).replace(strictEntityRe, replace); };
-}
-var sorter = function (a, b) { return (a < b ? 1 : -1); };
-exports.decodeHTML = (function () {
-    var legacy = Object.keys(legacy_json_1.default).sort(sorter);
-    var keys = Object.keys(entities_json_1.default).sort(sorter);
-    for (var i = 0, j = 0; i < keys.length; i++) {
-        if (legacy[j] === keys[i]) {
-            keys[i] += ";?";
-            j++;
-        }
-        else {
-            keys[i] += ";";
-        }
-    }
-    var re = new RegExp("&(?:" + keys.join("|") + "|#[xX][\\da-fA-F]+;?|#\\d+;?)", "g");
-    var replace = getReplacer(entities_json_1.default);
-    function replacer(str) {
-        if (str.substr(-1) !== ";")
-            str += ";";
-        return replace(str);
-    }
-    // TODO consider creating a merged map
-    return function (str) { return String(str).replace(re, replacer); };
-})();
-function getReplacer(map) {
-    return function replace(str) {
-        if (str.charAt(1) === "#") {
-            var secondChar = str.charAt(2);
-            if (secondChar === "X" || secondChar === "x") {
-                return decode_codepoint_1.default(parseInt(str.substr(3), 16));
-            }
-            return decode_codepoint_1.default(parseInt(str.substr(2), 10));
-        }
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-        return map[str.slice(1, -1)] || str;
-    };
-}
-
-
-/***/ }),
-
-/***/ 1227:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-var decode_json_1 = __importDefault(__nccwpck_require__(4589));
-// Adapted from https://github.com/mathiasbynens/he/blob/master/src/he.js#L94-L119
-var fromCodePoint = 
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-String.fromCodePoint ||
-    function (codePoint) {
-        var output = "";
-        if (codePoint > 0xffff) {
-            codePoint -= 0x10000;
-            output += String.fromCharCode(((codePoint >>> 10) & 0x3ff) | 0xd800);
-            codePoint = 0xdc00 | (codePoint & 0x3ff);
-        }
-        output += String.fromCharCode(codePoint);
-        return output;
-    };
-function decodeCodePoint(codePoint) {
-    if ((codePoint >= 0xd800 && codePoint <= 0xdfff) || codePoint > 0x10ffff) {
-        return "\uFFFD";
-    }
-    if (codePoint in decode_json_1.default) {
-        codePoint = decode_json_1.default[codePoint];
-    }
-    return fromCodePoint(codePoint);
-}
-exports.default = decodeCodePoint;
-
-
-/***/ }),
-
-/***/ 2006:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.escapeUTF8 = exports.escape = exports.encodeNonAsciiHTML = exports.encodeHTML = exports.encodeXML = void 0;
-var xml_json_1 = __importDefault(__nccwpck_require__(2228));
-var inverseXML = getInverseObj(xml_json_1.default);
-var xmlReplacer = getInverseReplacer(inverseXML);
-/**
- * Encodes all non-ASCII characters, as well as characters not valid in XML
- * documents using XML entities.
- *
- * If a character has no equivalent entity, a
- * numeric hexadecimal reference (eg. `&#xfc;`) will be used.
- */
-exports.encodeXML = getASCIIEncoder(inverseXML);
-var entities_json_1 = __importDefault(__nccwpck_require__(4007));
-var inverseHTML = getInverseObj(entities_json_1.default);
-var htmlReplacer = getInverseReplacer(inverseHTML);
-/**
- * Encodes all entities and non-ASCII characters in the input.
- *
- * This includes characters that are valid ASCII characters in HTML documents.
- * For example `#` will be encoded as `&num;`. To get a more compact output,
- * consider using the `encodeNonAsciiHTML` function.
- *
- * If a character has no equivalent entity, a
- * numeric hexadecimal reference (eg. `&#xfc;`) will be used.
- */
-exports.encodeHTML = getInverse(inverseHTML, htmlReplacer);
-/**
- * Encodes all non-ASCII characters, as well as characters not valid in HTML
- * documents using HTML entities.
- *
- * If a character has no equivalent entity, a
- * numeric hexadecimal reference (eg. `&#xfc;`) will be used.
- */
-exports.encodeNonAsciiHTML = getASCIIEncoder(inverseHTML);
-function getInverseObj(obj) {
-    return Object.keys(obj)
-        .sort()
-        .reduce(function (inverse, name) {
-        inverse[obj[name]] = "&" + name + ";";
-        return inverse;
-    }, {});
-}
-function getInverseReplacer(inverse) {
-    var single = [];
-    var multiple = [];
-    for (var _i = 0, _a = Object.keys(inverse); _i < _a.length; _i++) {
-        var k = _a[_i];
-        if (k.length === 1) {
-            // Add value to single array
-            single.push("\\" + k);
-        }
-        else {
-            // Add value to multiple array
-            multiple.push(k);
-        }
-    }
-    // Add ranges to single characters.
-    single.sort();
-    for (var start = 0; start < single.length - 1; start++) {
-        // Find the end of a run of characters
-        var end = start;
-        while (end < single.length - 1 &&
-            single[end].charCodeAt(1) + 1 === single[end + 1].charCodeAt(1)) {
-            end += 1;
-        }
-        var count = 1 + end - start;
-        // We want to replace at least three characters
-        if (count < 3)
-            continue;
-        single.splice(start, count, single[start] + "-" + single[end]);
-    }
-    multiple.unshift("[" + single.join("") + "]");
-    return new RegExp(multiple.join("|"), "g");
-}
-// /[^\0-\x7F]/gu
-var reNonASCII = /(?:[\x80-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])/g;
-var getCodePoint = 
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-String.prototype.codePointAt != null
-    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        function (str) { return str.codePointAt(0); }
-    : // http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-        function (c) {
-            return (c.charCodeAt(0) - 0xd800) * 0x400 +
-                c.charCodeAt(1) -
-                0xdc00 +
-                0x10000;
-        };
-function singleCharReplacer(c) {
-    return "&#x" + (c.length > 1 ? getCodePoint(c) : c.charCodeAt(0))
-        .toString(16)
-        .toUpperCase() + ";";
-}
-function getInverse(inverse, re) {
-    return function (data) {
-        return data
-            .replace(re, function (name) { return inverse[name]; })
-            .replace(reNonASCII, singleCharReplacer);
-    };
-}
-var reEscapeChars = new RegExp(xmlReplacer.source + "|" + reNonASCII.source, "g");
-/**
- * Encodes all non-ASCII characters, as well as characters not valid in XML
- * documents using numeric hexadecimal reference (eg. `&#xfc;`).
- *
- * Have a look at `escapeUTF8` if you want a more concise output at the expense
- * of reduced transportability.
- *
- * @param data String to escape.
- */
-function escape(data) {
-    return data.replace(reEscapeChars, singleCharReplacer);
-}
-exports.escape = escape;
-/**
- * Encodes all characters not valid in XML documents using numeric hexadecimal
- * reference (eg. `&#xfc;`).
- *
- * Note that the output will be character-set dependent.
- *
- * @param data String to escape.
- */
-function escapeUTF8(data) {
-    return data.replace(xmlReplacer, singleCharReplacer);
-}
-exports.escapeUTF8 = escapeUTF8;
-function getASCIIEncoder(obj) {
-    return function (data) {
-        return data.replace(reEscapeChars, function (c) { return obj[c] || singleCharReplacer(c); });
-    };
-}
-
-
-/***/ }),
-
-/***/ 3000:
+/***/ 6762:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
+
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.decodeXMLStrict = exports.decodeHTML5Strict = exports.decodeHTML4Strict = exports.decodeHTML5 = exports.decodeHTML4 = exports.decodeHTMLStrict = exports.decodeHTML = exports.decodeXML = exports.encodeHTML5 = exports.encodeHTML4 = exports.escapeUTF8 = exports.escape = exports.encodeNonAsciiHTML = exports.encodeHTML = exports.encodeXML = exports.encode = exports.decodeStrict = exports.decode = void 0;
-var decode_1 = __nccwpck_require__(5107);
-var encode_1 = __nccwpck_require__(2006);
-/**
- * Decodes a string with entities.
- *
- * @param data String to decode.
- * @param level Optional level to decode at. 0 = XML, 1 = HTML. Default is 0.
- * @deprecated Use `decodeXML` or `decodeHTML` directly.
- */
-function decode(data, level) {
-    return (!level || level <= 0 ? decode_1.decodeXML : decode_1.decodeHTML)(data);
+
+var universalUserAgent = __nccwpck_require__(5030);
+var beforeAfterHook = __nccwpck_require__(3682);
+var request = __nccwpck_require__(6234);
+var graphql = __nccwpck_require__(8467);
+var authToken = __nccwpck_require__(334);
+
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  return target;
 }
-exports.decode = decode;
-/**
- * Decodes a string with entities. Does not allow missing trailing semicolons for entities.
- *
- * @param data String to decode.
- * @param level Optional level to decode at. 0 = XML, 1 = HTML. Default is 0.
- * @deprecated Use `decodeHTMLStrict` or `decodeXML` directly.
- */
-function decodeStrict(data, level) {
-    return (!level || level <= 0 ? decode_1.decodeXML : decode_1.decodeHTMLStrict)(data);
+
+function _objectWithoutProperties(source, excluded) {
+  if (source == null) return {};
+
+  var target = _objectWithoutPropertiesLoose(source, excluded);
+
+  var key, i;
+
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+    for (i = 0; i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      target[key] = source[key];
+    }
+  }
+
+  return target;
 }
-exports.decodeStrict = decodeStrict;
-/**
- * Encodes a string with entities.
- *
- * @param data String to encode.
- * @param level Optional level to encode at. 0 = XML, 1 = HTML. Default is 0.
- * @deprecated Use `encodeHTML`, `encodeXML` or `encodeNonAsciiHTML` directly.
- */
-function encode(data, level) {
-    return (!level || level <= 0 ? encode_1.encodeXML : encode_1.encodeHTML)(data);
+
+const VERSION = "3.5.1";
+
+const _excluded = ["authStrategy"];
+class Octokit {
+  constructor(options = {}) {
+    const hook = new beforeAfterHook.Collection();
+    const requestDefaults = {
+      baseUrl: request.request.endpoint.DEFAULTS.baseUrl,
+      headers: {},
+      request: Object.assign({}, options.request, {
+        // @ts-ignore internal usage only, no need to type
+        hook: hook.bind(null, "request")
+      }),
+      mediaType: {
+        previews: [],
+        format: ""
+      }
+    }; // prepend default user agent with `options.userAgent` if set
+
+    requestDefaults.headers["user-agent"] = [options.userAgent, `octokit-core.js/${VERSION} ${universalUserAgent.getUserAgent()}`].filter(Boolean).join(" ");
+
+    if (options.baseUrl) {
+      requestDefaults.baseUrl = options.baseUrl;
+    }
+
+    if (options.previews) {
+      requestDefaults.mediaType.previews = options.previews;
+    }
+
+    if (options.timeZone) {
+      requestDefaults.headers["time-zone"] = options.timeZone;
+    }
+
+    this.request = request.request.defaults(requestDefaults);
+    this.graphql = graphql.withCustomRequest(this.request).defaults(requestDefaults);
+    this.log = Object.assign({
+      debug: () => {},
+      info: () => {},
+      warn: console.warn.bind(console),
+      error: console.error.bind(console)
+    }, options.log);
+    this.hook = hook; // (1) If neither `options.authStrategy` nor `options.auth` are set, the `octokit` instance
+    //     is unauthenticated. The `this.auth()` method is a no-op and no request hook is registered.
+    // (2) If only `options.auth` is set, use the default token authentication strategy.
+    // (3) If `options.authStrategy` is set then use it and pass in `options.auth`. Always pass own request as many strategies accept a custom request instance.
+    // TODO: type `options.auth` based on `options.authStrategy`.
+
+    if (!options.authStrategy) {
+      if (!options.auth) {
+        // (1)
+        this.auth = async () => ({
+          type: "unauthenticated"
+        });
+      } else {
+        // (2)
+        const auth = authToken.createTokenAuth(options.auth); // @ts-ignore  ¯\_(ツ)_/¯
+
+        hook.wrap("request", auth.hook);
+        this.auth = auth;
+      }
+    } else {
+      const {
+        authStrategy
+      } = options,
+            otherOptions = _objectWithoutProperties(options, _excluded);
+
+      const auth = authStrategy(Object.assign({
+        request: this.request,
+        log: this.log,
+        // we pass the current octokit instance as well as its constructor options
+        // to allow for authentication strategies that return a new octokit instance
+        // that shares the same internal state as the current one. The original
+        // requirement for this was the "event-octokit" authentication strategy
+        // of https://github.com/probot/octokit-auth-probot.
+        octokit: this,
+        octokitOptions: otherOptions
+      }, options.auth)); // @ts-ignore  ¯\_(ツ)_/¯
+
+      hook.wrap("request", auth.hook);
+      this.auth = auth;
+    } // apply plugins
+    // https://stackoverflow.com/a/16345172
+
+
+    const classConstructor = this.constructor;
+    classConstructor.plugins.forEach(plugin => {
+      Object.assign(this, plugin(this, options));
+    });
+  }
+
+  static defaults(defaults) {
+    const OctokitWithDefaults = class extends this {
+      constructor(...args) {
+        const options = args[0] || {};
+
+        if (typeof defaults === "function") {
+          super(defaults(options));
+          return;
+        }
+
+        super(Object.assign({}, defaults, options, options.userAgent && defaults.userAgent ? {
+          userAgent: `${options.userAgent} ${defaults.userAgent}`
+        } : null));
+      }
+
+    };
+    return OctokitWithDefaults;
+  }
+  /**
+   * Attach a plugin (or many) to your Octokit instance.
+   *
+   * @example
+   * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
+   */
+
+
+  static plugin(...newPlugins) {
+    var _a;
+
+    const currentPlugins = this.plugins;
+    const NewOctokit = (_a = class extends this {}, _a.plugins = currentPlugins.concat(newPlugins.filter(plugin => !currentPlugins.includes(plugin))), _a);
+    return NewOctokit;
+  }
+
 }
-exports.encode = encode;
-var encode_2 = __nccwpck_require__(2006);
-Object.defineProperty(exports, "encodeXML", ({ enumerable: true, get: function () { return encode_2.encodeXML; } }));
-Object.defineProperty(exports, "encodeHTML", ({ enumerable: true, get: function () { return encode_2.encodeHTML; } }));
-Object.defineProperty(exports, "encodeNonAsciiHTML", ({ enumerable: true, get: function () { return encode_2.encodeNonAsciiHTML; } }));
-Object.defineProperty(exports, "escape", ({ enumerable: true, get: function () { return encode_2.escape; } }));
-Object.defineProperty(exports, "escapeUTF8", ({ enumerable: true, get: function () { return encode_2.escapeUTF8; } }));
-// Legacy aliases (deprecated)
-Object.defineProperty(exports, "encodeHTML4", ({ enumerable: true, get: function () { return encode_2.encodeHTML; } }));
-Object.defineProperty(exports, "encodeHTML5", ({ enumerable: true, get: function () { return encode_2.encodeHTML; } }));
-var decode_2 = __nccwpck_require__(5107);
-Object.defineProperty(exports, "decodeXML", ({ enumerable: true, get: function () { return decode_2.decodeXML; } }));
-Object.defineProperty(exports, "decodeHTML", ({ enumerable: true, get: function () { return decode_2.decodeHTML; } }));
-Object.defineProperty(exports, "decodeHTMLStrict", ({ enumerable: true, get: function () { return decode_2.decodeHTMLStrict; } }));
-// Legacy aliases (deprecated)
-Object.defineProperty(exports, "decodeHTML4", ({ enumerable: true, get: function () { return decode_2.decodeHTML; } }));
-Object.defineProperty(exports, "decodeHTML5", ({ enumerable: true, get: function () { return decode_2.decodeHTML; } }));
-Object.defineProperty(exports, "decodeHTML4Strict", ({ enumerable: true, get: function () { return decode_2.decodeHTMLStrict; } }));
-Object.defineProperty(exports, "decodeHTML5Strict", ({ enumerable: true, get: function () { return decode_2.decodeHTMLStrict; } }));
-Object.defineProperty(exports, "decodeXMLStrict", ({ enumerable: true, get: function () { return decode_2.decodeXML; } }));
+Octokit.VERSION = VERSION;
+Octokit.plugins = [];
+
+exports.Octokit = Octokit;
+//# sourceMappingURL=index.js.map
 
 
 /***/ }),
 
-/***/ 4697:
-/***/ ((module, exports) => {
+/***/ 9440:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
-/**
- * @author Toru Nagashima <https://github.com/mysticatea>
- * @copyright 2015 Toru Nagashima. All rights reserved.
- * See LICENSE file in root directory for full license.
- */
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
-/**
- * @typedef {object} PrivateData
- * @property {EventTarget} eventTarget The event target.
- * @property {{type:string}} event The original event object.
- * @property {number} eventPhase The current event phase.
- * @property {EventTarget|null} currentTarget The current event target.
- * @property {boolean} canceled The flag to prevent default.
- * @property {boolean} stopped The flag to stop propagation.
- * @property {boolean} immediateStopped The flag to stop propagation immediately.
- * @property {Function|null} passiveListener The listener if the current listener is passive. Otherwise this is null.
- * @property {number} timeStamp The unix time.
- * @private
- */
+var isPlainObject = __nccwpck_require__(3287);
+var universalUserAgent = __nccwpck_require__(5030);
 
-/**
- * Private data for event wrappers.
- * @type {WeakMap<Event, PrivateData>}
- * @private
- */
-const privateData = new WeakMap();
+function lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
 
-/**
- * Cache for wrapper classes.
- * @type {WeakMap<Object, Function>}
- * @private
- */
-const wrappers = new WeakMap();
-
-/**
- * Get private data.
- * @param {Event} event The event object to get private data.
- * @returns {PrivateData} The private data of the event.
- * @private
- */
-function pd(event) {
-    const retv = privateData.get(event);
-    console.assert(
-        retv != null,
-        "'this' is expected an Event object, but got",
-        event
-    );
-    return retv
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
 }
 
-/**
- * https://dom.spec.whatwg.org/#set-the-canceled-flag
- * @param data {PrivateData} private data.
- */
-function setCancelFlag(data) {
-    if (data.passiveListener != null) {
-        if (
-            typeof console !== "undefined" &&
-            typeof console.error === "function"
-        ) {
-            console.error(
-                "Unable to preventDefault inside passive event listener invocation.",
-                data.passiveListener
-            );
-        }
-        return
+function mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach(key => {
+    if (isPlainObject.isPlainObject(options[key])) {
+      if (!(key in defaults)) Object.assign(result, {
+        [key]: options[key]
+      });else result[key] = mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, {
+        [key]: options[key]
+      });
     }
-    if (!data.event.cancelable) {
-        return
-    }
-
-    data.canceled = true;
-    if (typeof data.event.preventDefault === "function") {
-        data.event.preventDefault();
-    }
+  });
+  return result;
 }
 
-/**
- * @see https://dom.spec.whatwg.org/#interface-event
- * @private
- */
-/**
- * The event wrapper.
- * @constructor
- * @param {EventTarget} eventTarget The event target of this dispatching.
- * @param {Event|{type:string}} event The original event to wrap.
- */
-function Event(eventTarget, event) {
-    privateData.set(this, {
-        eventTarget,
-        event,
-        eventPhase: 2,
-        currentTarget: eventTarget,
-        canceled: false,
-        stopped: false,
-        immediateStopped: false,
-        passiveListener: null,
-        timeStamp: event.timeStamp || Date.now(),
-    });
-
-    // https://heycam.github.io/webidl/#Unforgeable
-    Object.defineProperty(this, "isTrusted", { value: false, enumerable: true });
-
-    // Define accessors
-    const keys = Object.keys(event);
-    for (let i = 0; i < keys.length; ++i) {
-        const key = keys[i];
-        if (!(key in this)) {
-            Object.defineProperty(this, key, defineRedirectDescriptor(key));
-        }
+function removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === undefined) {
+      delete obj[key];
     }
+  }
+
+  return obj;
 }
 
-// Should be enumerable, but class methods are not enumerable.
-Event.prototype = {
-    /**
-     * The type of this event.
-     * @type {string}
-     */
-    get type() {
-        return pd(this).event.type
-    },
+function merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? {
+      method,
+      url
+    } : {
+      url: method
+    }, options);
+  } else {
+    options = Object.assign({}, route);
+  } // lowercase header names before merging with defaults to avoid duplicates
 
-    /**
-     * The target of this event.
-     * @type {EventTarget}
-     */
-    get target() {
-        return pd(this).eventTarget
-    },
 
-    /**
-     * The target of this event.
-     * @type {EventTarget}
-     */
-    get currentTarget() {
-        return pd(this).currentTarget
-    },
+  options.headers = lowercaseKeys(options.headers); // remove properties with undefined values before merging
 
-    /**
-     * @returns {EventTarget[]} The composed path of this event.
-     */
-    composedPath() {
-        const currentTarget = pd(this).currentTarget;
-        if (currentTarget == null) {
-            return []
+  removeUndefinedProperties(options);
+  removeUndefinedProperties(options.headers);
+  const mergedOptions = mergeDeep(defaults || {}, options); // mediaType.previews arrays are merged, instead of overwritten
+
+  if (defaults && defaults.mediaType.previews.length) {
+    mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(preview => !mergedOptions.mediaType.previews.includes(preview)).concat(mergedOptions.mediaType.previews);
+  }
+
+  mergedOptions.mediaType.previews = mergedOptions.mediaType.previews.map(preview => preview.replace(/-preview/, ""));
+  return mergedOptions;
+}
+
+function addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+
+  if (names.length === 0) {
+    return url;
+  }
+
+  return url + separator + names.map(name => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+const urlVariableRegex = /\{[^}]+\}/g;
+
+function removeNonChars(variableName) {
+  return variableName.replace(/^\W+|\W+$/g, "").split(/,/);
+}
+
+function extractUrlVariableNames(url) {
+  const matches = url.match(urlVariableRegex);
+
+  if (!matches) {
+    return [];
+  }
+
+  return matches.map(removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+function omit(object, keysToOmit) {
+  return Object.keys(object).filter(option => !keysToOmit.includes(option)).reduce((obj, key) => {
+    obj[key] = object[key];
+    return obj;
+  }, {});
+}
+
+// Based on https://github.com/bramstein/url-template, licensed under BSD
+// TODO: create separate package.
+//
+// Copyright (c) 2012-2014, Bram Stein
+// All rights reserved.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+//  3. The name of the author may not be used to endorse or promote products
+//     derived from this software without specific prior written permission.
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+// EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+// EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+/* istanbul ignore file */
+function encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function (part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+
+    return part;
+  }).join("");
+}
+
+function encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+
+function encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? encodeReserved(value) : encodeUnreserved(value);
+
+  if (key) {
+    return encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+
+function isDefined(value) {
+  return value !== undefined && value !== null;
+}
+
+function isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+
+function getValues(context, operator, key, modifier) {
+  var value = context[key],
+      result = [];
+
+  if (isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+
+      result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : ""));
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(isDefined).forEach(function (value) {
+            result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : ""));
+          });
+        } else {
+          Object.keys(value).forEach(function (k) {
+            if (isDefined(value[k])) {
+              result.push(encodeValue(operator, value[k], k));
+            }
+          });
         }
-        return [currentTarget]
-    },
+      } else {
+        const tmp = [];
 
-    /**
-     * Constant of NONE.
-     * @type {number}
-     */
-    get NONE() {
-        return 0
-    },
-
-    /**
-     * Constant of CAPTURING_PHASE.
-     * @type {number}
-     */
-    get CAPTURING_PHASE() {
-        return 1
-    },
-
-    /**
-     * Constant of AT_TARGET.
-     * @type {number}
-     */
-    get AT_TARGET() {
-        return 2
-    },
-
-    /**
-     * Constant of BUBBLING_PHASE.
-     * @type {number}
-     */
-    get BUBBLING_PHASE() {
-        return 3
-    },
-
-    /**
-     * The target of this event.
-     * @type {number}
-     */
-    get eventPhase() {
-        return pd(this).eventPhase
-    },
-
-    /**
-     * Stop event bubbling.
-     * @returns {void}
-     */
-    stopPropagation() {
-        const data = pd(this);
-
-        data.stopped = true;
-        if (typeof data.event.stopPropagation === "function") {
-            data.event.stopPropagation();
+        if (Array.isArray(value)) {
+          value.filter(isDefined).forEach(function (value) {
+            tmp.push(encodeValue(operator, value));
+          });
+        } else {
+          Object.keys(value).forEach(function (k) {
+            if (isDefined(value[k])) {
+              tmp.push(encodeUnreserved(k));
+              tmp.push(encodeValue(operator, value[k].toString()));
+            }
+          });
         }
-    },
 
-    /**
-     * Stop event bubbling.
-     * @returns {void}
-     */
-    stopImmediatePropagation() {
-        const data = pd(this);
-
-        data.stopped = true;
-        data.immediateStopped = true;
-        if (typeof data.event.stopImmediatePropagation === "function") {
-            data.event.stopImmediatePropagation();
+        if (isKeyOperator(operator)) {
+          result.push(encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
         }
-    },
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (isDefined(value)) {
+        result.push(encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
 
-    /**
-     * The flag to be bubbling.
-     * @type {boolean}
-     */
-    get bubbles() {
-        return Boolean(pd(this).event.bubbles)
-    },
+  return result;
+}
 
-    /**
-     * The flag to be cancelable.
-     * @type {boolean}
-     */
-    get cancelable() {
-        return Boolean(pd(this).event.cancelable)
-    },
+function parseUrl(template) {
+  return {
+    expand: expand.bind(null, template)
+  };
+}
 
-    /**
-     * Cancel this event.
-     * @returns {void}
-     */
-    preventDefault() {
-        setCancelFlag(pd(this));
-    },
+function expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  return template.replace(/\{([^\{\}]+)\}|([^\{\}]+)/g, function (_, expression, literal) {
+    if (expression) {
+      let operator = "";
+      const values = [];
 
-    /**
-     * The flag to indicate cancellation state.
-     * @type {boolean}
-     */
-    get defaultPrevented() {
-        return pd(this).canceled
-    },
+      if (operators.indexOf(expression.charAt(0)) !== -1) {
+        operator = expression.charAt(0);
+        expression = expression.substr(1);
+      }
 
-    /**
-     * The flag to be composed.
-     * @type {boolean}
-     */
-    get composed() {
-        return Boolean(pd(this).event.composed)
-    },
+      expression.split(/,/g).forEach(function (variable) {
+        var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+        values.push(getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+      });
 
-    /**
-     * The unix time of this event.
-     * @type {number}
-     */
-    get timeStamp() {
-        return pd(this).timeStamp
-    },
+      if (operator && operator !== "+") {
+        var separator = ",";
 
-    /**
-     * The target of this event.
-     * @type {EventTarget}
-     * @deprecated
-     */
-    get srcElement() {
-        return pd(this).eventTarget
-    },
-
-    /**
-     * The flag to stop event bubbling.
-     * @type {boolean}
-     * @deprecated
-     */
-    get cancelBubble() {
-        return pd(this).stopped
-    },
-    set cancelBubble(value) {
-        if (!value) {
-            return
+        if (operator === "?") {
+          separator = "&";
+        } else if (operator !== "#") {
+          separator = operator;
         }
-        const data = pd(this);
 
-        data.stopped = true;
-        if (typeof data.event.cancelBubble === "boolean") {
-            data.event.cancelBubble = true;
-        }
-    },
+        return (values.length !== 0 ? operator : "") + values.join(separator);
+      } else {
+        return values.join(",");
+      }
+    } else {
+      return encodeReserved(literal);
+    }
+  });
+}
 
-    /**
-     * The flag to indicate cancellation state.
-     * @type {boolean}
-     * @deprecated
-     */
-    get returnValue() {
-        return !pd(this).canceled
-    },
-    set returnValue(value) {
-        if (!value) {
-            setCancelFlag(pd(this));
-        }
-    },
+function parse(options) {
+  // https://fetch.spec.whatwg.org/#methods
+  let method = options.method.toUpperCase(); // replace :varname with {varname} to make it RFC 6570 compatible
 
-    /**
-     * Initialize this event object. But do nothing under event dispatching.
-     * @param {string} type The event type.
-     * @param {boolean} [bubbles=false] The flag to be possible to bubble up.
-     * @param {boolean} [cancelable=false] The flag to be possible to cancel.
-     * @deprecated
-     */
-    initEvent() {
-        // Do nothing.
-    },
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = omit(options, ["method", "baseUrl", "url", "headers", "request", "mediaType"]); // extract variable names from URL to calculate remaining variables later
+
+  const urlVariableNames = extractUrlVariableNames(url);
+  url = parseUrl(url).expand(parameters);
+
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+
+  const omittedParameters = Object.keys(options).filter(option => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      // e.g. application/vnd.github.v3+json => application/vnd.github.v3.raw
+      headers.accept = headers.accept.split(/,/).map(preview => preview.replace(/application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/, `application/vnd$1$2.${options.mediaType.format}`)).join(",");
+    }
+
+    if (options.mediaType.previews.length) {
+      const previewsFromAcceptHeader = headers.accept.match(/[\w-]+(?=-preview)/g) || [];
+      headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map(preview => {
+        const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+        return `application/vnd.github.${preview}-preview${format}`;
+      }).join(",");
+    }
+  } // for GET/HEAD requests, set URL query parameters from remaining parameters
+  // for PATCH/POST/PUT/DELETE requests, set request body from remaining parameters
+
+
+  if (["GET", "HEAD"].includes(method)) {
+    url = addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      } else {
+        headers["content-length"] = 0;
+      }
+    }
+  } // default content-type for JSON if body is set
+
+
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  } // GitHub expects 'content-length: 0' header for PUT/PATCH requests without body.
+  // fetch does not allow to set `content-length` header, but we can set body to an empty string
+
+
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  } // Only return body/request keys if present
+
+
+  return Object.assign({
+    method,
+    url,
+    headers
+  }, typeof body !== "undefined" ? {
+    body
+  } : null, options.request ? {
+    request: options.request
+  } : null);
+}
+
+function endpointWithDefaults(defaults, route, options) {
+  return parse(merge(defaults, route, options));
+}
+
+function withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS = merge(oldDefaults, newDefaults);
+  const endpoint = endpointWithDefaults.bind(null, DEFAULTS);
+  return Object.assign(endpoint, {
+    DEFAULTS,
+    defaults: withDefaults.bind(null, DEFAULTS),
+    merge: merge.bind(null, DEFAULTS),
+    parse
+  });
+}
+
+const VERSION = "6.0.12";
+
+const userAgent = `octokit-endpoint.js/${VERSION} ${universalUserAgent.getUserAgent()}`; // DEFAULTS has all properties set that EndpointOptions has, except url.
+// So we use RequestParameters and add method as additional required property.
+
+const DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": userAgent
+  },
+  mediaType: {
+    format: "",
+    previews: []
+  }
 };
 
-// `constructor` is not enumerable.
-Object.defineProperty(Event.prototype, "constructor", {
-    value: Event,
-    configurable: true,
-    writable: true,
-});
+const endpoint = withDefaults(null, DEFAULTS);
 
-// Ensure `event instanceof window.Event` is `true`.
-if (typeof window !== "undefined" && typeof window.Event !== "undefined") {
-    Object.setPrototypeOf(Event.prototype, window.Event.prototype);
-
-    // Make association for wrappers.
-    wrappers.set(window.Event.prototype, Event);
-}
-
-/**
- * Get the property descriptor to redirect a given property.
- * @param {string} key Property name to define property descriptor.
- * @returns {PropertyDescriptor} The property descriptor to redirect the property.
- * @private
- */
-function defineRedirectDescriptor(key) {
-    return {
-        get() {
-            return pd(this).event[key]
-        },
-        set(value) {
-            pd(this).event[key] = value;
-        },
-        configurable: true,
-        enumerable: true,
-    }
-}
-
-/**
- * Get the property descriptor to call a given method property.
- * @param {string} key Property name to define property descriptor.
- * @returns {PropertyDescriptor} The property descriptor to call the method property.
- * @private
- */
-function defineCallDescriptor(key) {
-    return {
-        value() {
-            const event = pd(this).event;
-            return event[key].apply(event, arguments)
-        },
-        configurable: true,
-        enumerable: true,
-    }
-}
-
-/**
- * Define new wrapper class.
- * @param {Function} BaseEvent The base wrapper class.
- * @param {Object} proto The prototype of the original event.
- * @returns {Function} The defined wrapper class.
- * @private
- */
-function defineWrapper(BaseEvent, proto) {
-    const keys = Object.keys(proto);
-    if (keys.length === 0) {
-        return BaseEvent
-    }
-
-    /** CustomEvent */
-    function CustomEvent(eventTarget, event) {
-        BaseEvent.call(this, eventTarget, event);
-    }
-
-    CustomEvent.prototype = Object.create(BaseEvent.prototype, {
-        constructor: { value: CustomEvent, configurable: true, writable: true },
-    });
-
-    // Define accessors.
-    for (let i = 0; i < keys.length; ++i) {
-        const key = keys[i];
-        if (!(key in BaseEvent.prototype)) {
-            const descriptor = Object.getOwnPropertyDescriptor(proto, key);
-            const isFunc = typeof descriptor.value === "function";
-            Object.defineProperty(
-                CustomEvent.prototype,
-                key,
-                isFunc
-                    ? defineCallDescriptor(key)
-                    : defineRedirectDescriptor(key)
-            );
-        }
-    }
-
-    return CustomEvent
-}
-
-/**
- * Get the wrapper class of a given prototype.
- * @param {Object} proto The prototype of the original event to get its wrapper.
- * @returns {Function} The wrapper class.
- * @private
- */
-function getWrapper(proto) {
-    if (proto == null || proto === Object.prototype) {
-        return Event
-    }
-
-    let wrapper = wrappers.get(proto);
-    if (wrapper == null) {
-        wrapper = defineWrapper(getWrapper(Object.getPrototypeOf(proto)), proto);
-        wrappers.set(proto, wrapper);
-    }
-    return wrapper
-}
-
-/**
- * Wrap a given event to management a dispatching.
- * @param {EventTarget} eventTarget The event target of this dispatching.
- * @param {Object} event The event to wrap.
- * @returns {Event} The wrapper instance.
- * @private
- */
-function wrapEvent(eventTarget, event) {
-    const Wrapper = getWrapper(Object.getPrototypeOf(event));
-    return new Wrapper(eventTarget, event)
-}
-
-/**
- * Get the immediateStopped flag of a given event.
- * @param {Event} event The event to get.
- * @returns {boolean} The flag to stop propagation immediately.
- * @private
- */
-function isStopped(event) {
-    return pd(event).immediateStopped
-}
-
-/**
- * Set the current event phase of a given event.
- * @param {Event} event The event to set current target.
- * @param {number} eventPhase New event phase.
- * @returns {void}
- * @private
- */
-function setEventPhase(event, eventPhase) {
-    pd(event).eventPhase = eventPhase;
-}
-
-/**
- * Set the current target of a given event.
- * @param {Event} event The event to set current target.
- * @param {EventTarget|null} currentTarget New current target.
- * @returns {void}
- * @private
- */
-function setCurrentTarget(event, currentTarget) {
-    pd(event).currentTarget = currentTarget;
-}
-
-/**
- * Set a passive listener of a given event.
- * @param {Event} event The event to set current target.
- * @param {Function|null} passiveListener New passive listener.
- * @returns {void}
- * @private
- */
-function setPassiveListener(event, passiveListener) {
-    pd(event).passiveListener = passiveListener;
-}
-
-/**
- * @typedef {object} ListenerNode
- * @property {Function} listener
- * @property {1|2|3} listenerType
- * @property {boolean} passive
- * @property {boolean} once
- * @property {ListenerNode|null} next
- * @private
- */
-
-/**
- * @type {WeakMap<object, Map<string, ListenerNode>>}
- * @private
- */
-const listenersMap = new WeakMap();
-
-// Listener types
-const CAPTURE = 1;
-const BUBBLE = 2;
-const ATTRIBUTE = 3;
-
-/**
- * Check whether a given value is an object or not.
- * @param {any} x The value to check.
- * @returns {boolean} `true` if the value is an object.
- */
-function isObject(x) {
-    return x !== null && typeof x === "object" //eslint-disable-line no-restricted-syntax
-}
-
-/**
- * Get listeners.
- * @param {EventTarget} eventTarget The event target to get.
- * @returns {Map<string, ListenerNode>} The listeners.
- * @private
- */
-function getListeners(eventTarget) {
-    const listeners = listenersMap.get(eventTarget);
-    if (listeners == null) {
-        throw new TypeError(
-            "'this' is expected an EventTarget object, but got another value."
-        )
-    }
-    return listeners
-}
-
-/**
- * Get the property descriptor for the event attribute of a given event.
- * @param {string} eventName The event name to get property descriptor.
- * @returns {PropertyDescriptor} The property descriptor.
- * @private
- */
-function defineEventAttributeDescriptor(eventName) {
-    return {
-        get() {
-            const listeners = getListeners(this);
-            let node = listeners.get(eventName);
-            while (node != null) {
-                if (node.listenerType === ATTRIBUTE) {
-                    return node.listener
-                }
-                node = node.next;
-            }
-            return null
-        },
-
-        set(listener) {
-            if (typeof listener !== "function" && !isObject(listener)) {
-                listener = null; // eslint-disable-line no-param-reassign
-            }
-            const listeners = getListeners(this);
-
-            // Traverse to the tail while removing old value.
-            let prev = null;
-            let node = listeners.get(eventName);
-            while (node != null) {
-                if (node.listenerType === ATTRIBUTE) {
-                    // Remove old value.
-                    if (prev !== null) {
-                        prev.next = node.next;
-                    } else if (node.next !== null) {
-                        listeners.set(eventName, node.next);
-                    } else {
-                        listeners.delete(eventName);
-                    }
-                } else {
-                    prev = node;
-                }
-
-                node = node.next;
-            }
-
-            // Add new value.
-            if (listener !== null) {
-                const newNode = {
-                    listener,
-                    listenerType: ATTRIBUTE,
-                    passive: false,
-                    once: false,
-                    next: null,
-                };
-                if (prev === null) {
-                    listeners.set(eventName, newNode);
-                } else {
-                    prev.next = newNode;
-                }
-            }
-        },
-        configurable: true,
-        enumerable: true,
-    }
-}
-
-/**
- * Define an event attribute (e.g. `eventTarget.onclick`).
- * @param {Object} eventTargetPrototype The event target prototype to define an event attrbite.
- * @param {string} eventName The event name to define.
- * @returns {void}
- */
-function defineEventAttribute(eventTargetPrototype, eventName) {
-    Object.defineProperty(
-        eventTargetPrototype,
-        `on${eventName}`,
-        defineEventAttributeDescriptor(eventName)
-    );
-}
-
-/**
- * Define a custom EventTarget with event attributes.
- * @param {string[]} eventNames Event names for event attributes.
- * @returns {EventTarget} The custom EventTarget.
- * @private
- */
-function defineCustomEventTarget(eventNames) {
-    /** CustomEventTarget */
-    function CustomEventTarget() {
-        EventTarget.call(this);
-    }
-
-    CustomEventTarget.prototype = Object.create(EventTarget.prototype, {
-        constructor: {
-            value: CustomEventTarget,
-            configurable: true,
-            writable: true,
-        },
-    });
-
-    for (let i = 0; i < eventNames.length; ++i) {
-        defineEventAttribute(CustomEventTarget.prototype, eventNames[i]);
-    }
-
-    return CustomEventTarget
-}
-
-/**
- * EventTarget.
- *
- * - This is constructor if no arguments.
- * - This is a function which returns a CustomEventTarget constructor if there are arguments.
- *
- * For example:
- *
- *     class A extends EventTarget {}
- *     class B extends EventTarget("message") {}
- *     class C extends EventTarget("message", "error") {}
- *     class D extends EventTarget(["message", "error"]) {}
- */
-function EventTarget() {
-    /*eslint-disable consistent-return */
-    if (this instanceof EventTarget) {
-        listenersMap.set(this, new Map());
-        return
-    }
-    if (arguments.length === 1 && Array.isArray(arguments[0])) {
-        return defineCustomEventTarget(arguments[0])
-    }
-    if (arguments.length > 0) {
-        const types = new Array(arguments.length);
-        for (let i = 0; i < arguments.length; ++i) {
-            types[i] = arguments[i];
-        }
-        return defineCustomEventTarget(types)
-    }
-    throw new TypeError("Cannot call a class as a function")
-    /*eslint-enable consistent-return */
-}
-
-// Should be enumerable, but class methods are not enumerable.
-EventTarget.prototype = {
-    /**
-     * Add a given listener to this event target.
-     * @param {string} eventName The event name to add.
-     * @param {Function} listener The listener to add.
-     * @param {boolean|{capture?:boolean,passive?:boolean,once?:boolean}} [options] The options for this listener.
-     * @returns {void}
-     */
-    addEventListener(eventName, listener, options) {
-        if (listener == null) {
-            return
-        }
-        if (typeof listener !== "function" && !isObject(listener)) {
-            throw new TypeError("'listener' should be a function or an object.")
-        }
-
-        const listeners = getListeners(this);
-        const optionsIsObj = isObject(options);
-        const capture = optionsIsObj
-            ? Boolean(options.capture)
-            : Boolean(options);
-        const listenerType = capture ? CAPTURE : BUBBLE;
-        const newNode = {
-            listener,
-            listenerType,
-            passive: optionsIsObj && Boolean(options.passive),
-            once: optionsIsObj && Boolean(options.once),
-            next: null,
-        };
-
-        // Set it as the first node if the first node is null.
-        let node = listeners.get(eventName);
-        if (node === undefined) {
-            listeners.set(eventName, newNode);
-            return
-        }
-
-        // Traverse to the tail while checking duplication..
-        let prev = null;
-        while (node != null) {
-            if (
-                node.listener === listener &&
-                node.listenerType === listenerType
-            ) {
-                // Should ignore duplication.
-                return
-            }
-            prev = node;
-            node = node.next;
-        }
-
-        // Add it.
-        prev.next = newNode;
-    },
-
-    /**
-     * Remove a given listener from this event target.
-     * @param {string} eventName The event name to remove.
-     * @param {Function} listener The listener to remove.
-     * @param {boolean|{capture?:boolean,passive?:boolean,once?:boolean}} [options] The options for this listener.
-     * @returns {void}
-     */
-    removeEventListener(eventName, listener, options) {
-        if (listener == null) {
-            return
-        }
-
-        const listeners = getListeners(this);
-        const capture = isObject(options)
-            ? Boolean(options.capture)
-            : Boolean(options);
-        const listenerType = capture ? CAPTURE : BUBBLE;
-
-        let prev = null;
-        let node = listeners.get(eventName);
-        while (node != null) {
-            if (
-                node.listener === listener &&
-                node.listenerType === listenerType
-            ) {
-                if (prev !== null) {
-                    prev.next = node.next;
-                } else if (node.next !== null) {
-                    listeners.set(eventName, node.next);
-                } else {
-                    listeners.delete(eventName);
-                }
-                return
-            }
-
-            prev = node;
-            node = node.next;
-        }
-    },
-
-    /**
-     * Dispatch a given event.
-     * @param {Event|{type:string}} event The event to dispatch.
-     * @returns {boolean} `false` if canceled.
-     */
-    dispatchEvent(event) {
-        if (event == null || typeof event.type !== "string") {
-            throw new TypeError('"event.type" should be a string.')
-        }
-
-        // If listeners aren't registered, terminate.
-        const listeners = getListeners(this);
-        const eventName = event.type;
-        let node = listeners.get(eventName);
-        if (node == null) {
-            return true
-        }
-
-        // Since we cannot rewrite several properties, so wrap object.
-        const wrappedEvent = wrapEvent(this, event);
-
-        // This doesn't process capturing phase and bubbling phase.
-        // This isn't participating in a tree.
-        let prev = null;
-        while (node != null) {
-            // Remove this listener if it's once
-            if (node.once) {
-                if (prev !== null) {
-                    prev.next = node.next;
-                } else if (node.next !== null) {
-                    listeners.set(eventName, node.next);
-                } else {
-                    listeners.delete(eventName);
-                }
-            } else {
-                prev = node;
-            }
-
-            // Call this listener
-            setPassiveListener(
-                wrappedEvent,
-                node.passive ? node.listener : null
-            );
-            if (typeof node.listener === "function") {
-                try {
-                    node.listener.call(this, wrappedEvent);
-                } catch (err) {
-                    if (
-                        typeof console !== "undefined" &&
-                        typeof console.error === "function"
-                    ) {
-                        console.error(err);
-                    }
-                }
-            } else if (
-                node.listenerType !== ATTRIBUTE &&
-                typeof node.listener.handleEvent === "function"
-            ) {
-                node.listener.handleEvent(wrappedEvent);
-            }
-
-            // Break if `event.stopImmediatePropagation` was called.
-            if (isStopped(wrappedEvent)) {
-                break
-            }
-
-            node = node.next;
-        }
-        setPassiveListener(wrappedEvent, null);
-        setEventPhase(wrappedEvent, 0);
-        setCurrentTarget(wrappedEvent, null);
-
-        return !wrappedEvent.defaultPrevented
-    },
-};
-
-// `constructor` is not enumerable.
-Object.defineProperty(EventTarget.prototype, "constructor", {
-    value: EventTarget,
-    configurable: true,
-    writable: true,
-});
-
-// Ensure `eventTarget instanceof window.EventTarget` is `true`.
-if (
-    typeof window !== "undefined" &&
-    typeof window.EventTarget !== "undefined"
-) {
-    Object.setPrototypeOf(EventTarget.prototype, window.EventTarget.prototype);
-}
-
-exports.defineEventAttribute = defineEventAttribute;
-exports.EventTarget = EventTarget;
-exports.default = EventTarget;
-
-module.exports = EventTarget
-module.exports.EventTarget = module.exports.default = EventTarget
-module.exports.defineEventAttribute = defineEventAttribute
-//# sourceMappingURL=event-target-shim.js.map
+exports.endpoint = endpoint;
+//# sourceMappingURL=index.js.map
 
 
 /***/ }),
 
-/***/ 900:
-/***/ ((module) => {
+/***/ 8467:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/**
- * Helpers.
- */
+"use strict";
 
-var s = 1000;
-var m = s * 60;
-var h = m * 60;
-var d = h * 24;
-var w = d * 7;
-var y = d * 365.25;
 
-/**
- * Parse or format the given `val`.
- *
- * Options:
- *
- *  - `long` verbose formatting [false]
- *
- * @param {String|Number} val
- * @param {Object} [options]
- * @throws {Error} throw an error if val is not a non-empty string or a number
- * @return {String|Number}
- * @api public
- */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 
-module.exports = function(val, options) {
-  options = options || {};
-  var type = typeof val;
-  if (type === 'string' && val.length > 0) {
-    return parse(val);
-  } else if (type === 'number' && isFinite(val)) {
-    return options.long ? fmtLong(val) : fmtShort(val);
+var request = __nccwpck_require__(6234);
+var universalUserAgent = __nccwpck_require__(5030);
+
+const VERSION = "4.8.0";
+
+function _buildMessageForResponseErrors(data) {
+  return `Request failed due to following response errors:\n` + data.errors.map(e => ` - ${e.message}`).join("\n");
+}
+
+class GraphqlResponseError extends Error {
+  constructor(request, headers, response) {
+    super(_buildMessageForResponseErrors(response));
+    this.request = request;
+    this.headers = headers;
+    this.response = response;
+    this.name = "GraphqlResponseError"; // Expose the errors and response data in their shorthand properties.
+
+    this.errors = response.errors;
+    this.data = response.data; // Maintains proper stack trace (only available on V8)
+
+    /* istanbul ignore next */
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
-  throw new Error(
-    'val is not a non-empty string or a valid number. val=' +
-      JSON.stringify(val)
-  );
+
+}
+
+const NON_VARIABLE_OPTIONS = ["method", "baseUrl", "url", "headers", "request", "query", "mediaType"];
+const FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
+const GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
+function graphql(request, query, options) {
+  if (options) {
+    if (typeof query === "string" && "query" in options) {
+      return Promise.reject(new Error(`[@octokit/graphql] "query" cannot be used as variable name`));
+    }
+
+    for (const key in options) {
+      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key)) continue;
+      return Promise.reject(new Error(`[@octokit/graphql] "${key}" cannot be used as variable name`));
+    }
+  }
+
+  const parsedOptions = typeof query === "string" ? Object.assign({
+    query
+  }, options) : query;
+  const requestOptions = Object.keys(parsedOptions).reduce((result, key) => {
+    if (NON_VARIABLE_OPTIONS.includes(key)) {
+      result[key] = parsedOptions[key];
+      return result;
+    }
+
+    if (!result.variables) {
+      result.variables = {};
+    }
+
+    result.variables[key] = parsedOptions[key];
+    return result;
+  }, {}); // workaround for GitHub Enterprise baseUrl set with /api/v3 suffix
+  // https://github.com/octokit/auth-app.js/issues/111#issuecomment-657610451
+
+  const baseUrl = parsedOptions.baseUrl || request.endpoint.DEFAULTS.baseUrl;
+
+  if (GHES_V3_SUFFIX_REGEX.test(baseUrl)) {
+    requestOptions.url = baseUrl.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
+  }
+
+  return request(requestOptions).then(response => {
+    if (response.data.errors) {
+      const headers = {};
+
+      for (const key of Object.keys(response.headers)) {
+        headers[key] = response.headers[key];
+      }
+
+      throw new GraphqlResponseError(requestOptions, headers, response.data);
+    }
+
+    return response.data.data;
+  });
+}
+
+function withDefaults(request$1, newDefaults) {
+  const newRequest = request$1.defaults(newDefaults);
+
+  const newApi = (query, options) => {
+    return graphql(newRequest, query, options);
+  };
+
+  return Object.assign(newApi, {
+    defaults: withDefaults.bind(null, newRequest),
+    endpoint: request.request.endpoint
+  });
+}
+
+const graphql$1 = withDefaults(request.request, {
+  headers: {
+    "user-agent": `octokit-graphql.js/${VERSION} ${universalUserAgent.getUserAgent()}`
+  },
+  method: "POST",
+  url: "/graphql"
+});
+function withCustomRequest(customRequest) {
+  return withDefaults(customRequest, {
+    method: "POST",
+    url: "/graphql"
+  });
+}
+
+exports.GraphqlResponseError = GraphqlResponseError;
+exports.graphql = graphql$1;
+exports.withCustomRequest = withCustomRequest;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 4193:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+const VERSION = "2.17.0";
+
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+
+    keys.push.apply(keys, symbols);
+  }
+
+  return keys;
+}
+
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+
+  return target;
+}
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+/**
+ * Some “list” response that can be paginated have a different response structure
+ *
+ * They have a `total_count` key in the response (search also has `incomplete_results`,
+ * /installation/repositories also has `repository_selection`), as well as a key with
+ * the list of the items which name varies from endpoint to endpoint.
+ *
+ * Octokit normalizes these responses so that paginated results are always returned following
+ * the same structure. One challenge is that if the list response has only one page, no Link
+ * header is provided, so this header alone is not sufficient to check wether a response is
+ * paginated or not.
+ *
+ * We check if a "total_count" key is present in the response data, but also make sure that
+ * a "url" property is not, as the "Get the combined status for a specific ref" endpoint would
+ * otherwise match: https://developer.github.com/v3/repos/statuses/#get-the-combined-status-for-a-specific-ref
+ */
+function normalizePaginatedListResponse(response) {
+  // endpoints can respond with 204 if repository is empty
+  if (!response.data) {
+    return _objectSpread2(_objectSpread2({}, response), {}, {
+      data: []
+    });
+  }
+
+  const responseNeedsNormalization = "total_count" in response.data && !("url" in response.data);
+  if (!responseNeedsNormalization) return response; // keep the additional properties intact as there is currently no other way
+  // to retrieve the same information.
+
+  const incompleteResults = response.data.incomplete_results;
+  const repositorySelection = response.data.repository_selection;
+  const totalCount = response.data.total_count;
+  delete response.data.incomplete_results;
+  delete response.data.repository_selection;
+  delete response.data.total_count;
+  const namespaceKey = Object.keys(response.data)[0];
+  const data = response.data[namespaceKey];
+  response.data = data;
+
+  if (typeof incompleteResults !== "undefined") {
+    response.data.incomplete_results = incompleteResults;
+  }
+
+  if (typeof repositorySelection !== "undefined") {
+    response.data.repository_selection = repositorySelection;
+  }
+
+  response.data.total_count = totalCount;
+  return response;
+}
+
+function iterator(octokit, route, parameters) {
+  const options = typeof route === "function" ? route.endpoint(parameters) : octokit.request.endpoint(route, parameters);
+  const requestMethod = typeof route === "function" ? route : octokit.request;
+  const method = options.method;
+  const headers = options.headers;
+  let url = options.url;
+  return {
+    [Symbol.asyncIterator]: () => ({
+      async next() {
+        if (!url) return {
+          done: true
+        };
+
+        try {
+          const response = await requestMethod({
+            method,
+            url,
+            headers
+          });
+          const normalizedResponse = normalizePaginatedListResponse(response); // `response.headers.link` format:
+          // '<https://api.github.com/users/aseemk/followers?page=2>; rel="next", <https://api.github.com/users/aseemk/followers?page=2>; rel="last"'
+          // sets `url` to undefined if "next" URL is not present or `link` header is not set
+
+          url = ((normalizedResponse.headers.link || "").match(/<([^>]+)>;\s*rel="next"/) || [])[1];
+          return {
+            value: normalizedResponse
+          };
+        } catch (error) {
+          if (error.status !== 409) throw error;
+          url = "";
+          return {
+            value: {
+              status: 200,
+              headers: {},
+              data: []
+            }
+          };
+        }
+      }
+
+    })
+  };
+}
+
+function paginate(octokit, route, parameters, mapFn) {
+  if (typeof parameters === "function") {
+    mapFn = parameters;
+    parameters = undefined;
+  }
+
+  return gather(octokit, [], iterator(octokit, route, parameters)[Symbol.asyncIterator](), mapFn);
+}
+
+function gather(octokit, results, iterator, mapFn) {
+  return iterator.next().then(result => {
+    if (result.done) {
+      return results;
+    }
+
+    let earlyExit = false;
+
+    function done() {
+      earlyExit = true;
+    }
+
+    results = results.concat(mapFn ? mapFn(result.value, done) : result.value.data);
+
+    if (earlyExit) {
+      return results;
+    }
+
+    return gather(octokit, results, iterator, mapFn);
+  });
+}
+
+const composePaginateRest = Object.assign(paginate, {
+  iterator
+});
+
+const paginatingEndpoints = ["GET /app/hook/deliveries", "GET /app/installations", "GET /applications/grants", "GET /authorizations", "GET /enterprises/{enterprise}/actions/permissions/organizations", "GET /enterprises/{enterprise}/actions/runner-groups", "GET /enterprises/{enterprise}/actions/runner-groups/{runner_group_id}/organizations", "GET /enterprises/{enterprise}/actions/runner-groups/{runner_group_id}/runners", "GET /enterprises/{enterprise}/actions/runners", "GET /enterprises/{enterprise}/actions/runners/downloads", "GET /events", "GET /gists", "GET /gists/public", "GET /gists/starred", "GET /gists/{gist_id}/comments", "GET /gists/{gist_id}/commits", "GET /gists/{gist_id}/forks", "GET /installation/repositories", "GET /issues", "GET /marketplace_listing/plans", "GET /marketplace_listing/plans/{plan_id}/accounts", "GET /marketplace_listing/stubbed/plans", "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts", "GET /networks/{owner}/{repo}/events", "GET /notifications", "GET /organizations", "GET /orgs/{org}/actions/permissions/repositories", "GET /orgs/{org}/actions/runner-groups", "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/repositories", "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/runners", "GET /orgs/{org}/actions/runners", "GET /orgs/{org}/actions/runners/downloads", "GET /orgs/{org}/actions/secrets", "GET /orgs/{org}/actions/secrets/{secret_name}/repositories", "GET /orgs/{org}/blocks", "GET /orgs/{org}/credential-authorizations", "GET /orgs/{org}/events", "GET /orgs/{org}/failed_invitations", "GET /orgs/{org}/hooks", "GET /orgs/{org}/hooks/{hook_id}/deliveries", "GET /orgs/{org}/installations", "GET /orgs/{org}/invitations", "GET /orgs/{org}/invitations/{invitation_id}/teams", "GET /orgs/{org}/issues", "GET /orgs/{org}/members", "GET /orgs/{org}/migrations", "GET /orgs/{org}/migrations/{migration_id}/repositories", "GET /orgs/{org}/outside_collaborators", "GET /orgs/{org}/packages", "GET /orgs/{org}/projects", "GET /orgs/{org}/public_members", "GET /orgs/{org}/repos", "GET /orgs/{org}/secret-scanning/alerts", "GET /orgs/{org}/team-sync/groups", "GET /orgs/{org}/teams", "GET /orgs/{org}/teams/{team_slug}/discussions", "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments", "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions", "GET /orgs/{org}/teams/{team_slug}/invitations", "GET /orgs/{org}/teams/{team_slug}/members", "GET /orgs/{org}/teams/{team_slug}/projects", "GET /orgs/{org}/teams/{team_slug}/repos", "GET /orgs/{org}/teams/{team_slug}/team-sync/group-mappings", "GET /orgs/{org}/teams/{team_slug}/teams", "GET /projects/columns/{column_id}/cards", "GET /projects/{project_id}/collaborators", "GET /projects/{project_id}/columns", "GET /repos/{owner}/{repo}/actions/artifacts", "GET /repos/{owner}/{repo}/actions/runners", "GET /repos/{owner}/{repo}/actions/runners/downloads", "GET /repos/{owner}/{repo}/actions/runs", "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts", "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs", "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", "GET /repos/{owner}/{repo}/actions/secrets", "GET /repos/{owner}/{repo}/actions/workflows", "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs", "GET /repos/{owner}/{repo}/assignees", "GET /repos/{owner}/{repo}/autolinks", "GET /repos/{owner}/{repo}/branches", "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations", "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs", "GET /repos/{owner}/{repo}/code-scanning/alerts", "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances", "GET /repos/{owner}/{repo}/code-scanning/analyses", "GET /repos/{owner}/{repo}/collaborators", "GET /repos/{owner}/{repo}/comments", "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions", "GET /repos/{owner}/{repo}/commits", "GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head", "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments", "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls", "GET /repos/{owner}/{repo}/commits/{ref}/check-runs", "GET /repos/{owner}/{repo}/commits/{ref}/check-suites", "GET /repos/{owner}/{repo}/commits/{ref}/statuses", "GET /repos/{owner}/{repo}/contributors", "GET /repos/{owner}/{repo}/deployments", "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses", "GET /repos/{owner}/{repo}/events", "GET /repos/{owner}/{repo}/forks", "GET /repos/{owner}/{repo}/git/matching-refs/{ref}", "GET /repos/{owner}/{repo}/hooks", "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries", "GET /repos/{owner}/{repo}/invitations", "GET /repos/{owner}/{repo}/issues", "GET /repos/{owner}/{repo}/issues/comments", "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions", "GET /repos/{owner}/{repo}/issues/events", "GET /repos/{owner}/{repo}/issues/{issue_number}/comments", "GET /repos/{owner}/{repo}/issues/{issue_number}/events", "GET /repos/{owner}/{repo}/issues/{issue_number}/labels", "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions", "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline", "GET /repos/{owner}/{repo}/keys", "GET /repos/{owner}/{repo}/labels", "GET /repos/{owner}/{repo}/milestones", "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels", "GET /repos/{owner}/{repo}/notifications", "GET /repos/{owner}/{repo}/pages/builds", "GET /repos/{owner}/{repo}/projects", "GET /repos/{owner}/{repo}/pulls", "GET /repos/{owner}/{repo}/pulls/comments", "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions", "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments", "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits", "GET /repos/{owner}/{repo}/pulls/{pull_number}/files", "GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers", "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews", "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments", "GET /repos/{owner}/{repo}/releases", "GET /repos/{owner}/{repo}/releases/{release_id}/assets", "GET /repos/{owner}/{repo}/secret-scanning/alerts", "GET /repos/{owner}/{repo}/stargazers", "GET /repos/{owner}/{repo}/subscribers", "GET /repos/{owner}/{repo}/tags", "GET /repos/{owner}/{repo}/teams", "GET /repositories", "GET /repositories/{repository_id}/environments/{environment_name}/secrets", "GET /scim/v2/enterprises/{enterprise}/Groups", "GET /scim/v2/enterprises/{enterprise}/Users", "GET /scim/v2/organizations/{org}/Users", "GET /search/code", "GET /search/commits", "GET /search/issues", "GET /search/labels", "GET /search/repositories", "GET /search/topics", "GET /search/users", "GET /teams/{team_id}/discussions", "GET /teams/{team_id}/discussions/{discussion_number}/comments", "GET /teams/{team_id}/discussions/{discussion_number}/comments/{comment_number}/reactions", "GET /teams/{team_id}/discussions/{discussion_number}/reactions", "GET /teams/{team_id}/invitations", "GET /teams/{team_id}/members", "GET /teams/{team_id}/projects", "GET /teams/{team_id}/repos", "GET /teams/{team_id}/team-sync/group-mappings", "GET /teams/{team_id}/teams", "GET /user/blocks", "GET /user/emails", "GET /user/followers", "GET /user/following", "GET /user/gpg_keys", "GET /user/installations", "GET /user/installations/{installation_id}/repositories", "GET /user/issues", "GET /user/keys", "GET /user/marketplace_purchases", "GET /user/marketplace_purchases/stubbed", "GET /user/memberships/orgs", "GET /user/migrations", "GET /user/migrations/{migration_id}/repositories", "GET /user/orgs", "GET /user/packages", "GET /user/public_emails", "GET /user/repos", "GET /user/repository_invitations", "GET /user/starred", "GET /user/subscriptions", "GET /user/teams", "GET /users", "GET /users/{username}/events", "GET /users/{username}/events/orgs/{org}", "GET /users/{username}/events/public", "GET /users/{username}/followers", "GET /users/{username}/following", "GET /users/{username}/gists", "GET /users/{username}/gpg_keys", "GET /users/{username}/keys", "GET /users/{username}/orgs", "GET /users/{username}/packages", "GET /users/{username}/projects", "GET /users/{username}/received_events", "GET /users/{username}/received_events/public", "GET /users/{username}/repos", "GET /users/{username}/starred", "GET /users/{username}/subscriptions"];
+
+function isPaginatingEndpoint(arg) {
+  if (typeof arg === "string") {
+    return paginatingEndpoints.includes(arg);
+  } else {
+    return false;
+  }
+}
+
+/**
+ * @param octokit Octokit instance
+ * @param options Options passed to Octokit constructor
+ */
+
+function paginateRest(octokit) {
+  return {
+    paginate: Object.assign(paginate.bind(null, octokit), {
+      iterator: iterator.bind(null, octokit)
+    })
+  };
+}
+paginateRest.VERSION = VERSION;
+
+exports.composePaginateRest = composePaginateRest;
+exports.isPaginatingEndpoint = isPaginatingEndpoint;
+exports.paginateRest = paginateRest;
+exports.paginatingEndpoints = paginatingEndpoints;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 3044:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) symbols = symbols.filter(function (sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    });
+    keys.push.apply(keys, symbols);
+  }
+
+  return keys;
+}
+
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+
+  return target;
+}
+
+const Endpoints = {
+  actions: {
+    addSelectedRepoToOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"],
+    cancelWorkflowRun: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel"],
+    createOrUpdateEnvironmentSecret: ["PUT /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"],
+    createOrUpdateOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}"],
+    createOrUpdateRepoSecret: ["PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}"],
+    createRegistrationTokenForOrg: ["POST /orgs/{org}/actions/runners/registration-token"],
+    createRegistrationTokenForRepo: ["POST /repos/{owner}/{repo}/actions/runners/registration-token"],
+    createRemoveTokenForOrg: ["POST /orgs/{org}/actions/runners/remove-token"],
+    createRemoveTokenForRepo: ["POST /repos/{owner}/{repo}/actions/runners/remove-token"],
+    createWorkflowDispatch: ["POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches"],
+    deleteArtifact: ["DELETE /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
+    deleteEnvironmentSecret: ["DELETE /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"],
+    deleteOrgSecret: ["DELETE /orgs/{org}/actions/secrets/{secret_name}"],
+    deleteRepoSecret: ["DELETE /repos/{owner}/{repo}/actions/secrets/{secret_name}"],
+    deleteSelfHostedRunnerFromOrg: ["DELETE /orgs/{org}/actions/runners/{runner_id}"],
+    deleteSelfHostedRunnerFromRepo: ["DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}"],
+    deleteWorkflowRun: ["DELETE /repos/{owner}/{repo}/actions/runs/{run_id}"],
+    deleteWorkflowRunLogs: ["DELETE /repos/{owner}/{repo}/actions/runs/{run_id}/logs"],
+    disableSelectedRepositoryGithubActionsOrganization: ["DELETE /orgs/{org}/actions/permissions/repositories/{repository_id}"],
+    disableWorkflow: ["PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable"],
+    downloadArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}"],
+    downloadJobLogsForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs"],
+    downloadWorkflowRunLogs: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs"],
+    enableSelectedRepositoryGithubActionsOrganization: ["PUT /orgs/{org}/actions/permissions/repositories/{repository_id}"],
+    enableWorkflow: ["PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable"],
+    getAllowedActionsOrganization: ["GET /orgs/{org}/actions/permissions/selected-actions"],
+    getAllowedActionsRepository: ["GET /repos/{owner}/{repo}/actions/permissions/selected-actions"],
+    getArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
+    getEnvironmentPublicKey: ["GET /repositories/{repository_id}/environments/{environment_name}/secrets/public-key"],
+    getEnvironmentSecret: ["GET /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"],
+    getGithubActionsPermissionsOrganization: ["GET /orgs/{org}/actions/permissions"],
+    getGithubActionsPermissionsRepository: ["GET /repos/{owner}/{repo}/actions/permissions"],
+    getJobForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/jobs/{job_id}"],
+    getOrgPublicKey: ["GET /orgs/{org}/actions/secrets/public-key"],
+    getOrgSecret: ["GET /orgs/{org}/actions/secrets/{secret_name}"],
+    getPendingDeploymentsForRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"],
+    getRepoPermissions: ["GET /repos/{owner}/{repo}/actions/permissions", {}, {
+      renamed: ["actions", "getGithubActionsPermissionsRepository"]
+    }],
+    getRepoPublicKey: ["GET /repos/{owner}/{repo}/actions/secrets/public-key"],
+    getRepoSecret: ["GET /repos/{owner}/{repo}/actions/secrets/{secret_name}"],
+    getReviewsForRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/approvals"],
+    getSelfHostedRunnerForOrg: ["GET /orgs/{org}/actions/runners/{runner_id}"],
+    getSelfHostedRunnerForRepo: ["GET /repos/{owner}/{repo}/actions/runners/{runner_id}"],
+    getWorkflow: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}"],
+    getWorkflowRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}"],
+    getWorkflowRunUsage: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/timing"],
+    getWorkflowUsage: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/timing"],
+    listArtifactsForRepo: ["GET /repos/{owner}/{repo}/actions/artifacts"],
+    listEnvironmentSecrets: ["GET /repositories/{repository_id}/environments/{environment_name}/secrets"],
+    listJobsForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs"],
+    listOrgSecrets: ["GET /orgs/{org}/actions/secrets"],
+    listRepoSecrets: ["GET /repos/{owner}/{repo}/actions/secrets"],
+    listRepoWorkflows: ["GET /repos/{owner}/{repo}/actions/workflows"],
+    listRunnerApplicationsForOrg: ["GET /orgs/{org}/actions/runners/downloads"],
+    listRunnerApplicationsForRepo: ["GET /repos/{owner}/{repo}/actions/runners/downloads"],
+    listSelectedReposForOrgSecret: ["GET /orgs/{org}/actions/secrets/{secret_name}/repositories"],
+    listSelectedRepositoriesEnabledGithubActionsOrganization: ["GET /orgs/{org}/actions/permissions/repositories"],
+    listSelfHostedRunnersForOrg: ["GET /orgs/{org}/actions/runners"],
+    listSelfHostedRunnersForRepo: ["GET /repos/{owner}/{repo}/actions/runners"],
+    listWorkflowRunArtifacts: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts"],
+    listWorkflowRuns: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs"],
+    listWorkflowRunsForRepo: ["GET /repos/{owner}/{repo}/actions/runs"],
+    reRunWorkflow: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun"],
+    removeSelectedRepoFromOrgSecret: ["DELETE /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"],
+    reviewPendingDeploymentsForRun: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"],
+    setAllowedActionsOrganization: ["PUT /orgs/{org}/actions/permissions/selected-actions"],
+    setAllowedActionsRepository: ["PUT /repos/{owner}/{repo}/actions/permissions/selected-actions"],
+    setGithubActionsPermissionsOrganization: ["PUT /orgs/{org}/actions/permissions"],
+    setGithubActionsPermissionsRepository: ["PUT /repos/{owner}/{repo}/actions/permissions"],
+    setSelectedReposForOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}/repositories"],
+    setSelectedRepositoriesEnabledGithubActionsOrganization: ["PUT /orgs/{org}/actions/permissions/repositories"]
+  },
+  activity: {
+    checkRepoIsStarredByAuthenticatedUser: ["GET /user/starred/{owner}/{repo}"],
+    deleteRepoSubscription: ["DELETE /repos/{owner}/{repo}/subscription"],
+    deleteThreadSubscription: ["DELETE /notifications/threads/{thread_id}/subscription"],
+    getFeeds: ["GET /feeds"],
+    getRepoSubscription: ["GET /repos/{owner}/{repo}/subscription"],
+    getThread: ["GET /notifications/threads/{thread_id}"],
+    getThreadSubscriptionForAuthenticatedUser: ["GET /notifications/threads/{thread_id}/subscription"],
+    listEventsForAuthenticatedUser: ["GET /users/{username}/events"],
+    listNotificationsForAuthenticatedUser: ["GET /notifications"],
+    listOrgEventsForAuthenticatedUser: ["GET /users/{username}/events/orgs/{org}"],
+    listPublicEvents: ["GET /events"],
+    listPublicEventsForRepoNetwork: ["GET /networks/{owner}/{repo}/events"],
+    listPublicEventsForUser: ["GET /users/{username}/events/public"],
+    listPublicOrgEvents: ["GET /orgs/{org}/events"],
+    listReceivedEventsForUser: ["GET /users/{username}/received_events"],
+    listReceivedPublicEventsForUser: ["GET /users/{username}/received_events/public"],
+    listRepoEvents: ["GET /repos/{owner}/{repo}/events"],
+    listRepoNotificationsForAuthenticatedUser: ["GET /repos/{owner}/{repo}/notifications"],
+    listReposStarredByAuthenticatedUser: ["GET /user/starred"],
+    listReposStarredByUser: ["GET /users/{username}/starred"],
+    listReposWatchedByUser: ["GET /users/{username}/subscriptions"],
+    listStargazersForRepo: ["GET /repos/{owner}/{repo}/stargazers"],
+    listWatchedReposForAuthenticatedUser: ["GET /user/subscriptions"],
+    listWatchersForRepo: ["GET /repos/{owner}/{repo}/subscribers"],
+    markNotificationsAsRead: ["PUT /notifications"],
+    markRepoNotificationsAsRead: ["PUT /repos/{owner}/{repo}/notifications"],
+    markThreadAsRead: ["PATCH /notifications/threads/{thread_id}"],
+    setRepoSubscription: ["PUT /repos/{owner}/{repo}/subscription"],
+    setThreadSubscription: ["PUT /notifications/threads/{thread_id}/subscription"],
+    starRepoForAuthenticatedUser: ["PUT /user/starred/{owner}/{repo}"],
+    unstarRepoForAuthenticatedUser: ["DELETE /user/starred/{owner}/{repo}"]
+  },
+  apps: {
+    addRepoToInstallation: ["PUT /user/installations/{installation_id}/repositories/{repository_id}"],
+    checkToken: ["POST /applications/{client_id}/token"],
+    createContentAttachment: ["POST /content_references/{content_reference_id}/attachments", {
+      mediaType: {
+        previews: ["corsair"]
+      }
+    }],
+    createFromManifest: ["POST /app-manifests/{code}/conversions"],
+    createInstallationAccessToken: ["POST /app/installations/{installation_id}/access_tokens"],
+    deleteAuthorization: ["DELETE /applications/{client_id}/grant"],
+    deleteInstallation: ["DELETE /app/installations/{installation_id}"],
+    deleteToken: ["DELETE /applications/{client_id}/token"],
+    getAuthenticated: ["GET /app"],
+    getBySlug: ["GET /apps/{app_slug}"],
+    getInstallation: ["GET /app/installations/{installation_id}"],
+    getOrgInstallation: ["GET /orgs/{org}/installation"],
+    getRepoInstallation: ["GET /repos/{owner}/{repo}/installation"],
+    getSubscriptionPlanForAccount: ["GET /marketplace_listing/accounts/{account_id}"],
+    getSubscriptionPlanForAccountStubbed: ["GET /marketplace_listing/stubbed/accounts/{account_id}"],
+    getUserInstallation: ["GET /users/{username}/installation"],
+    getWebhookConfigForApp: ["GET /app/hook/config"],
+    listAccountsForPlan: ["GET /marketplace_listing/plans/{plan_id}/accounts"],
+    listAccountsForPlanStubbed: ["GET /marketplace_listing/stubbed/plans/{plan_id}/accounts"],
+    listInstallationReposForAuthenticatedUser: ["GET /user/installations/{installation_id}/repositories"],
+    listInstallations: ["GET /app/installations"],
+    listInstallationsForAuthenticatedUser: ["GET /user/installations"],
+    listPlans: ["GET /marketplace_listing/plans"],
+    listPlansStubbed: ["GET /marketplace_listing/stubbed/plans"],
+    listReposAccessibleToInstallation: ["GET /installation/repositories"],
+    listSubscriptionsForAuthenticatedUser: ["GET /user/marketplace_purchases"],
+    listSubscriptionsForAuthenticatedUserStubbed: ["GET /user/marketplace_purchases/stubbed"],
+    removeRepoFromInstallation: ["DELETE /user/installations/{installation_id}/repositories/{repository_id}"],
+    resetToken: ["PATCH /applications/{client_id}/token"],
+    revokeInstallationAccessToken: ["DELETE /installation/token"],
+    scopeToken: ["POST /applications/{client_id}/token/scoped"],
+    suspendInstallation: ["PUT /app/installations/{installation_id}/suspended"],
+    unsuspendInstallation: ["DELETE /app/installations/{installation_id}/suspended"],
+    updateWebhookConfigForApp: ["PATCH /app/hook/config"]
+  },
+  billing: {
+    getGithubActionsBillingOrg: ["GET /orgs/{org}/settings/billing/actions"],
+    getGithubActionsBillingUser: ["GET /users/{username}/settings/billing/actions"],
+    getGithubPackagesBillingOrg: ["GET /orgs/{org}/settings/billing/packages"],
+    getGithubPackagesBillingUser: ["GET /users/{username}/settings/billing/packages"],
+    getSharedStorageBillingOrg: ["GET /orgs/{org}/settings/billing/shared-storage"],
+    getSharedStorageBillingUser: ["GET /users/{username}/settings/billing/shared-storage"]
+  },
+  checks: {
+    create: ["POST /repos/{owner}/{repo}/check-runs"],
+    createSuite: ["POST /repos/{owner}/{repo}/check-suites"],
+    get: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}"],
+    getSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}"],
+    listAnnotations: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations"],
+    listForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-runs"],
+    listForSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs"],
+    listSuitesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-suites"],
+    rerequestSuite: ["POST /repos/{owner}/{repo}/check-suites/{check_suite_id}/rerequest"],
+    setSuitesPreferences: ["PATCH /repos/{owner}/{repo}/check-suites/preferences"],
+    update: ["PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}"]
+  },
+  codeScanning: {
+    deleteAnalysis: ["DELETE /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}{?confirm_delete}"],
+    getAlert: ["GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}", {}, {
+      renamedParameters: {
+        alert_id: "alert_number"
+      }
+    }],
+    getAnalysis: ["GET /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}"],
+    getSarif: ["GET /repos/{owner}/{repo}/code-scanning/sarifs/{sarif_id}"],
+    listAlertsForRepo: ["GET /repos/{owner}/{repo}/code-scanning/alerts"],
+    listAlertsInstances: ["GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances"],
+    listRecentAnalyses: ["GET /repos/{owner}/{repo}/code-scanning/analyses"],
+    updateAlert: ["PATCH /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}"],
+    uploadSarif: ["POST /repos/{owner}/{repo}/code-scanning/sarifs"]
+  },
+  codesOfConduct: {
+    getAllCodesOfConduct: ["GET /codes_of_conduct", {
+      mediaType: {
+        previews: ["scarlet-witch"]
+      }
+    }],
+    getConductCode: ["GET /codes_of_conduct/{key}", {
+      mediaType: {
+        previews: ["scarlet-witch"]
+      }
+    }],
+    getForRepo: ["GET /repos/{owner}/{repo}/community/code_of_conduct", {
+      mediaType: {
+        previews: ["scarlet-witch"]
+      }
+    }]
+  },
+  emojis: {
+    get: ["GET /emojis"]
+  },
+  enterpriseAdmin: {
+    disableSelectedOrganizationGithubActionsEnterprise: ["DELETE /enterprises/{enterprise}/actions/permissions/organizations/{org_id}"],
+    enableSelectedOrganizationGithubActionsEnterprise: ["PUT /enterprises/{enterprise}/actions/permissions/organizations/{org_id}"],
+    getAllowedActionsEnterprise: ["GET /enterprises/{enterprise}/actions/permissions/selected-actions"],
+    getGithubActionsPermissionsEnterprise: ["GET /enterprises/{enterprise}/actions/permissions"],
+    listSelectedOrganizationsEnabledGithubActionsEnterprise: ["GET /enterprises/{enterprise}/actions/permissions/organizations"],
+    setAllowedActionsEnterprise: ["PUT /enterprises/{enterprise}/actions/permissions/selected-actions"],
+    setGithubActionsPermissionsEnterprise: ["PUT /enterprises/{enterprise}/actions/permissions"],
+    setSelectedOrganizationsEnabledGithubActionsEnterprise: ["PUT /enterprises/{enterprise}/actions/permissions/organizations"]
+  },
+  gists: {
+    checkIsStarred: ["GET /gists/{gist_id}/star"],
+    create: ["POST /gists"],
+    createComment: ["POST /gists/{gist_id}/comments"],
+    delete: ["DELETE /gists/{gist_id}"],
+    deleteComment: ["DELETE /gists/{gist_id}/comments/{comment_id}"],
+    fork: ["POST /gists/{gist_id}/forks"],
+    get: ["GET /gists/{gist_id}"],
+    getComment: ["GET /gists/{gist_id}/comments/{comment_id}"],
+    getRevision: ["GET /gists/{gist_id}/{sha}"],
+    list: ["GET /gists"],
+    listComments: ["GET /gists/{gist_id}/comments"],
+    listCommits: ["GET /gists/{gist_id}/commits"],
+    listForUser: ["GET /users/{username}/gists"],
+    listForks: ["GET /gists/{gist_id}/forks"],
+    listPublic: ["GET /gists/public"],
+    listStarred: ["GET /gists/starred"],
+    star: ["PUT /gists/{gist_id}/star"],
+    unstar: ["DELETE /gists/{gist_id}/star"],
+    update: ["PATCH /gists/{gist_id}"],
+    updateComment: ["PATCH /gists/{gist_id}/comments/{comment_id}"]
+  },
+  git: {
+    createBlob: ["POST /repos/{owner}/{repo}/git/blobs"],
+    createCommit: ["POST /repos/{owner}/{repo}/git/commits"],
+    createRef: ["POST /repos/{owner}/{repo}/git/refs"],
+    createTag: ["POST /repos/{owner}/{repo}/git/tags"],
+    createTree: ["POST /repos/{owner}/{repo}/git/trees"],
+    deleteRef: ["DELETE /repos/{owner}/{repo}/git/refs/{ref}"],
+    getBlob: ["GET /repos/{owner}/{repo}/git/blobs/{file_sha}"],
+    getCommit: ["GET /repos/{owner}/{repo}/git/commits/{commit_sha}"],
+    getRef: ["GET /repos/{owner}/{repo}/git/ref/{ref}"],
+    getTag: ["GET /repos/{owner}/{repo}/git/tags/{tag_sha}"],
+    getTree: ["GET /repos/{owner}/{repo}/git/trees/{tree_sha}"],
+    listMatchingRefs: ["GET /repos/{owner}/{repo}/git/matching-refs/{ref}"],
+    updateRef: ["PATCH /repos/{owner}/{repo}/git/refs/{ref}"]
+  },
+  gitignore: {
+    getAllTemplates: ["GET /gitignore/templates"],
+    getTemplate: ["GET /gitignore/templates/{name}"]
+  },
+  interactions: {
+    getRestrictionsForAuthenticatedUser: ["GET /user/interaction-limits"],
+    getRestrictionsForOrg: ["GET /orgs/{org}/interaction-limits"],
+    getRestrictionsForRepo: ["GET /repos/{owner}/{repo}/interaction-limits"],
+    getRestrictionsForYourPublicRepos: ["GET /user/interaction-limits", {}, {
+      renamed: ["interactions", "getRestrictionsForAuthenticatedUser"]
+    }],
+    removeRestrictionsForAuthenticatedUser: ["DELETE /user/interaction-limits"],
+    removeRestrictionsForOrg: ["DELETE /orgs/{org}/interaction-limits"],
+    removeRestrictionsForRepo: ["DELETE /repos/{owner}/{repo}/interaction-limits"],
+    removeRestrictionsForYourPublicRepos: ["DELETE /user/interaction-limits", {}, {
+      renamed: ["interactions", "removeRestrictionsForAuthenticatedUser"]
+    }],
+    setRestrictionsForAuthenticatedUser: ["PUT /user/interaction-limits"],
+    setRestrictionsForOrg: ["PUT /orgs/{org}/interaction-limits"],
+    setRestrictionsForRepo: ["PUT /repos/{owner}/{repo}/interaction-limits"],
+    setRestrictionsForYourPublicRepos: ["PUT /user/interaction-limits", {}, {
+      renamed: ["interactions", "setRestrictionsForAuthenticatedUser"]
+    }]
+  },
+  issues: {
+    addAssignees: ["POST /repos/{owner}/{repo}/issues/{issue_number}/assignees"],
+    addLabels: ["POST /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+    checkUserCanBeAssigned: ["GET /repos/{owner}/{repo}/assignees/{assignee}"],
+    create: ["POST /repos/{owner}/{repo}/issues"],
+    createComment: ["POST /repos/{owner}/{repo}/issues/{issue_number}/comments"],
+    createLabel: ["POST /repos/{owner}/{repo}/labels"],
+    createMilestone: ["POST /repos/{owner}/{repo}/milestones"],
+    deleteComment: ["DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}"],
+    deleteLabel: ["DELETE /repos/{owner}/{repo}/labels/{name}"],
+    deleteMilestone: ["DELETE /repos/{owner}/{repo}/milestones/{milestone_number}"],
+    get: ["GET /repos/{owner}/{repo}/issues/{issue_number}"],
+    getComment: ["GET /repos/{owner}/{repo}/issues/comments/{comment_id}"],
+    getEvent: ["GET /repos/{owner}/{repo}/issues/events/{event_id}"],
+    getLabel: ["GET /repos/{owner}/{repo}/labels/{name}"],
+    getMilestone: ["GET /repos/{owner}/{repo}/milestones/{milestone_number}"],
+    list: ["GET /issues"],
+    listAssignees: ["GET /repos/{owner}/{repo}/assignees"],
+    listComments: ["GET /repos/{owner}/{repo}/issues/{issue_number}/comments"],
+    listCommentsForRepo: ["GET /repos/{owner}/{repo}/issues/comments"],
+    listEvents: ["GET /repos/{owner}/{repo}/issues/{issue_number}/events"],
+    listEventsForRepo: ["GET /repos/{owner}/{repo}/issues/events"],
+    listEventsForTimeline: ["GET /repos/{owner}/{repo}/issues/{issue_number}/timeline", {
+      mediaType: {
+        previews: ["mockingbird"]
+      }
+    }],
+    listForAuthenticatedUser: ["GET /user/issues"],
+    listForOrg: ["GET /orgs/{org}/issues"],
+    listForRepo: ["GET /repos/{owner}/{repo}/issues"],
+    listLabelsForMilestone: ["GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels"],
+    listLabelsForRepo: ["GET /repos/{owner}/{repo}/labels"],
+    listLabelsOnIssue: ["GET /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+    listMilestones: ["GET /repos/{owner}/{repo}/milestones"],
+    lock: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/lock"],
+    removeAllLabels: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+    removeAssignees: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees"],
+    removeLabel: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}"],
+    setLabels: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+    unlock: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/lock"],
+    update: ["PATCH /repos/{owner}/{repo}/issues/{issue_number}"],
+    updateComment: ["PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"],
+    updateLabel: ["PATCH /repos/{owner}/{repo}/labels/{name}"],
+    updateMilestone: ["PATCH /repos/{owner}/{repo}/milestones/{milestone_number}"]
+  },
+  licenses: {
+    get: ["GET /licenses/{license}"],
+    getAllCommonlyUsed: ["GET /licenses"],
+    getForRepo: ["GET /repos/{owner}/{repo}/license"]
+  },
+  markdown: {
+    render: ["POST /markdown"],
+    renderRaw: ["POST /markdown/raw", {
+      headers: {
+        "content-type": "text/plain; charset=utf-8"
+      }
+    }]
+  },
+  meta: {
+    get: ["GET /meta"],
+    getOctocat: ["GET /octocat"],
+    getZen: ["GET /zen"],
+    root: ["GET /"]
+  },
+  migrations: {
+    cancelImport: ["DELETE /repos/{owner}/{repo}/import"],
+    deleteArchiveForAuthenticatedUser: ["DELETE /user/migrations/{migration_id}/archive", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    deleteArchiveForOrg: ["DELETE /orgs/{org}/migrations/{migration_id}/archive", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    downloadArchiveForOrg: ["GET /orgs/{org}/migrations/{migration_id}/archive", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    getArchiveForAuthenticatedUser: ["GET /user/migrations/{migration_id}/archive", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    getCommitAuthors: ["GET /repos/{owner}/{repo}/import/authors"],
+    getImportStatus: ["GET /repos/{owner}/{repo}/import"],
+    getLargeFiles: ["GET /repos/{owner}/{repo}/import/large_files"],
+    getStatusForAuthenticatedUser: ["GET /user/migrations/{migration_id}", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    getStatusForOrg: ["GET /orgs/{org}/migrations/{migration_id}", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    listForAuthenticatedUser: ["GET /user/migrations", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    listForOrg: ["GET /orgs/{org}/migrations", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    listReposForOrg: ["GET /orgs/{org}/migrations/{migration_id}/repositories", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    listReposForUser: ["GET /user/migrations/{migration_id}/repositories", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    mapCommitAuthor: ["PATCH /repos/{owner}/{repo}/import/authors/{author_id}"],
+    setLfsPreference: ["PATCH /repos/{owner}/{repo}/import/lfs"],
+    startForAuthenticatedUser: ["POST /user/migrations"],
+    startForOrg: ["POST /orgs/{org}/migrations"],
+    startImport: ["PUT /repos/{owner}/{repo}/import"],
+    unlockRepoForAuthenticatedUser: ["DELETE /user/migrations/{migration_id}/repos/{repo_name}/lock", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    unlockRepoForOrg: ["DELETE /orgs/{org}/migrations/{migration_id}/repos/{repo_name}/lock", {
+      mediaType: {
+        previews: ["wyandotte"]
+      }
+    }],
+    updateImport: ["PATCH /repos/{owner}/{repo}/import"]
+  },
+  orgs: {
+    blockUser: ["PUT /orgs/{org}/blocks/{username}"],
+    cancelInvitation: ["DELETE /orgs/{org}/invitations/{invitation_id}"],
+    checkBlockedUser: ["GET /orgs/{org}/blocks/{username}"],
+    checkMembershipForUser: ["GET /orgs/{org}/members/{username}"],
+    checkPublicMembershipForUser: ["GET /orgs/{org}/public_members/{username}"],
+    convertMemberToOutsideCollaborator: ["PUT /orgs/{org}/outside_collaborators/{username}"],
+    createInvitation: ["POST /orgs/{org}/invitations"],
+    createWebhook: ["POST /orgs/{org}/hooks"],
+    deleteWebhook: ["DELETE /orgs/{org}/hooks/{hook_id}"],
+    get: ["GET /orgs/{org}"],
+    getMembershipForAuthenticatedUser: ["GET /user/memberships/orgs/{org}"],
+    getMembershipForUser: ["GET /orgs/{org}/memberships/{username}"],
+    getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
+    getWebhookConfigForOrg: ["GET /orgs/{org}/hooks/{hook_id}/config"],
+    list: ["GET /organizations"],
+    listAppInstallations: ["GET /orgs/{org}/installations"],
+    listBlockedUsers: ["GET /orgs/{org}/blocks"],
+    listFailedInvitations: ["GET /orgs/{org}/failed_invitations"],
+    listForAuthenticatedUser: ["GET /user/orgs"],
+    listForUser: ["GET /users/{username}/orgs"],
+    listInvitationTeams: ["GET /orgs/{org}/invitations/{invitation_id}/teams"],
+    listMembers: ["GET /orgs/{org}/members"],
+    listMembershipsForAuthenticatedUser: ["GET /user/memberships/orgs"],
+    listOutsideCollaborators: ["GET /orgs/{org}/outside_collaborators"],
+    listPendingInvitations: ["GET /orgs/{org}/invitations"],
+    listPublicMembers: ["GET /orgs/{org}/public_members"],
+    listWebhooks: ["GET /orgs/{org}/hooks"],
+    pingWebhook: ["POST /orgs/{org}/hooks/{hook_id}/pings"],
+    removeMember: ["DELETE /orgs/{org}/members/{username}"],
+    removeMembershipForUser: ["DELETE /orgs/{org}/memberships/{username}"],
+    removeOutsideCollaborator: ["DELETE /orgs/{org}/outside_collaborators/{username}"],
+    removePublicMembershipForAuthenticatedUser: ["DELETE /orgs/{org}/public_members/{username}"],
+    setMembershipForUser: ["PUT /orgs/{org}/memberships/{username}"],
+    setPublicMembershipForAuthenticatedUser: ["PUT /orgs/{org}/public_members/{username}"],
+    unblockUser: ["DELETE /orgs/{org}/blocks/{username}"],
+    update: ["PATCH /orgs/{org}"],
+    updateMembershipForAuthenticatedUser: ["PATCH /user/memberships/orgs/{org}"],
+    updateWebhook: ["PATCH /orgs/{org}/hooks/{hook_id}"],
+    updateWebhookConfigForOrg: ["PATCH /orgs/{org}/hooks/{hook_id}/config"]
+  },
+  packages: {
+    deletePackageForAuthenticatedUser: ["DELETE /user/packages/{package_type}/{package_name}"],
+    deletePackageForOrg: ["DELETE /orgs/{org}/packages/{package_type}/{package_name}"],
+    deletePackageVersionForAuthenticatedUser: ["DELETE /user/packages/{package_type}/{package_name}/versions/{package_version_id}"],
+    deletePackageVersionForOrg: ["DELETE /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"],
+    getAllPackageVersionsForAPackageOwnedByAnOrg: ["GET /orgs/{org}/packages/{package_type}/{package_name}/versions", {}, {
+      renamed: ["packages", "getAllPackageVersionsForPackageOwnedByOrg"]
+    }],
+    getAllPackageVersionsForAPackageOwnedByTheAuthenticatedUser: ["GET /user/packages/{package_type}/{package_name}/versions", {}, {
+      renamed: ["packages", "getAllPackageVersionsForPackageOwnedByAuthenticatedUser"]
+    }],
+    getAllPackageVersionsForPackageOwnedByAuthenticatedUser: ["GET /user/packages/{package_type}/{package_name}/versions"],
+    getAllPackageVersionsForPackageOwnedByOrg: ["GET /orgs/{org}/packages/{package_type}/{package_name}/versions"],
+    getAllPackageVersionsForPackageOwnedByUser: ["GET /users/{username}/packages/{package_type}/{package_name}/versions"],
+    getPackageForAuthenticatedUser: ["GET /user/packages/{package_type}/{package_name}"],
+    getPackageForOrganization: ["GET /orgs/{org}/packages/{package_type}/{package_name}"],
+    getPackageForUser: ["GET /users/{username}/packages/{package_type}/{package_name}"],
+    getPackageVersionForAuthenticatedUser: ["GET /user/packages/{package_type}/{package_name}/versions/{package_version_id}"],
+    getPackageVersionForOrganization: ["GET /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"],
+    getPackageVersionForUser: ["GET /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"],
+    restorePackageForAuthenticatedUser: ["POST /user/packages/{package_type}/{package_name}/restore{?token}"],
+    restorePackageForOrg: ["POST /orgs/{org}/packages/{package_type}/{package_name}/restore{?token}"],
+    restorePackageVersionForAuthenticatedUser: ["POST /user/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"],
+    restorePackageVersionForOrg: ["POST /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"]
+  },
+  projects: {
+    addCollaborator: ["PUT /projects/{project_id}/collaborators/{username}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    createCard: ["POST /projects/columns/{column_id}/cards", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    createColumn: ["POST /projects/{project_id}/columns", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    createForAuthenticatedUser: ["POST /user/projects", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    createForOrg: ["POST /orgs/{org}/projects", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    createForRepo: ["POST /repos/{owner}/{repo}/projects", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    delete: ["DELETE /projects/{project_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    deleteCard: ["DELETE /projects/columns/cards/{card_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    deleteColumn: ["DELETE /projects/columns/{column_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    get: ["GET /projects/{project_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    getCard: ["GET /projects/columns/cards/{card_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    getColumn: ["GET /projects/columns/{column_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    getPermissionForUser: ["GET /projects/{project_id}/collaborators/{username}/permission", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    listCards: ["GET /projects/columns/{column_id}/cards", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    listCollaborators: ["GET /projects/{project_id}/collaborators", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    listColumns: ["GET /projects/{project_id}/columns", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    listForOrg: ["GET /orgs/{org}/projects", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    listForRepo: ["GET /repos/{owner}/{repo}/projects", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    listForUser: ["GET /users/{username}/projects", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    moveCard: ["POST /projects/columns/cards/{card_id}/moves", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    moveColumn: ["POST /projects/columns/{column_id}/moves", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    removeCollaborator: ["DELETE /projects/{project_id}/collaborators/{username}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    update: ["PATCH /projects/{project_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    updateCard: ["PATCH /projects/columns/cards/{card_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    updateColumn: ["PATCH /projects/columns/{column_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }]
+  },
+  pulls: {
+    checkIfMerged: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
+    create: ["POST /repos/{owner}/{repo}/pulls"],
+    createReplyForReviewComment: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies"],
+    createReview: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
+    createReviewComment: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/comments"],
+    deletePendingReview: ["DELETE /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"],
+    deleteReviewComment: ["DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}"],
+    dismissReview: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/dismissals"],
+    get: ["GET /repos/{owner}/{repo}/pulls/{pull_number}"],
+    getReview: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"],
+    getReviewComment: ["GET /repos/{owner}/{repo}/pulls/comments/{comment_id}"],
+    list: ["GET /repos/{owner}/{repo}/pulls"],
+    listCommentsForReview: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments"],
+    listCommits: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/commits"],
+    listFiles: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/files"],
+    listRequestedReviewers: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"],
+    listReviewComments: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/comments"],
+    listReviewCommentsForRepo: ["GET /repos/{owner}/{repo}/pulls/comments"],
+    listReviews: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
+    merge: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
+    removeRequestedReviewers: ["DELETE /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"],
+    requestReviewers: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"],
+    submitReview: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events"],
+    update: ["PATCH /repos/{owner}/{repo}/pulls/{pull_number}"],
+    updateBranch: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/update-branch", {
+      mediaType: {
+        previews: ["lydian"]
+      }
+    }],
+    updateReview: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"],
+    updateReviewComment: ["PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}"]
+  },
+  rateLimit: {
+    get: ["GET /rate_limit"]
+  },
+  reactions: {
+    createForCommitComment: ["POST /repos/{owner}/{repo}/comments/{comment_id}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    createForIssue: ["POST /repos/{owner}/{repo}/issues/{issue_number}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    createForIssueComment: ["POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    createForPullRequestReviewComment: ["POST /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    createForTeamDiscussionCommentInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    createForTeamDiscussionInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    deleteForCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}/reactions/{reaction_id}", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    deleteForIssue: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    deleteForIssueComment: ["DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    deleteForPullRequestComment: ["DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions/{reaction_id}", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    deleteForTeamDiscussion: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions/{reaction_id}", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    deleteForTeamDiscussionComment: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions/{reaction_id}", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    deleteLegacy: ["DELETE /reactions/{reaction_id}", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }, {
+      deprecated: "octokit.rest.reactions.deleteLegacy() is deprecated, see https://docs.github.com/rest/reference/reactions/#delete-a-reaction-legacy"
+    }],
+    listForCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    listForIssue: ["GET /repos/{owner}/{repo}/issues/{issue_number}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    listForIssueComment: ["GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    listForPullRequestReviewComment: ["GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    listForTeamDiscussionCommentInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
+    listForTeamDiscussionInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }]
+  },
+  repos: {
+    acceptInvitation: ["PATCH /user/repository_invitations/{invitation_id}"],
+    addAppAccessRestrictions: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps", {}, {
+      mapToData: "apps"
+    }],
+    addCollaborator: ["PUT /repos/{owner}/{repo}/collaborators/{username}"],
+    addStatusCheckContexts: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts", {}, {
+      mapToData: "contexts"
+    }],
+    addTeamAccessRestrictions: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams", {}, {
+      mapToData: "teams"
+    }],
+    addUserAccessRestrictions: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users", {}, {
+      mapToData: "users"
+    }],
+    checkCollaborator: ["GET /repos/{owner}/{repo}/collaborators/{username}"],
+    checkVulnerabilityAlerts: ["GET /repos/{owner}/{repo}/vulnerability-alerts", {
+      mediaType: {
+        previews: ["dorian"]
+      }
+    }],
+    compareCommits: ["GET /repos/{owner}/{repo}/compare/{base}...{head}"],
+    createCommitComment: ["POST /repos/{owner}/{repo}/commits/{commit_sha}/comments"],
+    createCommitSignatureProtection: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
+      mediaType: {
+        previews: ["zzzax"]
+      }
+    }],
+    createCommitStatus: ["POST /repos/{owner}/{repo}/statuses/{sha}"],
+    createDeployKey: ["POST /repos/{owner}/{repo}/keys"],
+    createDeployment: ["POST /repos/{owner}/{repo}/deployments"],
+    createDeploymentStatus: ["POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"],
+    createDispatchEvent: ["POST /repos/{owner}/{repo}/dispatches"],
+    createForAuthenticatedUser: ["POST /user/repos"],
+    createFork: ["POST /repos/{owner}/{repo}/forks"],
+    createInOrg: ["POST /orgs/{org}/repos"],
+    createOrUpdateEnvironment: ["PUT /repos/{owner}/{repo}/environments/{environment_name}"],
+    createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
+    createPagesSite: ["POST /repos/{owner}/{repo}/pages", {
+      mediaType: {
+        previews: ["switcheroo"]
+      }
+    }],
+    createRelease: ["POST /repos/{owner}/{repo}/releases"],
+    createUsingTemplate: ["POST /repos/{template_owner}/{template_repo}/generate", {
+      mediaType: {
+        previews: ["baptiste"]
+      }
+    }],
+    createWebhook: ["POST /repos/{owner}/{repo}/hooks"],
+    declineInvitation: ["DELETE /user/repository_invitations/{invitation_id}"],
+    delete: ["DELETE /repos/{owner}/{repo}"],
+    deleteAccessRestrictions: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"],
+    deleteAdminBranchProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"],
+    deleteAnEnvironment: ["DELETE /repos/{owner}/{repo}/environments/{environment_name}"],
+    deleteBranchProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection"],
+    deleteCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}"],
+    deleteCommitSignatureProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
+      mediaType: {
+        previews: ["zzzax"]
+      }
+    }],
+    deleteDeployKey: ["DELETE /repos/{owner}/{repo}/keys/{key_id}"],
+    deleteDeployment: ["DELETE /repos/{owner}/{repo}/deployments/{deployment_id}"],
+    deleteFile: ["DELETE /repos/{owner}/{repo}/contents/{path}"],
+    deleteInvitation: ["DELETE /repos/{owner}/{repo}/invitations/{invitation_id}"],
+    deletePagesSite: ["DELETE /repos/{owner}/{repo}/pages", {
+      mediaType: {
+        previews: ["switcheroo"]
+      }
+    }],
+    deletePullRequestReviewProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"],
+    deleteRelease: ["DELETE /repos/{owner}/{repo}/releases/{release_id}"],
+    deleteReleaseAsset: ["DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}"],
+    deleteWebhook: ["DELETE /repos/{owner}/{repo}/hooks/{hook_id}"],
+    disableAutomatedSecurityFixes: ["DELETE /repos/{owner}/{repo}/automated-security-fixes", {
+      mediaType: {
+        previews: ["london"]
+      }
+    }],
+    disableVulnerabilityAlerts: ["DELETE /repos/{owner}/{repo}/vulnerability-alerts", {
+      mediaType: {
+        previews: ["dorian"]
+      }
+    }],
+    downloadArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}", {}, {
+      renamed: ["repos", "downloadZipballArchive"]
+    }],
+    downloadTarballArchive: ["GET /repos/{owner}/{repo}/tarball/{ref}"],
+    downloadZipballArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}"],
+    enableAutomatedSecurityFixes: ["PUT /repos/{owner}/{repo}/automated-security-fixes", {
+      mediaType: {
+        previews: ["london"]
+      }
+    }],
+    enableVulnerabilityAlerts: ["PUT /repos/{owner}/{repo}/vulnerability-alerts", {
+      mediaType: {
+        previews: ["dorian"]
+      }
+    }],
+    get: ["GET /repos/{owner}/{repo}"],
+    getAccessRestrictions: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"],
+    getAdminBranchProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"],
+    getAllEnvironments: ["GET /repos/{owner}/{repo}/environments"],
+    getAllStatusCheckContexts: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts"],
+    getAllTopics: ["GET /repos/{owner}/{repo}/topics", {
+      mediaType: {
+        previews: ["mercy"]
+      }
+    }],
+    getAppsWithAccessToProtectedBranch: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps"],
+    getBranch: ["GET /repos/{owner}/{repo}/branches/{branch}"],
+    getBranchProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection"],
+    getClones: ["GET /repos/{owner}/{repo}/traffic/clones"],
+    getCodeFrequencyStats: ["GET /repos/{owner}/{repo}/stats/code_frequency"],
+    getCollaboratorPermissionLevel: ["GET /repos/{owner}/{repo}/collaborators/{username}/permission"],
+    getCombinedStatusForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/status"],
+    getCommit: ["GET /repos/{owner}/{repo}/commits/{ref}"],
+    getCommitActivityStats: ["GET /repos/{owner}/{repo}/stats/commit_activity"],
+    getCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}"],
+    getCommitSignatureProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
+      mediaType: {
+        previews: ["zzzax"]
+      }
+    }],
+    getCommunityProfileMetrics: ["GET /repos/{owner}/{repo}/community/profile"],
+    getContent: ["GET /repos/{owner}/{repo}/contents/{path}"],
+    getContributorsStats: ["GET /repos/{owner}/{repo}/stats/contributors"],
+    getDeployKey: ["GET /repos/{owner}/{repo}/keys/{key_id}"],
+    getDeployment: ["GET /repos/{owner}/{repo}/deployments/{deployment_id}"],
+    getDeploymentStatus: ["GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses/{status_id}"],
+    getEnvironment: ["GET /repos/{owner}/{repo}/environments/{environment_name}"],
+    getLatestPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/latest"],
+    getLatestRelease: ["GET /repos/{owner}/{repo}/releases/latest"],
+    getPages: ["GET /repos/{owner}/{repo}/pages"],
+    getPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/{build_id}"],
+    getParticipationStats: ["GET /repos/{owner}/{repo}/stats/participation"],
+    getPullRequestReviewProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"],
+    getPunchCardStats: ["GET /repos/{owner}/{repo}/stats/punch_card"],
+    getReadme: ["GET /repos/{owner}/{repo}/readme"],
+    getReadmeInDirectory: ["GET /repos/{owner}/{repo}/readme/{dir}"],
+    getRelease: ["GET /repos/{owner}/{repo}/releases/{release_id}"],
+    getReleaseAsset: ["GET /repos/{owner}/{repo}/releases/assets/{asset_id}"],
+    getReleaseByTag: ["GET /repos/{owner}/{repo}/releases/tags/{tag}"],
+    getStatusChecksProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"],
+    getTeamsWithAccessToProtectedBranch: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams"],
+    getTopPaths: ["GET /repos/{owner}/{repo}/traffic/popular/paths"],
+    getTopReferrers: ["GET /repos/{owner}/{repo}/traffic/popular/referrers"],
+    getUsersWithAccessToProtectedBranch: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users"],
+    getViews: ["GET /repos/{owner}/{repo}/traffic/views"],
+    getWebhook: ["GET /repos/{owner}/{repo}/hooks/{hook_id}"],
+    getWebhookConfigForRepo: ["GET /repos/{owner}/{repo}/hooks/{hook_id}/config"],
+    listBranches: ["GET /repos/{owner}/{repo}/branches"],
+    listBranchesForHeadCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head", {
+      mediaType: {
+        previews: ["groot"]
+      }
+    }],
+    listCollaborators: ["GET /repos/{owner}/{repo}/collaborators"],
+    listCommentsForCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/comments"],
+    listCommitCommentsForRepo: ["GET /repos/{owner}/{repo}/comments"],
+    listCommitStatusesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/statuses"],
+    listCommits: ["GET /repos/{owner}/{repo}/commits"],
+    listContributors: ["GET /repos/{owner}/{repo}/contributors"],
+    listDeployKeys: ["GET /repos/{owner}/{repo}/keys"],
+    listDeploymentStatuses: ["GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"],
+    listDeployments: ["GET /repos/{owner}/{repo}/deployments"],
+    listForAuthenticatedUser: ["GET /user/repos"],
+    listForOrg: ["GET /orgs/{org}/repos"],
+    listForUser: ["GET /users/{username}/repos"],
+    listForks: ["GET /repos/{owner}/{repo}/forks"],
+    listInvitations: ["GET /repos/{owner}/{repo}/invitations"],
+    listInvitationsForAuthenticatedUser: ["GET /user/repository_invitations"],
+    listLanguages: ["GET /repos/{owner}/{repo}/languages"],
+    listPagesBuilds: ["GET /repos/{owner}/{repo}/pages/builds"],
+    listPublic: ["GET /repositories"],
+    listPullRequestsAssociatedWithCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls", {
+      mediaType: {
+        previews: ["groot"]
+      }
+    }],
+    listReleaseAssets: ["GET /repos/{owner}/{repo}/releases/{release_id}/assets"],
+    listReleases: ["GET /repos/{owner}/{repo}/releases"],
+    listTags: ["GET /repos/{owner}/{repo}/tags"],
+    listTeams: ["GET /repos/{owner}/{repo}/teams"],
+    listWebhooks: ["GET /repos/{owner}/{repo}/hooks"],
+    merge: ["POST /repos/{owner}/{repo}/merges"],
+    pingWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/pings"],
+    removeAppAccessRestrictions: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps", {}, {
+      mapToData: "apps"
+    }],
+    removeCollaborator: ["DELETE /repos/{owner}/{repo}/collaborators/{username}"],
+    removeStatusCheckContexts: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts", {}, {
+      mapToData: "contexts"
+    }],
+    removeStatusCheckProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"],
+    removeTeamAccessRestrictions: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams", {}, {
+      mapToData: "teams"
+    }],
+    removeUserAccessRestrictions: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users", {}, {
+      mapToData: "users"
+    }],
+    renameBranch: ["POST /repos/{owner}/{repo}/branches/{branch}/rename"],
+    replaceAllTopics: ["PUT /repos/{owner}/{repo}/topics", {
+      mediaType: {
+        previews: ["mercy"]
+      }
+    }],
+    requestPagesBuild: ["POST /repos/{owner}/{repo}/pages/builds"],
+    setAdminBranchProtection: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"],
+    setAppAccessRestrictions: ["PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps", {}, {
+      mapToData: "apps"
+    }],
+    setStatusCheckContexts: ["PUT /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts", {}, {
+      mapToData: "contexts"
+    }],
+    setTeamAccessRestrictions: ["PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams", {}, {
+      mapToData: "teams"
+    }],
+    setUserAccessRestrictions: ["PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users", {}, {
+      mapToData: "users"
+    }],
+    testPushWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/tests"],
+    transfer: ["POST /repos/{owner}/{repo}/transfer"],
+    update: ["PATCH /repos/{owner}/{repo}"],
+    updateBranchProtection: ["PUT /repos/{owner}/{repo}/branches/{branch}/protection"],
+    updateCommitComment: ["PATCH /repos/{owner}/{repo}/comments/{comment_id}"],
+    updateInformationAboutPagesSite: ["PUT /repos/{owner}/{repo}/pages"],
+    updateInvitation: ["PATCH /repos/{owner}/{repo}/invitations/{invitation_id}"],
+    updatePullRequestReviewProtection: ["PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"],
+    updateRelease: ["PATCH /repos/{owner}/{repo}/releases/{release_id}"],
+    updateReleaseAsset: ["PATCH /repos/{owner}/{repo}/releases/assets/{asset_id}"],
+    updateStatusCheckPotection: ["PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks", {}, {
+      renamed: ["repos", "updateStatusCheckProtection"]
+    }],
+    updateStatusCheckProtection: ["PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"],
+    updateWebhook: ["PATCH /repos/{owner}/{repo}/hooks/{hook_id}"],
+    updateWebhookConfigForRepo: ["PATCH /repos/{owner}/{repo}/hooks/{hook_id}/config"],
+    uploadReleaseAsset: ["POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}", {
+      baseUrl: "https://uploads.github.com"
+    }]
+  },
+  search: {
+    code: ["GET /search/code"],
+    commits: ["GET /search/commits", {
+      mediaType: {
+        previews: ["cloak"]
+      }
+    }],
+    issuesAndPullRequests: ["GET /search/issues"],
+    labels: ["GET /search/labels"],
+    repos: ["GET /search/repositories"],
+    topics: ["GET /search/topics", {
+      mediaType: {
+        previews: ["mercy"]
+      }
+    }],
+    users: ["GET /search/users"]
+  },
+  secretScanning: {
+    getAlert: ["GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"],
+    listAlertsForRepo: ["GET /repos/{owner}/{repo}/secret-scanning/alerts"],
+    updateAlert: ["PATCH /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"]
+  },
+  teams: {
+    addOrUpdateMembershipForUserInOrg: ["PUT /orgs/{org}/teams/{team_slug}/memberships/{username}"],
+    addOrUpdateProjectPermissionsInOrg: ["PUT /orgs/{org}/teams/{team_slug}/projects/{project_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    addOrUpdateRepoPermissionsInOrg: ["PUT /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"],
+    checkPermissionsForProjectInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects/{project_id}", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    checkPermissionsForRepoInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"],
+    create: ["POST /orgs/{org}/teams"],
+    createDiscussionCommentInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"],
+    createDiscussionInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions"],
+    deleteDiscussionCommentInOrg: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"],
+    deleteDiscussionInOrg: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"],
+    deleteInOrg: ["DELETE /orgs/{org}/teams/{team_slug}"],
+    getByName: ["GET /orgs/{org}/teams/{team_slug}"],
+    getDiscussionCommentInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"],
+    getDiscussionInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"],
+    getMembershipForUserInOrg: ["GET /orgs/{org}/teams/{team_slug}/memberships/{username}"],
+    list: ["GET /orgs/{org}/teams"],
+    listChildInOrg: ["GET /orgs/{org}/teams/{team_slug}/teams"],
+    listDiscussionCommentsInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"],
+    listDiscussionsInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions"],
+    listForAuthenticatedUser: ["GET /user/teams"],
+    listMembersInOrg: ["GET /orgs/{org}/teams/{team_slug}/members"],
+    listPendingInvitationsInOrg: ["GET /orgs/{org}/teams/{team_slug}/invitations"],
+    listProjectsInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects", {
+      mediaType: {
+        previews: ["inertia"]
+      }
+    }],
+    listReposInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos"],
+    removeMembershipForUserInOrg: ["DELETE /orgs/{org}/teams/{team_slug}/memberships/{username}"],
+    removeProjectInOrg: ["DELETE /orgs/{org}/teams/{team_slug}/projects/{project_id}"],
+    removeRepoInOrg: ["DELETE /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"],
+    updateDiscussionCommentInOrg: ["PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"],
+    updateDiscussionInOrg: ["PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"],
+    updateInOrg: ["PATCH /orgs/{org}/teams/{team_slug}"]
+  },
+  users: {
+    addEmailForAuthenticated: ["POST /user/emails"],
+    block: ["PUT /user/blocks/{username}"],
+    checkBlocked: ["GET /user/blocks/{username}"],
+    checkFollowingForUser: ["GET /users/{username}/following/{target_user}"],
+    checkPersonIsFollowedByAuthenticated: ["GET /user/following/{username}"],
+    createGpgKeyForAuthenticated: ["POST /user/gpg_keys"],
+    createPublicSshKeyForAuthenticated: ["POST /user/keys"],
+    deleteEmailForAuthenticated: ["DELETE /user/emails"],
+    deleteGpgKeyForAuthenticated: ["DELETE /user/gpg_keys/{gpg_key_id}"],
+    deletePublicSshKeyForAuthenticated: ["DELETE /user/keys/{key_id}"],
+    follow: ["PUT /user/following/{username}"],
+    getAuthenticated: ["GET /user"],
+    getByUsername: ["GET /users/{username}"],
+    getContextForUser: ["GET /users/{username}/hovercard"],
+    getGpgKeyForAuthenticated: ["GET /user/gpg_keys/{gpg_key_id}"],
+    getPublicSshKeyForAuthenticated: ["GET /user/keys/{key_id}"],
+    list: ["GET /users"],
+    listBlockedByAuthenticated: ["GET /user/blocks"],
+    listEmailsForAuthenticated: ["GET /user/emails"],
+    listFollowedByAuthenticated: ["GET /user/following"],
+    listFollowersForAuthenticatedUser: ["GET /user/followers"],
+    listFollowersForUser: ["GET /users/{username}/followers"],
+    listFollowingForUser: ["GET /users/{username}/following"],
+    listGpgKeysForAuthenticated: ["GET /user/gpg_keys"],
+    listGpgKeysForUser: ["GET /users/{username}/gpg_keys"],
+    listPublicEmailsForAuthenticated: ["GET /user/public_emails"],
+    listPublicKeysForUser: ["GET /users/{username}/keys"],
+    listPublicSshKeysForAuthenticated: ["GET /user/keys"],
+    setPrimaryEmailVisibilityForAuthenticated: ["PATCH /user/email/visibility"],
+    unblock: ["DELETE /user/blocks/{username}"],
+    unfollow: ["DELETE /user/following/{username}"],
+    updateAuthenticated: ["PATCH /user"]
+  }
 };
 
+const VERSION = "4.15.1";
+
+function endpointsToMethods(octokit, endpointsMap) {
+  const newMethods = {};
+
+  for (const [scope, endpoints] of Object.entries(endpointsMap)) {
+    for (const [methodName, endpoint] of Object.entries(endpoints)) {
+      const [route, defaults, decorations] = endpoint;
+      const [method, url] = route.split(/ /);
+      const endpointDefaults = Object.assign({
+        method,
+        url
+      }, defaults);
+
+      if (!newMethods[scope]) {
+        newMethods[scope] = {};
+      }
+
+      const scopeMethods = newMethods[scope];
+
+      if (decorations) {
+        scopeMethods[methodName] = decorate(octokit, scope, methodName, endpointDefaults, decorations);
+        continue;
+      }
+
+      scopeMethods[methodName] = octokit.request.defaults(endpointDefaults);
+    }
+  }
+
+  return newMethods;
+}
+
+function decorate(octokit, scope, methodName, defaults, decorations) {
+  const requestWithDefaults = octokit.request.defaults(defaults);
+  /* istanbul ignore next */
+
+  function withDecorations(...args) {
+    // @ts-ignore https://github.com/microsoft/TypeScript/issues/25488
+    let options = requestWithDefaults.endpoint.merge(...args); // There are currently no other decorations than `.mapToData`
+
+    if (decorations.mapToData) {
+      options = Object.assign({}, options, {
+        data: options[decorations.mapToData],
+        [decorations.mapToData]: undefined
+      });
+      return requestWithDefaults(options);
+    }
+
+    if (decorations.renamed) {
+      const [newScope, newMethodName] = decorations.renamed;
+      octokit.log.warn(`octokit.${scope}.${methodName}() has been renamed to octokit.${newScope}.${newMethodName}()`);
+    }
+
+    if (decorations.deprecated) {
+      octokit.log.warn(decorations.deprecated);
+    }
+
+    if (decorations.renamedParameters) {
+      // @ts-ignore https://github.com/microsoft/TypeScript/issues/25488
+      const options = requestWithDefaults.endpoint.merge(...args);
+
+      for (const [name, alias] of Object.entries(decorations.renamedParameters)) {
+        if (name in options) {
+          octokit.log.warn(`"${name}" parameter is deprecated for "octokit.${scope}.${methodName}()". Use "${alias}" instead`);
+
+          if (!(alias in options)) {
+            options[alias] = options[name];
+          }
+
+          delete options[name];
+        }
+      }
+
+      return requestWithDefaults(options);
+    } // @ts-ignore https://github.com/microsoft/TypeScript/issues/25488
+
+
+    return requestWithDefaults(...args);
+  }
+
+  return Object.assign(withDecorations, requestWithDefaults);
+}
+
+function restEndpointMethods(octokit) {
+  const api = endpointsToMethods(octokit, Endpoints);
+  return _objectSpread2(_objectSpread2({}, api), {}, {
+    rest: api
+  });
+}
+restEndpointMethods.VERSION = VERSION;
+
+exports.restEndpointMethods = restEndpointMethods;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 537:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var deprecation = __nccwpck_require__(8932);
+var once = _interopDefault(__nccwpck_require__(1223));
+
+const logOnceCode = once(deprecation => console.warn(deprecation));
+const logOnceHeaders = once(deprecation => console.warn(deprecation));
 /**
- * Parse the given `str` and return milliseconds.
- *
- * @param {String} str
- * @return {Number}
- * @api private
+ * Error with extra properties to help with debugging
  */
 
-function parse(str) {
-  str = String(str);
-  if (str.length > 100) {
+class RequestError extends Error {
+  constructor(message, statusCode, options) {
+    super(message); // Maintains proper stack trace (only available on V8)
+
+    /* istanbul ignore next */
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+
+    this.name = "HttpError";
+    this.status = statusCode;
+    let headers;
+
+    if ("headers" in options && typeof options.headers !== "undefined") {
+      headers = options.headers;
+    }
+
+    if ("response" in options) {
+      this.response = options.response;
+      headers = options.response.headers;
+    } // redact request credentials without mutating original request options
+
+
+    const requestCopy = Object.assign({}, options.request);
+
+    if (options.request.headers.authorization) {
+      requestCopy.headers = Object.assign({}, options.request.headers, {
+        authorization: options.request.headers.authorization.replace(/ .*$/, " [REDACTED]")
+      });
+    }
+
+    requestCopy.url = requestCopy.url // client_id & client_secret can be passed as URL query parameters to increase rate limit
+    // see https://developer.github.com/v3/#increasing-the-unauthenticated-rate-limit-for-oauth-applications
+    .replace(/\bclient_secret=\w+/g, "client_secret=[REDACTED]") // OAuth tokens can be passed as URL query parameters, although it is not recommended
+    // see https://developer.github.com/v3/#oauth2-token-sent-in-a-header
+    .replace(/\baccess_token=\w+/g, "access_token=[REDACTED]");
+    this.request = requestCopy; // deprecations
+
+    Object.defineProperty(this, "code", {
+      get() {
+        logOnceCode(new deprecation.Deprecation("[@octokit/request-error] `error.code` is deprecated, use `error.status`."));
+        return statusCode;
+      }
+
+    });
+    Object.defineProperty(this, "headers", {
+      get() {
+        logOnceHeaders(new deprecation.Deprecation("[@octokit/request-error] `error.headers` is deprecated, use `error.response.headers`."));
+        return headers || {};
+      }
+
+    });
+  }
+
+}
+
+exports.RequestError = RequestError;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 6234:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var endpoint = __nccwpck_require__(9440);
+var universalUserAgent = __nccwpck_require__(5030);
+var isPlainObject = __nccwpck_require__(3287);
+var nodeFetch = _interopDefault(__nccwpck_require__(467));
+var requestError = __nccwpck_require__(537);
+
+const VERSION = "5.6.3";
+
+function getBufferResponse(response) {
+  return response.arrayBuffer();
+}
+
+function fetchWrapper(requestOptions) {
+  const log = requestOptions.request && requestOptions.request.log ? requestOptions.request.log : console;
+
+  if (isPlainObject.isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body)) {
+    requestOptions.body = JSON.stringify(requestOptions.body);
+  }
+
+  let headers = {};
+  let status;
+  let url;
+  const fetch = requestOptions.request && requestOptions.request.fetch || nodeFetch;
+  return fetch(requestOptions.url, Object.assign({
+    method: requestOptions.method,
+    body: requestOptions.body,
+    headers: requestOptions.headers,
+    redirect: requestOptions.redirect
+  }, // `requestOptions.request.agent` type is incompatible
+  // see https://github.com/octokit/types.ts/pull/264
+  requestOptions.request)).then(async response => {
+    url = response.url;
+    status = response.status;
+
+    for (const keyAndValue of response.headers) {
+      headers[keyAndValue[0]] = keyAndValue[1];
+    }
+
+    if ("deprecation" in headers) {
+      const matches = headers.link && headers.link.match(/<([^>]+)>; rel="deprecation"/);
+      const deprecationLink = matches && matches.pop();
+      log.warn(`[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${headers.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`);
+    }
+
+    if (status === 204 || status === 205) {
+      return;
+    } // GitHub API returns 200 for HEAD requests
+
+
+    if (requestOptions.method === "HEAD") {
+      if (status < 400) {
+        return;
+      }
+
+      throw new requestError.RequestError(response.statusText, status, {
+        response: {
+          url,
+          status,
+          headers,
+          data: undefined
+        },
+        request: requestOptions
+      });
+    }
+
+    if (status === 304) {
+      throw new requestError.RequestError("Not modified", status, {
+        response: {
+          url,
+          status,
+          headers,
+          data: await getResponseData(response)
+        },
+        request: requestOptions
+      });
+    }
+
+    if (status >= 400) {
+      const data = await getResponseData(response);
+      const error = new requestError.RequestError(toErrorMessage(data), status, {
+        response: {
+          url,
+          status,
+          headers,
+          data
+        },
+        request: requestOptions
+      });
+      throw error;
+    }
+
+    return getResponseData(response);
+  }).then(data => {
+    return {
+      status,
+      url,
+      headers,
+      data
+    };
+  }).catch(error => {
+    if (error instanceof requestError.RequestError) throw error;
+    throw new requestError.RequestError(error.message, 500, {
+      request: requestOptions
+    });
+  });
+}
+
+async function getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+
+  if (/application\/json/.test(contentType)) {
+    return response.json();
+  }
+
+  if (!contentType || /^text\/|charset=utf-8$/.test(contentType)) {
+    return response.text();
+  }
+
+  return getBufferResponse(response);
+}
+
+function toErrorMessage(data) {
+  if (typeof data === "string") return data; // istanbul ignore else - just in case
+
+  if ("message" in data) {
+    if (Array.isArray(data.errors)) {
+      return `${data.message}: ${data.errors.map(JSON.stringify).join(", ")}`;
+    }
+
+    return data.message;
+  } // istanbul ignore next - just in case
+
+
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+function withDefaults(oldEndpoint, newDefaults) {
+  const endpoint = oldEndpoint.defaults(newDefaults);
+
+  const newApi = function (route, parameters) {
+    const endpointOptions = endpoint.merge(route, parameters);
+
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return fetchWrapper(endpoint.parse(endpointOptions));
+    }
+
+    const request = (route, parameters) => {
+      return fetchWrapper(endpoint.parse(endpoint.merge(route, parameters)));
+    };
+
+    Object.assign(request, {
+      endpoint,
+      defaults: withDefaults.bind(null, endpoint)
+    });
+    return endpointOptions.request.hook(request, endpointOptions);
+  };
+
+  return Object.assign(newApi, {
+    endpoint,
+    defaults: withDefaults.bind(null, endpoint)
+  });
+}
+
+const request = withDefaults(endpoint.endpoint, {
+  headers: {
+    "user-agent": `octokit-request.js/${VERSION} ${universalUserAgent.getUserAgent()}`
+  }
+});
+
+exports.request = request;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 3682:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var register = __nccwpck_require__(4670)
+var addHook = __nccwpck_require__(5549)
+var removeHook = __nccwpck_require__(6819)
+
+// bind with array of arguments: https://stackoverflow.com/a/21792913
+var bind = Function.bind
+var bindable = bind.bind(bind)
+
+function bindApi (hook, state, name) {
+  var removeHookRef = bindable(removeHook, null).apply(null, name ? [state, name] : [state])
+  hook.api = { remove: removeHookRef }
+  hook.remove = removeHookRef
+
+  ;['before', 'error', 'after', 'wrap'].forEach(function (kind) {
+    var args = name ? [state, kind, name] : [state, kind]
+    hook[kind] = hook.api[kind] = bindable(addHook, null).apply(null, args)
+  })
+}
+
+function HookSingular () {
+  var singularHookName = 'h'
+  var singularHookState = {
+    registry: {}
+  }
+  var singularHook = register.bind(null, singularHookState, singularHookName)
+  bindApi(singularHook, singularHookState, singularHookName)
+  return singularHook
+}
+
+function HookCollection () {
+  var state = {
+    registry: {}
+  }
+
+  var hook = register.bind(null, state)
+  bindApi(hook, state)
+
+  return hook
+}
+
+var collectionHookDeprecationMessageDisplayed = false
+function Hook () {
+  if (!collectionHookDeprecationMessageDisplayed) {
+    console.warn('[before-after-hook]: "Hook()" repurposing warning, use "Hook.Collection()". Read more: https://git.io/upgrade-before-after-hook-to-1.4')
+    collectionHookDeprecationMessageDisplayed = true
+  }
+  return HookCollection()
+}
+
+Hook.Singular = HookSingular.bind()
+Hook.Collection = HookCollection.bind()
+
+module.exports = Hook
+// expose constructors as a named property for TypeScript
+module.exports.Hook = Hook
+module.exports.Singular = Hook.Singular
+module.exports.Collection = Hook.Collection
+
+
+/***/ }),
+
+/***/ 5549:
+/***/ ((module) => {
+
+module.exports = addHook;
+
+function addHook(state, kind, name, hook) {
+  var orig = hook;
+  if (!state.registry[name]) {
+    state.registry[name] = [];
+  }
+
+  if (kind === "before") {
+    hook = function (method, options) {
+      return Promise.resolve()
+        .then(orig.bind(null, options))
+        .then(method.bind(null, options));
+    };
+  }
+
+  if (kind === "after") {
+    hook = function (method, options) {
+      var result;
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .then(function (result_) {
+          result = result_;
+          return orig(result, options);
+        })
+        .then(function () {
+          return result;
+        });
+    };
+  }
+
+  if (kind === "error") {
+    hook = function (method, options) {
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .catch(function (error) {
+          return orig(error, options);
+        });
+    };
+  }
+
+  state.registry[name].push({
+    hook: hook,
+    orig: orig,
+  });
+}
+
+
+/***/ }),
+
+/***/ 4670:
+/***/ ((module) => {
+
+module.exports = register;
+
+function register(state, name, method, options) {
+  if (typeof method !== "function") {
+    throw new Error("method for before hook must be a function");
+  }
+
+  if (!options) {
+    options = {};
+  }
+
+  if (Array.isArray(name)) {
+    return name.reverse().reduce(function (callback, name) {
+      return register.bind(null, state, name, callback, options);
+    }, method)();
+  }
+
+  return Promise.resolve().then(function () {
+    if (!state.registry[name]) {
+      return method(options);
+    }
+
+    return state.registry[name].reduce(function (method, registered) {
+      return registered.hook.bind(null, method, options);
+    }, method)();
+  });
+}
+
+
+/***/ }),
+
+/***/ 6819:
+/***/ ((module) => {
+
+module.exports = removeHook;
+
+function removeHook(state, name, method) {
+  if (!state.registry[name]) {
     return;
   }
-  var match = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(
-    str
-  );
-  if (!match) {
+
+  var index = state.registry[name]
+    .map(function (registered) {
+      return registered.orig;
+    })
+    .indexOf(method);
+
+  if (index === -1) {
     return;
   }
-  var n = parseFloat(match[1]);
-  var type = (match[2] || 'ms').toLowerCase();
-  switch (type) {
-    case 'years':
-    case 'year':
-    case 'yrs':
-    case 'yr':
-    case 'y':
-      return n * y;
-    case 'weeks':
-    case 'week':
-    case 'w':
-      return n * w;
-    case 'days':
-    case 'day':
-    case 'd':
-      return n * d;
-    case 'hours':
-    case 'hour':
-    case 'hrs':
-    case 'hr':
-    case 'h':
-      return n * h;
-    case 'minutes':
-    case 'minute':
-    case 'mins':
-    case 'min':
-    case 'm':
-      return n * m;
-    case 'seconds':
-    case 'second':
-    case 'secs':
-    case 'sec':
-    case 's':
-      return n * s;
-    case 'milliseconds':
-    case 'millisecond':
-    case 'msecs':
-    case 'msec':
-    case 'ms':
-      return n;
-    default:
-      return undefined;
-  }
+
+  state.registry[name].splice(index, 1);
 }
 
-/**
- * Short format for `ms`.
+
+/***/ }),
+
+/***/ 8932:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+class Deprecation extends Error {
+  constructor(message) {
+    super(message); // Maintains proper stack trace (only available on V8)
+
+    /* istanbul ignore next */
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+
+    this.name = 'Deprecation';
+  }
+
+}
+
+exports.Deprecation = Deprecation;
+
+
+/***/ }),
+
+/***/ 3287:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+/*!
+ * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
  *
- * @param {Number} ms
- * @return {String}
- * @api private
+ * Copyright (c) 2014-2017, Jon Schlinkert.
+ * Released under the MIT License.
  */
 
-function fmtShort(ms) {
-  var msAbs = Math.abs(ms);
-  if (msAbs >= d) {
-    return Math.round(ms / d) + 'd';
-  }
-  if (msAbs >= h) {
-    return Math.round(ms / h) + 'h';
-  }
-  if (msAbs >= m) {
-    return Math.round(ms / m) + 'm';
-  }
-  if (msAbs >= s) {
-    return Math.round(ms / s) + 's';
-  }
-  return ms + 'ms';
+function isObject(o) {
+  return Object.prototype.toString.call(o) === '[object Object]';
 }
 
-/**
- * Long format for `ms`.
- *
- * @param {Number} ms
- * @return {String}
- * @api private
- */
+function isPlainObject(o) {
+  var ctor,prot;
 
-function fmtLong(ms) {
-  var msAbs = Math.abs(ms);
-  if (msAbs >= d) {
-    return plural(ms, msAbs, d, 'day');
+  if (isObject(o) === false) return false;
+
+  // If has modified constructor
+  ctor = o.constructor;
+  if (ctor === undefined) return true;
+
+  // If has modified prototype
+  prot = ctor.prototype;
+  if (isObject(prot) === false) return false;
+
+  // If constructor does not have an Object-specific method
+  if (prot.hasOwnProperty('isPrototypeOf') === false) {
+    return false;
   }
-  if (msAbs >= h) {
-    return plural(ms, msAbs, h, 'hour');
-  }
-  if (msAbs >= m) {
-    return plural(ms, msAbs, m, 'minute');
-  }
-  if (msAbs >= s) {
-    return plural(ms, msAbs, s, 'second');
-  }
-  return ms + ' ms';
+
+  // Most likely a plain Object
+  return true;
 }
 
-/**
- * Pluralization helper.
- */
-
-function plural(ms, msAbs, n, name) {
-  var isPlural = msAbs >= n * 1.5;
-  return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
-}
+exports.isPlainObject = isPlainObject;
 
 
 /***/ }),
@@ -5498,5916 +5942,51 @@ exports.FetchError = FetchError;
 
 /***/ }),
 
-/***/ 6424:
-/***/ ((module) => {
-
-"use strict";
-
-
-class TimeoutError extends Error {
-	constructor(message) {
-		super(message);
-		this.name = 'TimeoutError';
-	}
-}
-
-const pTimeout = (promise, milliseconds, fallback, options) => {
-	let timer;
-	const cancelablePromise = new Promise((resolve, reject) => {
-		if (typeof milliseconds !== 'number' || milliseconds < 0) {
-			throw new TypeError('Expected `milliseconds` to be a positive number');
-		}
-
-		if (milliseconds === Infinity) {
-			resolve(promise);
-			return;
-		}
-
-		options = {
-			customTimers: {setTimeout, clearTimeout},
-			...options
-		};
-
-		timer = options.customTimers.setTimeout.call(undefined, () => {
-			if (typeof fallback === 'function') {
-				try {
-					resolve(fallback());
-				} catch (error) {
-					reject(error);
-				}
-
-				return;
-			}
-
-			const message = typeof fallback === 'string' ? fallback : `Promise timed out after ${milliseconds} milliseconds`;
-			const timeoutError = fallback instanceof Error ? fallback : new TimeoutError(message);
-
-			if (typeof promise.cancel === 'function') {
-				promise.cancel();
-			}
-
-			reject(timeoutError);
-		}, milliseconds);
-
-		(async () => {
-			try {
-				resolve(await promise);
-			} catch (error) {
-				reject(error);
-			} finally {
-				options.customTimers.clearTimeout.call(undefined, timer);
-			}
-		})();
-	});
-
-	cancelablePromise.clear = () => {
-		clearTimeout(timer);
-		timer = undefined;
-	};
-
-	return cancelablePromise;
-};
-
-module.exports = pTimeout;
-// TODO: Remove this for the next major release
-module.exports.default = pTimeout;
-
-module.exports.TimeoutError = TimeoutError;
-
-
-/***/ }),
-
-/***/ 6946:
+/***/ 1223:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-"use strict";
-
-
-module.exports = __nccwpck_require__(1634);
-
-
-
-/***/ }),
-
-/***/ 9222:
-/***/ ((module) => {
-
-const fields = module.exports = {};
-
-fields.feed = [
-  ['author', 'creator'],
-  ['dc:publisher', 'publisher'],
-  ['dc:creator', 'creator'],
-  ['dc:source', 'source'],
-  ['dc:title', 'title'],
-  ['dc:type', 'type'],
-  'title',
-  'description',
-  'author',
-  'pubDate',
-  'webMaster',
-  'managingEditor',
-  'generator',
-  'link',
-  'language',
-  'copyright',
-  'lastBuildDate',
-  'docs',
-  'generator',
-  'ttl',
-  'rating',
-  'skipHours',
-  'skipDays',
-];
-
-fields.item = [
-  ['author', 'creator'],
-  ['dc:creator', 'creator'],
-  ['dc:date', 'date'],
-  ['dc:language', 'language'],
-  ['dc:rights', 'rights'],
-  ['dc:source', 'source'],
-  ['dc:title', 'title'],
-  'title',
-  'link',
-  'pubDate',
-  'author',
-  'summary',
-  ['content:encoded', 'content:encoded', {includeSnippet: true}],
-  'enclosure',
-  'dc:creator',
-  'dc:date',
-  'comments',
-];
-
-var mapItunesField = function(f) {
-  return ['itunes:' + f, f];
-}
-
-fields.podcastFeed = ([
-  'author',
-  'subtitle',
-  'summary',
-  'explicit'
-]).map(mapItunesField);
-
-fields.podcastItem = ([
-  'author',
-  'subtitle',
-  'summary',
-  'explicit',
-  'duration',
-  'image',
-  'episode',
-  'image',
-  'season',
-  'keywords',
-]).map(mapItunesField);
-
-
-
-/***/ }),
-
-/***/ 1634:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const http = __nccwpck_require__(8605);
-const https = __nccwpck_require__(7211);
-const xml2js = __nccwpck_require__(6189);
-const url = __nccwpck_require__(8835);
-
-const fields = __nccwpck_require__(9222);
-const utils = __nccwpck_require__(3442);
-
-const DEFAULT_HEADERS = {
-  'User-Agent': 'rss-parser',
-  'Accept': 'application/rss+xml',
-}
-const DEFAULT_MAX_REDIRECTS = 5;
-const DEFAULT_TIMEOUT = 60000;
-
-class Parser {
-  constructor(options={}) {
-    options.headers = options.headers || {};
-    options.xml2js = options.xml2js || {};
-    options.customFields = options.customFields || {};
-    options.customFields.item = options.customFields.item || [];
-    options.customFields.feed = options.customFields.feed || [];
-    options.requestOptions = options.requestOptions || {};
-    if (!options.maxRedirects) options.maxRedirects = DEFAULT_MAX_REDIRECTS;
-    if (!options.timeout) options.timeout = DEFAULT_TIMEOUT;
-    this.options = options;
-    this.xmlParser = new xml2js.Parser(this.options.xml2js);
-  }
-
-  parseString(xml, callback) {
-    let prom = new Promise((resolve, reject) => {
-      this.xmlParser.parseString(xml, (err, result) => {
-        if (err) return reject(err);
-        if (!result) {
-          return reject(new Error('Unable to parse XML.'));
-        }
-        let feed = null;
-        if (result.feed) {
-          feed = this.buildAtomFeed(result);
-        } else if (result.rss && result.rss.$ && result.rss.$.version && result.rss.$.version.match(/^2/)) {
-          feed = this.buildRSS2(result);
-        } else if (result['rdf:RDF']) {
-          feed = this.buildRSS1(result);
-        } else if (result.rss && result.rss.$ && result.rss.$.version && result.rss.$.version.match(/0\.9/)) {
-          feed = this.buildRSS0_9(result);
-        } else if (result.rss && this.options.defaultRSS) {
-          switch(this.options.defaultRSS) {
-            case 0.9:
-              feed = this.buildRSS0_9(result);
-              break;
-            case 1:
-              feed = this.buildRSS1(result);
-              break;
-            case 2:
-              feed = this.buildRSS2(result);
-              break;
-            default:
-              return reject(new Error("default RSS version not recognized."))
-          }
-        } else {
-          return reject(new Error("Feed not recognized as RSS 1 or 2."))
-        }
-        resolve(feed);
-      });
-    });
-    prom = utils.maybePromisify(callback, prom);
-    return prom;
-  }
-
-  parseURL(feedUrl, callback, redirectCount=0) {
-    let xml = '';
-    let get = feedUrl.indexOf('https') === 0 ? https.get : http.get;
-    let urlParts = url.parse(feedUrl);
-    let headers = Object.assign({}, DEFAULT_HEADERS, this.options.headers);
-    let timeout = null;
-    let prom = new Promise((resolve, reject) => {
-      const requestOpts = Object.assign({headers}, urlParts, this.options.requestOptions);
-      let req = get(requestOpts, (res) => {
-        if (this.options.maxRedirects && res.statusCode >= 300 && res.statusCode < 400 && res.headers['location']) {
-          if (redirectCount === this.options.maxRedirects) {
-            return reject(new Error("Too many redirects"));
-          } else {
-            const newLocation = url.resolve(feedUrl, res.headers['location']);
-            return this.parseURL(newLocation, null, redirectCount + 1).then(resolve, reject);
-          }
-        } else if (res.statusCode >= 300) {
-          return reject(new Error("Status code " + res.statusCode))
-        }
-        let encoding = utils.getEncodingFromContentType(res.headers['content-type']);
-        res.setEncoding(encoding);
-        res.on('data', (chunk) => {
-          xml += chunk;
-        });
-        res.on('end', () => {
-          return this.parseString(xml).then(resolve, reject);
-        });
-      })
-      req.on('error', reject);
-      timeout = setTimeout(() => {
-        return reject(new Error("Request timed out after " + this.options.timeout + "ms"));
-      }, this.options.timeout);
-    }).then(data => {
-      clearTimeout(timeout);
-      return Promise.resolve(data);
-    }, e => {
-      clearTimeout(timeout);
-      return Promise.reject(e);
-    });
-    prom = utils.maybePromisify(callback, prom);
-    return prom;
-  }
-
-  buildAtomFeed(xmlObj) {
-    let feed = {items: []};
-    utils.copyFromXML(xmlObj.feed, feed, this.options.customFields.feed);
-    if (xmlObj.feed.link) {
-      feed.link = utils.getLink(xmlObj.feed.link, 'alternate', 0);
-      feed.feedUrl = utils.getLink(xmlObj.feed.link, 'self', 1);
-    }
-    if (xmlObj.feed.title) {
-      let title = xmlObj.feed.title[0] || '';
-      if (title._) title = title._
-      if (title) feed.title = title;
-    }
-    if (xmlObj.feed.updated) {
-      feed.lastBuildDate = xmlObj.feed.updated[0];
-    }
-    feed.items = (xmlObj.feed.entry || []).map(entry => this.parseItemAtom(entry));
-    return feed;
-  }
-
-  parseItemAtom(entry) {
-    let item = {};
-    utils.copyFromXML(entry, item, this.options.customFields.item);
-    if (entry.title) {
-      let title = entry.title[0] || '';
-      if (title._) title = title._;
-      if (title) item.title = title;
-    }
-    if (entry.link && entry.link.length) {
-      item.link = utils.getLink(entry.link, 'alternate', 0);
-    }
-    if (entry.published && entry.published.length && entry.published[0].length) item.pubDate = new Date(entry.published[0]).toISOString();
-    if (!item.pubDate && entry.updated && entry.updated.length && entry.updated[0].length) item.pubDate = new Date(entry.updated[0]).toISOString();
-    if (entry.author && entry.author.length && entry.author[0].name && entry.author[0].name.length) item.author = entry.author[0].name[0];
-    if (entry.content && entry.content.length) {
-      item.content = utils.getContent(entry.content[0]);
-      item.contentSnippet = utils.getSnippet(item.content)
-    }
-    if (entry.summary && entry.summary.length) {
-      item.summary = utils.getContent(entry.summary[0]);
-    }
-    if (entry.id) {
-      item.id = entry.id[0];
-    }
-    this.setISODate(item);
-    return item;
-  }
-
-  buildRSS0_9(xmlObj) {
-    var channel = xmlObj.rss.channel[0];
-    var items = channel.item;
-    return this.buildRSS(channel, items);
-  }
-
-  buildRSS1(xmlObj) {
-    xmlObj = xmlObj['rdf:RDF'];
-    let channel = xmlObj.channel[0];
-    let items = xmlObj.item;
-    return this.buildRSS(channel, items);
-  }
-
-  buildRSS2(xmlObj) {
-    let channel = xmlObj.rss.channel[0];
-    let items = channel.item;
-    let feed = this.buildRSS(channel, items);
-    if (xmlObj.rss.$ && xmlObj.rss.$['xmlns:itunes']) {
-      this.decorateItunes(feed, channel);
-    }
-    return feed;
-  }
-
-  buildRSS(channel, items) {
-    items = items || [];
-    let feed = {items: []};
-    let feedFields = fields.feed.concat(this.options.customFields.feed);
-    let itemFields = fields.item.concat(this.options.customFields.item);
-    if (channel['atom:link'] && channel['atom:link'][0] && channel['atom:link'][0].$) {
-      feed.feedUrl = channel['atom:link'][0].$.href;
-    }
-    if (channel.image && channel.image[0] && channel.image[0].url) {
-      feed.image = {};
-      let image = channel.image[0];
-      if (image.link) feed.image.link = image.link[0];
-      if (image.url) feed.image.url = image.url[0];
-      if (image.title) feed.image.title = image.title[0];
-      if (image.width) feed.image.width = image.width[0];
-      if (image.height) feed.image.height = image.height[0];
-    }
-    const paginationLinks = this.generatePaginationLinks(channel);
-    if (Object.keys(paginationLinks).length) {
-      feed.paginationLinks = paginationLinks;
-    }
-    utils.copyFromXML(channel, feed, feedFields);
-    feed.items = items.map(xmlItem => this.parseItemRss(xmlItem, itemFields));
-    return feed;
-  }
-
-  parseItemRss(xmlItem, itemFields) {
-    let item = {};
-    utils.copyFromXML(xmlItem, item, itemFields);
-    if (xmlItem.enclosure) {
-      item.enclosure = xmlItem.enclosure[0].$;
-    }
-    if (xmlItem.description) {
-      item.content = utils.getContent(xmlItem.description[0]);
-      item.contentSnippet = utils.getSnippet(item.content);
-    }
-    if (xmlItem.guid) {
-      item.guid = xmlItem.guid[0];
-      if (item.guid._) item.guid = item.guid._;
-    }
-    if (xmlItem.category) item.categories = xmlItem.category;
-    this.setISODate(item);
-    return item;
-  }
-
-  /**
-   * Add iTunes specific fields from XML to extracted JSON
-   *
-   * @access public
-   * @param {object} feed extracted
-   * @param {object} channel parsed XML
-   */
-  decorateItunes(feed, channel) {
-    let items = channel.item || [];
-    let categories = [];
-    feed.itunes = {}
-
-    if (channel['itunes:owner']) {
-      let owner = {};
-
-      if(channel['itunes:owner'][0]['itunes:name']) {
-        owner.name = channel['itunes:owner'][0]['itunes:name'][0];
-      }
-      if(channel['itunes:owner'][0]['itunes:email']) {
-        owner.email = channel['itunes:owner'][0]['itunes:email'][0];
-      }
-      feed.itunes.owner = owner;
-    }
-
-    if (channel['itunes:image']) {
-      let image;
-      let hasImageHref = (channel['itunes:image'][0] &&
-        channel['itunes:image'][0].$ &&
-        channel['itunes:image'][0].$.href);
-      image = hasImageHref ? channel['itunes:image'][0].$.href : null;
-      if (image) {
-        feed.itunes.image = image;
-      }
-    }
-
-    if (channel['itunes:category']) {
-      const categoriesWithSubs = channel['itunes:category'].map((category) => {
-        return {
-          name: category.$.text,
-          subs: category['itunes:category'] ?
-            category['itunes:category']
-              .map((subcategory) => ({ name: subcategory.$.text })) : null,
-        };
-      });
-
-      feed.itunes.categories = categoriesWithSubs.map((category) => category.name);
-      feed.itunes.categoriesWithSubs = categoriesWithSubs;
-    }
-
-    if (channel['itunes:keywords']) {
-      if (channel['itunes:keywords'].length > 1) {
-        feed.itunes.keywords = channel['itunes:keywords'].map(
-          keyword => keyword.$.text
-        );
-      } else {
-        let keywords = channel['itunes:keywords'][0];
-        if (keywords && typeof keywords._ === 'string') {
-          keywords = keywords._;
-        }
-
-        if (keywords && keywords.$ && keywords.$.text) {
-          feed.itunes.keywords = keywords.$.text.split(',')
-        } else if (typeof keywords === "string") {
-          feed.itunes.keywords = keywords.split(',');
-        }
-      }
-    }
-
-    utils.copyFromXML(channel, feed.itunes, fields.podcastFeed);
-    items.forEach((item, index) => {
-      let entry = feed.items[index];
-      entry.itunes = {};
-      utils.copyFromXML(item, entry.itunes, fields.podcastItem);
-      let image = item['itunes:image'];
-      if (image && image[0] && image[0].$ && image[0].$.href) {
-        entry.itunes.image = image[0].$.href;
-      }
-    });
-  }
-
-  setISODate(item) {
-    let date = item.pubDate || item.date;
-    if (date) {
-      try {
-        item.isoDate = new Date(date.trim()).toISOString();
-      } catch (e) {
-        // Ignore bad date format
-      }
-    }
-  }
-
-  /**
-   * Generates a pagination object where the rel attribute is the key and href attribute is the value
-   *  { self: 'self-url', first: 'first-url', ...  }
-   *
-   * @access private
-   * @param {Object} channel parsed XML
-   * @returns {Object}
-   */
-  generatePaginationLinks(channel) {
-    if (!channel['atom:link']) {
-      return {};
-    }
-    const paginationRelAttributes = ['self', 'first', 'next', 'prev', 'last'];
-
-    return channel['atom:link'].reduce((paginationLinks, link) => {
-      if (!link.$ || !paginationRelAttributes.includes(link.$.rel)) {
-        return paginationLinks;
-      }
-      paginationLinks[link.$.rel] = link.$.href;
-      return paginationLinks;
-    }, {});
-  }
-}
-
-module.exports = Parser;
-
-
-/***/ }),
-
-/***/ 3442:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const utils = module.exports = {};
-const entities = __nccwpck_require__(3000);
-const xml2js = __nccwpck_require__(6189);
-
-utils.stripHtml = function(str) {
-  str = str.replace(/([^\n])<\/?(h|br|p|ul|ol|li|blockquote|section|table|tr|div)(?:.|\n)*?>([^\n])/gm, '$1\n$3')
-  str = str.replace(/<(?:.|\n)*?>/gm, '');
-  return str;
-}
-
-utils.getSnippet = function(str) {
-  return entities.decodeHTML(utils.stripHtml(str)).trim();
-}
-
-utils.getLink = function(links, rel, fallbackIdx) {
-  if (!links) return;
-  for (let i = 0; i < links.length; ++i) {
-    if (links[i].$.rel === rel) return links[i].$.href;
-  }
-  if (links[fallbackIdx]) return links[fallbackIdx].$.href;
-}
-
-utils.getContent = function(content) {
-  if (typeof content._ === 'string') {
-    return content._;
-  } else if (typeof content === 'object') {
-    let builder = new xml2js.Builder({headless: true, explicitRoot: true, rootName: 'div', renderOpts: {pretty: false}});
-    return builder.buildObject(content);
-  } else {
-    return content;
-  }
-}
-
-utils.copyFromXML = function(xml, dest, fields) {
-  fields.forEach(function(f) {
-    let from = f;
-    let to = f;
-    let options = {};
-    if (Array.isArray(f)) {
-      from = f[0];
-      to = f[1];
-      if (f.length > 2) {
-        options = f[2];
-      }
-    }
-    const { keepArray, includeSnippet } = options;
-    if (xml[from] !== undefined){
-      dest[to] = keepArray ? xml[from] : xml[from][0];
-    }
-    if (dest[to] && typeof dest[to]._ === 'string') {
-      dest[to]=dest[to]._;
-    }
-    if (includeSnippet && dest[to] && typeof dest[to] === 'string') {
-      dest[to + 'Snippet'] = utils.getSnippet(dest[to]);
-    }
-  })
-}
-
-utils.maybePromisify = function(callback, promise) {
-  if (!callback) return promise;
-  return promise.then(
-    data => setTimeout(() => callback(null, data)),
-    err => setTimeout(() => callback(err))
-  );
-}
-
-const DEFAULT_ENCODING = 'utf8';
-const ENCODING_REGEX = /(encoding|charset)\s*=\s*(\S+)/;
-const SUPPORTED_ENCODINGS = ['ascii', 'utf8', 'utf16le', 'ucs2', 'base64', 'latin1', 'binary', 'hex'];
-const ENCODING_ALIASES = {
-  'utf-8': 'utf8',
-  'iso-8859-1': 'latin1',
-}
-
-utils.getEncodingFromContentType = function(contentType) {
-  contentType = contentType || '';
-  let match = contentType.match(ENCODING_REGEX);
-  let encoding = (match || [])[2] || '';
-  encoding = encoding.toLowerCase();
-  encoding = ENCODING_ALIASES[encoding] || encoding;
-  if (!encoding || SUPPORTED_ENCODINGS.indexOf(encoding) === -1) {
-    encoding = DEFAULT_ENCODING;
-  }
-  return encoding;
-}
-
-
-/***/ }),
-
-/***/ 9373:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-/**
- * @author Michael Raith
- * @date   24.02.2016 12:04
- */
-
-
-
-var crypto = __nccwpck_require__(6417);
-var bufferAlloc = __nccwpck_require__(6615);
-
-
-/**
- * Do a constant time string comparison. Always compare the complete strings
- * against each other to get a constant time. This method does not short-cut
- * if the two string's length differs.
- *
- * @param {string} a
- * @param {string} b
- *
- * @return {boolean}
- */
-var safeCompare = function safeCompare(a, b) {
-    var strA = String(a);
-    var strB = String(b);
-    var lenA = strA.length;
-    var result = 0;
-
-    if (lenA !== strB.length) {
-        strB = strA;
-        result = 1;
-    }
-
-    for (var i = 0; i < lenA; i++) {
-        result |= (strA.charCodeAt(i) ^ strB.charCodeAt(i));
-    }
-
-    return result === 0;
-};
-
-
-/**
- * Call native "crypto.timingSafeEqual" methods.
- * All passed values will be converted into strings first.
- *
- * Runtime is always corresponding to the length of the first parameter (string
- * a).
- *
- * @param {string} a
- * @param {string} b
- *
- * @return {boolean}
- */
-var nativeTimingSafeEqual = function nativeTimingSafeEqual(a, b) {
-    var strA = String(a);
-    var strB = String(b);
-    var aLen = Buffer.byteLength(strA);
-    var bLen = Buffer.byteLength(strB);
-
-    // Always use length of a to avoid leaking the length. Even if this is a
-    // false positive because one is a prefix of the other, the explicit length
-    // check at the end will catch that.
-    var bufA = bufferAlloc(aLen, 0, 'utf8');
-    bufA.write(strA);
-    var bufB = bufferAlloc(aLen, 0, 'utf8');
-    bufB.write(strB);
-
-    return crypto.timingSafeEqual(bufA, bufB) && aLen === bLen;
-};
-
-
-module.exports = (
-    typeof crypto.timingSafeEqual !== 'undefined' ?
-        nativeTimingSafeEqual :
-        safeCompare
-);
-
-
-/***/ }),
-
-/***/ 521:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-
-var stream = __nccwpck_require__(2413);
-
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-
-function __rest(s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
-    return t;
-}
-
-/**
- * Handles Readable streams requests as concatenation through data handling as
- * well adding tags it each begin, end and between of the streams
- */
-class SandwichStream extends stream.Readable {
-    /**
-     * Initiates the SandwichStream, you can consider it also passing
-     * ReadableOptions to it
-     *
-     * @param head Pushes this content before all other content
-     * @param tail Pushes this content after all other data has been pushed
-     * @param separator Pushes this content between each stream
-     * @param remaining The other kind of options to be passed to Readable
-     * @example
-     * const ss = new SandwichStream({
-     *     head: 'This at the top\n',
-     *     tail: '\nThis at the bottom',
-     *     separator: '\n --- \n'
-     * });
-     */
-    constructor(_a) {
-        var { head, tail, separator } = _a, remaining = __rest(_a, ["head", "tail", "separator"]);
-        super(remaining);
-        this.streamsActive = false;
-        this.streams = [];
-        this.newStreams = [];
-        this.currentStream = null;
-        this.head = (null !== head && undefined !== head) ? head : null;
-        this.tail = (null !== tail && undefined !== tail) ? tail : null;
-        this.separator = (null !== separator && undefined !== separator) ? separator : null;
-    }
-    /**
-     * Add a new Readable stream in the queue
-     *
-     * @param newStream The Readable stream
-     * @example
-     * sandwichStream.add(streamOne);
-     * sandwichStream.add(streamTwo);
-     * sandwichStream.add(streamThree);
-     * @throws An Error in case that this request was not accepted
-     * @returns This instance of Sandwich Stream
-     */
-    add(newStream) {
-        if (false === this.streamsActive) {
-            this.streams.push(newStream);
-            newStream.on('error', this.subStreamOnError.bind(this));
-        }
-        else {
-            this.newStreams.push(newStream);
-        }
-        return this;
-    }
-    /**
-     * Works in a similar way from the Readable read, only that this one checks
-     * for whether or not a stream is already being handled
-     * @returns This instance of Sandwich Stream
-     */
-    _read() {
-        if (false === this.streamsActive) {
-            this.streamsActive = true;
-            this.pushHead();
-            this.streamNextStream();
-        }
-    }
-    /**
-     * Binds an error thrown from one of the streams being handled
-     *
-     * @param err Error to be bind
-     * @returns This instance of Sandwich Stream
-     */
-    subStreamOnError(err) {
-        this.emit('error', err);
-    }
-    /**
-     * Fetches the next stream to be handled
-     * @returns This instance of Sandwich Stream
-     */
-    streamNextStream() {
-        if (true === this.nextStream()) {
-            this.bindCurrentStreamEvents();
-        }
-        else {
-            this.pushTail();
-            this.push(null);
-        }
-    }
-    /**
-     * Verifies whether or not the stream queue has ended
-     * @returns This instance of Sandwich Stream
-     */
-    nextStream() {
-        const tmp = this.streams.shift();
-        this.currentStream = (undefined !== tmp) ? tmp : null;
-        return null !== this.currentStream;
-    }
-    /**
-     * Once the current stream starts to pass their data, this handles it in a
-     * less complicated way
-     * @returns This instance of Sandwich Stream
-     */
-    bindCurrentStreamEvents() {
-        this.currentStream.on('readable', this.currentStreamOnReadable.bind(this));
-        this.currentStream.on('end', this.currentStreamOnEnd.bind(this));
-    }
-    /**
-     * Handles the data from a current stream once they are being streamed
-     * @returns This instance of Sandwich Stream
-     */
-    currentStreamOnReadable() {
-        const tmp = this.currentStream.read();
-        const data = (undefined !== tmp && null !== tmp) ? tmp : '';
-        this.push(data);
-    }
-    /**
-     * Handles the tagging once a stream is finished
-     * @returns This instance of Sandwich Stream
-     */
-    currentStreamOnEnd() {
-        this.pushSeparator();
-        this.streams.concat(this.newStreams);
-        this.newStreams = [];
-        this.streamNextStream();
-    }
-    /**
-     * Adds the head tag to the Sandwich Stream
-     * @returns This instance of Sandwich Stream
-     */
-    pushHead() {
-        if (null !== this.head) {
-            this.push(this.head);
-        }
-    }
-    /**
-     * Adds the separator tag to the Sandwich Stream
-     * @returns This instance of Sandwich Stream
-     */
-    pushSeparator() {
-        if (0 < this.streams.length && null !== this.separator) {
-            this.push(this.separator);
-        }
-    }
-    /**
-     * Adds the tail tag to the Sandwich Stream
-     * @returns This instance of Sandwich Stream
-     */
-    pushTail() {
-        if (null !== this.tail) {
-            this.push(this.tail);
-        }
-    }
-}
-
-exports.SandwichStream = SandwichStream;
-exports.default = SandwichStream;
-
-
-/***/ }),
-
-/***/ 2043:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-;(function (sax) { // wrapper for non-node envs
-  sax.parser = function (strict, opt) { return new SAXParser(strict, opt) }
-  sax.SAXParser = SAXParser
-  sax.SAXStream = SAXStream
-  sax.createStream = createStream
-
-  // When we pass the MAX_BUFFER_LENGTH position, start checking for buffer overruns.
-  // When we check, schedule the next check for MAX_BUFFER_LENGTH - (max(buffer lengths)),
-  // since that's the earliest that a buffer overrun could occur.  This way, checks are
-  // as rare as required, but as often as necessary to ensure never crossing this bound.
-  // Furthermore, buffers are only tested at most once per write(), so passing a very
-  // large string into write() might have undesirable effects, but this is manageable by
-  // the caller, so it is assumed to be safe.  Thus, a call to write() may, in the extreme
-  // edge case, result in creating at most one complete copy of the string passed in.
-  // Set to Infinity to have unlimited buffers.
-  sax.MAX_BUFFER_LENGTH = 64 * 1024
-
-  var buffers = [
-    'comment', 'sgmlDecl', 'textNode', 'tagName', 'doctype',
-    'procInstName', 'procInstBody', 'entity', 'attribName',
-    'attribValue', 'cdata', 'script'
-  ]
-
-  sax.EVENTS = [
-    'text',
-    'processinginstruction',
-    'sgmldeclaration',
-    'doctype',
-    'comment',
-    'opentagstart',
-    'attribute',
-    'opentag',
-    'closetag',
-    'opencdata',
-    'cdata',
-    'closecdata',
-    'error',
-    'end',
-    'ready',
-    'script',
-    'opennamespace',
-    'closenamespace'
-  ]
-
-  function SAXParser (strict, opt) {
-    if (!(this instanceof SAXParser)) {
-      return new SAXParser(strict, opt)
-    }
-
-    var parser = this
-    clearBuffers(parser)
-    parser.q = parser.c = ''
-    parser.bufferCheckPosition = sax.MAX_BUFFER_LENGTH
-    parser.opt = opt || {}
-    parser.opt.lowercase = parser.opt.lowercase || parser.opt.lowercasetags
-    parser.looseCase = parser.opt.lowercase ? 'toLowerCase' : 'toUpperCase'
-    parser.tags = []
-    parser.closed = parser.closedRoot = parser.sawRoot = false
-    parser.tag = parser.error = null
-    parser.strict = !!strict
-    parser.noscript = !!(strict || parser.opt.noscript)
-    parser.state = S.BEGIN
-    parser.strictEntities = parser.opt.strictEntities
-    parser.ENTITIES = parser.strictEntities ? Object.create(sax.XML_ENTITIES) : Object.create(sax.ENTITIES)
-    parser.attribList = []
-
-    // namespaces form a prototype chain.
-    // it always points at the current tag,
-    // which protos to its parent tag.
-    if (parser.opt.xmlns) {
-      parser.ns = Object.create(rootNS)
-    }
-
-    // mostly just for error reporting
-    parser.trackPosition = parser.opt.position !== false
-    if (parser.trackPosition) {
-      parser.position = parser.line = parser.column = 0
-    }
-    emit(parser, 'onready')
-  }
-
-  if (!Object.create) {
-    Object.create = function (o) {
-      function F () {}
-      F.prototype = o
-      var newf = new F()
-      return newf
-    }
-  }
-
-  if (!Object.keys) {
-    Object.keys = function (o) {
-      var a = []
-      for (var i in o) if (o.hasOwnProperty(i)) a.push(i)
-      return a
-    }
-  }
-
-  function checkBufferLength (parser) {
-    var maxAllowed = Math.max(sax.MAX_BUFFER_LENGTH, 10)
-    var maxActual = 0
-    for (var i = 0, l = buffers.length; i < l; i++) {
-      var len = parser[buffers[i]].length
-      if (len > maxAllowed) {
-        // Text/cdata nodes can get big, and since they're buffered,
-        // we can get here under normal conditions.
-        // Avoid issues by emitting the text node now,
-        // so at least it won't get any bigger.
-        switch (buffers[i]) {
-          case 'textNode':
-            closeText(parser)
-            break
-
-          case 'cdata':
-            emitNode(parser, 'oncdata', parser.cdata)
-            parser.cdata = ''
-            break
-
-          case 'script':
-            emitNode(parser, 'onscript', parser.script)
-            parser.script = ''
-            break
-
-          default:
-            error(parser, 'Max buffer length exceeded: ' + buffers[i])
-        }
-      }
-      maxActual = Math.max(maxActual, len)
-    }
-    // schedule the next check for the earliest possible buffer overrun.
-    var m = sax.MAX_BUFFER_LENGTH - maxActual
-    parser.bufferCheckPosition = m + parser.position
-  }
-
-  function clearBuffers (parser) {
-    for (var i = 0, l = buffers.length; i < l; i++) {
-      parser[buffers[i]] = ''
-    }
-  }
-
-  function flushBuffers (parser) {
-    closeText(parser)
-    if (parser.cdata !== '') {
-      emitNode(parser, 'oncdata', parser.cdata)
-      parser.cdata = ''
-    }
-    if (parser.script !== '') {
-      emitNode(parser, 'onscript', parser.script)
-      parser.script = ''
-    }
-  }
-
-  SAXParser.prototype = {
-    end: function () { end(this) },
-    write: write,
-    resume: function () { this.error = null; return this },
-    close: function () { return this.write(null) },
-    flush: function () { flushBuffers(this) }
-  }
-
-  var Stream
-  try {
-    Stream = __nccwpck_require__(2413).Stream
-  } catch (ex) {
-    Stream = function () {}
-  }
-
-  var streamWraps = sax.EVENTS.filter(function (ev) {
-    return ev !== 'error' && ev !== 'end'
+var wrappy = __nccwpck_require__(2940)
+module.exports = wrappy(once)
+module.exports.strict = wrappy(onceStrict)
+
+once.proto = once(function () {
+  Object.defineProperty(Function.prototype, 'once', {
+    value: function () {
+      return once(this)
+    },
+    configurable: true
   })
 
-  function createStream (strict, opt) {
-    return new SAXStream(strict, opt)
-  }
-
-  function SAXStream (strict, opt) {
-    if (!(this instanceof SAXStream)) {
-      return new SAXStream(strict, opt)
-    }
-
-    Stream.apply(this)
-
-    this._parser = new SAXParser(strict, opt)
-    this.writable = true
-    this.readable = true
-
-    var me = this
-
-    this._parser.onend = function () {
-      me.emit('end')
-    }
-
-    this._parser.onerror = function (er) {
-      me.emit('error', er)
-
-      // if didn't throw, then means error was handled.
-      // go ahead and clear error, so we can write again.
-      me._parser.error = null
-    }
-
-    this._decoder = null
-
-    streamWraps.forEach(function (ev) {
-      Object.defineProperty(me, 'on' + ev, {
-        get: function () {
-          return me._parser['on' + ev]
-        },
-        set: function (h) {
-          if (!h) {
-            me.removeAllListeners(ev)
-            me._parser['on' + ev] = h
-            return h
-          }
-          me.on(ev, h)
-        },
-        enumerable: true,
-        configurable: false
-      })
-    })
-  }
-
-  SAXStream.prototype = Object.create(Stream.prototype, {
-    constructor: {
-      value: SAXStream
-    }
+  Object.defineProperty(Function.prototype, 'onceStrict', {
+    value: function () {
+      return onceStrict(this)
+    },
+    configurable: true
   })
+})
 
-  SAXStream.prototype.write = function (data) {
-    if (typeof Buffer === 'function' &&
-      typeof Buffer.isBuffer === 'function' &&
-      Buffer.isBuffer(data)) {
-      if (!this._decoder) {
-        var SD = __nccwpck_require__(4304).StringDecoder
-        this._decoder = new SD('utf8')
-      }
-      data = this._decoder.write(data)
-    }
-
-    this._parser.write(data.toString())
-    this.emit('data', data)
-    return true
+function once (fn) {
+  var f = function () {
+    if (f.called) return f.value
+    f.called = true
+    return f.value = fn.apply(this, arguments)
   }
+  f.called = false
+  return f
+}
 
-  SAXStream.prototype.end = function (chunk) {
-    if (chunk && chunk.length) {
-      this.write(chunk)
-    }
-    this._parser.end()
-    return true
+function onceStrict (fn) {
+  var f = function () {
+    if (f.called)
+      throw new Error(f.onceError)
+    f.called = true
+    return f.value = fn.apply(this, arguments)
   }
-
-  SAXStream.prototype.on = function (ev, handler) {
-    var me = this
-    if (!me._parser['on' + ev] && streamWraps.indexOf(ev) !== -1) {
-      me._parser['on' + ev] = function () {
-        var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null, arguments)
-        args.splice(0, 0, ev)
-        me.emit.apply(me, args)
-      }
-    }
-
-    return Stream.prototype.on.call(me, ev, handler)
-  }
-
-  // this really needs to be replaced with character classes.
-  // XML allows all manner of ridiculous numbers and digits.
-  var CDATA = '[CDATA['
-  var DOCTYPE = 'DOCTYPE'
-  var XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace'
-  var XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
-  var rootNS = { xml: XML_NAMESPACE, xmlns: XMLNS_NAMESPACE }
-
-  // http://www.w3.org/TR/REC-xml/#NT-NameStartChar
-  // This implementation works on strings, a single character at a time
-  // as such, it cannot ever support astral-plane characters (10000-EFFFF)
-  // without a significant breaking change to either this  parser, or the
-  // JavaScript language.  Implementation of an emoji-capable xml parser
-  // is left as an exercise for the reader.
-  var nameStart = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
-
-  var nameBody = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
-
-  var entityStart = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
-  var entityBody = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
-
-  function isWhitespace (c) {
-    return c === ' ' || c === '\n' || c === '\r' || c === '\t'
-  }
-
-  function isQuote (c) {
-    return c === '"' || c === '\''
-  }
-
-  function isAttribEnd (c) {
-    return c === '>' || isWhitespace(c)
-  }
-
-  function isMatch (regex, c) {
-    return regex.test(c)
-  }
-
-  function notMatch (regex, c) {
-    return !isMatch(regex, c)
-  }
-
-  var S = 0
-  sax.STATE = {
-    BEGIN: S++, // leading byte order mark or whitespace
-    BEGIN_WHITESPACE: S++, // leading whitespace
-    TEXT: S++, // general stuff
-    TEXT_ENTITY: S++, // &amp and such.
-    OPEN_WAKA: S++, // <
-    SGML_DECL: S++, // <!BLARG
-    SGML_DECL_QUOTED: S++, // <!BLARG foo "bar
-    DOCTYPE: S++, // <!DOCTYPE
-    DOCTYPE_QUOTED: S++, // <!DOCTYPE "//blah
-    DOCTYPE_DTD: S++, // <!DOCTYPE "//blah" [ ...
-    DOCTYPE_DTD_QUOTED: S++, // <!DOCTYPE "//blah" [ "foo
-    COMMENT_STARTING: S++, // <!-
-    COMMENT: S++, // <!--
-    COMMENT_ENDING: S++, // <!-- blah -
-    COMMENT_ENDED: S++, // <!-- blah --
-    CDATA: S++, // <![CDATA[ something
-    CDATA_ENDING: S++, // ]
-    CDATA_ENDING_2: S++, // ]]
-    PROC_INST: S++, // <?hi
-    PROC_INST_BODY: S++, // <?hi there
-    PROC_INST_ENDING: S++, // <?hi "there" ?
-    OPEN_TAG: S++, // <strong
-    OPEN_TAG_SLASH: S++, // <strong /
-    ATTRIB: S++, // <a
-    ATTRIB_NAME: S++, // <a foo
-    ATTRIB_NAME_SAW_WHITE: S++, // <a foo _
-    ATTRIB_VALUE: S++, // <a foo=
-    ATTRIB_VALUE_QUOTED: S++, // <a foo="bar
-    ATTRIB_VALUE_CLOSED: S++, // <a foo="bar"
-    ATTRIB_VALUE_UNQUOTED: S++, // <a foo=bar
-    ATTRIB_VALUE_ENTITY_Q: S++, // <foo bar="&quot;"
-    ATTRIB_VALUE_ENTITY_U: S++, // <foo bar=&quot
-    CLOSE_TAG: S++, // </a
-    CLOSE_TAG_SAW_WHITE: S++, // </a   >
-    SCRIPT: S++, // <script> ...
-    SCRIPT_ENDING: S++ // <script> ... <
-  }
-
-  sax.XML_ENTITIES = {
-    'amp': '&',
-    'gt': '>',
-    'lt': '<',
-    'quot': '"',
-    'apos': "'"
-  }
-
-  sax.ENTITIES = {
-    'amp': '&',
-    'gt': '>',
-    'lt': '<',
-    'quot': '"',
-    'apos': "'",
-    'AElig': 198,
-    'Aacute': 193,
-    'Acirc': 194,
-    'Agrave': 192,
-    'Aring': 197,
-    'Atilde': 195,
-    'Auml': 196,
-    'Ccedil': 199,
-    'ETH': 208,
-    'Eacute': 201,
-    'Ecirc': 202,
-    'Egrave': 200,
-    'Euml': 203,
-    'Iacute': 205,
-    'Icirc': 206,
-    'Igrave': 204,
-    'Iuml': 207,
-    'Ntilde': 209,
-    'Oacute': 211,
-    'Ocirc': 212,
-    'Ograve': 210,
-    'Oslash': 216,
-    'Otilde': 213,
-    'Ouml': 214,
-    'THORN': 222,
-    'Uacute': 218,
-    'Ucirc': 219,
-    'Ugrave': 217,
-    'Uuml': 220,
-    'Yacute': 221,
-    'aacute': 225,
-    'acirc': 226,
-    'aelig': 230,
-    'agrave': 224,
-    'aring': 229,
-    'atilde': 227,
-    'auml': 228,
-    'ccedil': 231,
-    'eacute': 233,
-    'ecirc': 234,
-    'egrave': 232,
-    'eth': 240,
-    'euml': 235,
-    'iacute': 237,
-    'icirc': 238,
-    'igrave': 236,
-    'iuml': 239,
-    'ntilde': 241,
-    'oacute': 243,
-    'ocirc': 244,
-    'ograve': 242,
-    'oslash': 248,
-    'otilde': 245,
-    'ouml': 246,
-    'szlig': 223,
-    'thorn': 254,
-    'uacute': 250,
-    'ucirc': 251,
-    'ugrave': 249,
-    'uuml': 252,
-    'yacute': 253,
-    'yuml': 255,
-    'copy': 169,
-    'reg': 174,
-    'nbsp': 160,
-    'iexcl': 161,
-    'cent': 162,
-    'pound': 163,
-    'curren': 164,
-    'yen': 165,
-    'brvbar': 166,
-    'sect': 167,
-    'uml': 168,
-    'ordf': 170,
-    'laquo': 171,
-    'not': 172,
-    'shy': 173,
-    'macr': 175,
-    'deg': 176,
-    'plusmn': 177,
-    'sup1': 185,
-    'sup2': 178,
-    'sup3': 179,
-    'acute': 180,
-    'micro': 181,
-    'para': 182,
-    'middot': 183,
-    'cedil': 184,
-    'ordm': 186,
-    'raquo': 187,
-    'frac14': 188,
-    'frac12': 189,
-    'frac34': 190,
-    'iquest': 191,
-    'times': 215,
-    'divide': 247,
-    'OElig': 338,
-    'oelig': 339,
-    'Scaron': 352,
-    'scaron': 353,
-    'Yuml': 376,
-    'fnof': 402,
-    'circ': 710,
-    'tilde': 732,
-    'Alpha': 913,
-    'Beta': 914,
-    'Gamma': 915,
-    'Delta': 916,
-    'Epsilon': 917,
-    'Zeta': 918,
-    'Eta': 919,
-    'Theta': 920,
-    'Iota': 921,
-    'Kappa': 922,
-    'Lambda': 923,
-    'Mu': 924,
-    'Nu': 925,
-    'Xi': 926,
-    'Omicron': 927,
-    'Pi': 928,
-    'Rho': 929,
-    'Sigma': 931,
-    'Tau': 932,
-    'Upsilon': 933,
-    'Phi': 934,
-    'Chi': 935,
-    'Psi': 936,
-    'Omega': 937,
-    'alpha': 945,
-    'beta': 946,
-    'gamma': 947,
-    'delta': 948,
-    'epsilon': 949,
-    'zeta': 950,
-    'eta': 951,
-    'theta': 952,
-    'iota': 953,
-    'kappa': 954,
-    'lambda': 955,
-    'mu': 956,
-    'nu': 957,
-    'xi': 958,
-    'omicron': 959,
-    'pi': 960,
-    'rho': 961,
-    'sigmaf': 962,
-    'sigma': 963,
-    'tau': 964,
-    'upsilon': 965,
-    'phi': 966,
-    'chi': 967,
-    'psi': 968,
-    'omega': 969,
-    'thetasym': 977,
-    'upsih': 978,
-    'piv': 982,
-    'ensp': 8194,
-    'emsp': 8195,
-    'thinsp': 8201,
-    'zwnj': 8204,
-    'zwj': 8205,
-    'lrm': 8206,
-    'rlm': 8207,
-    'ndash': 8211,
-    'mdash': 8212,
-    'lsquo': 8216,
-    'rsquo': 8217,
-    'sbquo': 8218,
-    'ldquo': 8220,
-    'rdquo': 8221,
-    'bdquo': 8222,
-    'dagger': 8224,
-    'Dagger': 8225,
-    'bull': 8226,
-    'hellip': 8230,
-    'permil': 8240,
-    'prime': 8242,
-    'Prime': 8243,
-    'lsaquo': 8249,
-    'rsaquo': 8250,
-    'oline': 8254,
-    'frasl': 8260,
-    'euro': 8364,
-    'image': 8465,
-    'weierp': 8472,
-    'real': 8476,
-    'trade': 8482,
-    'alefsym': 8501,
-    'larr': 8592,
-    'uarr': 8593,
-    'rarr': 8594,
-    'darr': 8595,
-    'harr': 8596,
-    'crarr': 8629,
-    'lArr': 8656,
-    'uArr': 8657,
-    'rArr': 8658,
-    'dArr': 8659,
-    'hArr': 8660,
-    'forall': 8704,
-    'part': 8706,
-    'exist': 8707,
-    'empty': 8709,
-    'nabla': 8711,
-    'isin': 8712,
-    'notin': 8713,
-    'ni': 8715,
-    'prod': 8719,
-    'sum': 8721,
-    'minus': 8722,
-    'lowast': 8727,
-    'radic': 8730,
-    'prop': 8733,
-    'infin': 8734,
-    'ang': 8736,
-    'and': 8743,
-    'or': 8744,
-    'cap': 8745,
-    'cup': 8746,
-    'int': 8747,
-    'there4': 8756,
-    'sim': 8764,
-    'cong': 8773,
-    'asymp': 8776,
-    'ne': 8800,
-    'equiv': 8801,
-    'le': 8804,
-    'ge': 8805,
-    'sub': 8834,
-    'sup': 8835,
-    'nsub': 8836,
-    'sube': 8838,
-    'supe': 8839,
-    'oplus': 8853,
-    'otimes': 8855,
-    'perp': 8869,
-    'sdot': 8901,
-    'lceil': 8968,
-    'rceil': 8969,
-    'lfloor': 8970,
-    'rfloor': 8971,
-    'lang': 9001,
-    'rang': 9002,
-    'loz': 9674,
-    'spades': 9824,
-    'clubs': 9827,
-    'hearts': 9829,
-    'diams': 9830
-  }
-
-  Object.keys(sax.ENTITIES).forEach(function (key) {
-    var e = sax.ENTITIES[key]
-    var s = typeof e === 'number' ? String.fromCharCode(e) : e
-    sax.ENTITIES[key] = s
-  })
-
-  for (var s in sax.STATE) {
-    sax.STATE[sax.STATE[s]] = s
-  }
-
-  // shorthand
-  S = sax.STATE
-
-  function emit (parser, event, data) {
-    parser[event] && parser[event](data)
-  }
-
-  function emitNode (parser, nodeType, data) {
-    if (parser.textNode) closeText(parser)
-    emit(parser, nodeType, data)
-  }
-
-  function closeText (parser) {
-    parser.textNode = textopts(parser.opt, parser.textNode)
-    if (parser.textNode) emit(parser, 'ontext', parser.textNode)
-    parser.textNode = ''
-  }
-
-  function textopts (opt, text) {
-    if (opt.trim) text = text.trim()
-    if (opt.normalize) text = text.replace(/\s+/g, ' ')
-    return text
-  }
-
-  function error (parser, er) {
-    closeText(parser)
-    if (parser.trackPosition) {
-      er += '\nLine: ' + parser.line +
-        '\nColumn: ' + parser.column +
-        '\nChar: ' + parser.c
-    }
-    er = new Error(er)
-    parser.error = er
-    emit(parser, 'onerror', er)
-    return parser
-  }
-
-  function end (parser) {
-    if (parser.sawRoot && !parser.closedRoot) strictFail(parser, 'Unclosed root tag')
-    if ((parser.state !== S.BEGIN) &&
-      (parser.state !== S.BEGIN_WHITESPACE) &&
-      (parser.state !== S.TEXT)) {
-      error(parser, 'Unexpected end')
-    }
-    closeText(parser)
-    parser.c = ''
-    parser.closed = true
-    emit(parser, 'onend')
-    SAXParser.call(parser, parser.strict, parser.opt)
-    return parser
-  }
-
-  function strictFail (parser, message) {
-    if (typeof parser !== 'object' || !(parser instanceof SAXParser)) {
-      throw new Error('bad call to strictFail')
-    }
-    if (parser.strict) {
-      error(parser, message)
-    }
-  }
-
-  function newTag (parser) {
-    if (!parser.strict) parser.tagName = parser.tagName[parser.looseCase]()
-    var parent = parser.tags[parser.tags.length - 1] || parser
-    var tag = parser.tag = { name: parser.tagName, attributes: {} }
-
-    // will be overridden if tag contails an xmlns="foo" or xmlns:foo="bar"
-    if (parser.opt.xmlns) {
-      tag.ns = parent.ns
-    }
-    parser.attribList.length = 0
-    emitNode(parser, 'onopentagstart', tag)
-  }
-
-  function qname (name, attribute) {
-    var i = name.indexOf(':')
-    var qualName = i < 0 ? [ '', name ] : name.split(':')
-    var prefix = qualName[0]
-    var local = qualName[1]
-
-    // <x "xmlns"="http://foo">
-    if (attribute && name === 'xmlns') {
-      prefix = 'xmlns'
-      local = ''
-    }
-
-    return { prefix: prefix, local: local }
-  }
-
-  function attrib (parser) {
-    if (!parser.strict) {
-      parser.attribName = parser.attribName[parser.looseCase]()
-    }
-
-    if (parser.attribList.indexOf(parser.attribName) !== -1 ||
-      parser.tag.attributes.hasOwnProperty(parser.attribName)) {
-      parser.attribName = parser.attribValue = ''
-      return
-    }
-
-    if (parser.opt.xmlns) {
-      var qn = qname(parser.attribName, true)
-      var prefix = qn.prefix
-      var local = qn.local
-
-      if (prefix === 'xmlns') {
-        // namespace binding attribute. push the binding into scope
-        if (local === 'xml' && parser.attribValue !== XML_NAMESPACE) {
-          strictFail(parser,
-            'xml: prefix must be bound to ' + XML_NAMESPACE + '\n' +
-            'Actual: ' + parser.attribValue)
-        } else if (local === 'xmlns' && parser.attribValue !== XMLNS_NAMESPACE) {
-          strictFail(parser,
-            'xmlns: prefix must be bound to ' + XMLNS_NAMESPACE + '\n' +
-            'Actual: ' + parser.attribValue)
-        } else {
-          var tag = parser.tag
-          var parent = parser.tags[parser.tags.length - 1] || parser
-          if (tag.ns === parent.ns) {
-            tag.ns = Object.create(parent.ns)
-          }
-          tag.ns[local] = parser.attribValue
-        }
-      }
-
-      // defer onattribute events until all attributes have been seen
-      // so any new bindings can take effect. preserve attribute order
-      // so deferred events can be emitted in document order
-      parser.attribList.push([parser.attribName, parser.attribValue])
-    } else {
-      // in non-xmlns mode, we can emit the event right away
-      parser.tag.attributes[parser.attribName] = parser.attribValue
-      emitNode(parser, 'onattribute', {
-        name: parser.attribName,
-        value: parser.attribValue
-      })
-    }
-
-    parser.attribName = parser.attribValue = ''
-  }
-
-  function openTag (parser, selfClosing) {
-    if (parser.opt.xmlns) {
-      // emit namespace binding events
-      var tag = parser.tag
-
-      // add namespace info to tag
-      var qn = qname(parser.tagName)
-      tag.prefix = qn.prefix
-      tag.local = qn.local
-      tag.uri = tag.ns[qn.prefix] || ''
-
-      if (tag.prefix && !tag.uri) {
-        strictFail(parser, 'Unbound namespace prefix: ' +
-          JSON.stringify(parser.tagName))
-        tag.uri = qn.prefix
-      }
-
-      var parent = parser.tags[parser.tags.length - 1] || parser
-      if (tag.ns && parent.ns !== tag.ns) {
-        Object.keys(tag.ns).forEach(function (p) {
-          emitNode(parser, 'onopennamespace', {
-            prefix: p,
-            uri: tag.ns[p]
-          })
-        })
-      }
-
-      // handle deferred onattribute events
-      // Note: do not apply default ns to attributes:
-      //   http://www.w3.org/TR/REC-xml-names/#defaulting
-      for (var i = 0, l = parser.attribList.length; i < l; i++) {
-        var nv = parser.attribList[i]
-        var name = nv[0]
-        var value = nv[1]
-        var qualName = qname(name, true)
-        var prefix = qualName.prefix
-        var local = qualName.local
-        var uri = prefix === '' ? '' : (tag.ns[prefix] || '')
-        var a = {
-          name: name,
-          value: value,
-          prefix: prefix,
-          local: local,
-          uri: uri
-        }
-
-        // if there's any attributes with an undefined namespace,
-        // then fail on them now.
-        if (prefix && prefix !== 'xmlns' && !uri) {
-          strictFail(parser, 'Unbound namespace prefix: ' +
-            JSON.stringify(prefix))
-          a.uri = prefix
-        }
-        parser.tag.attributes[name] = a
-        emitNode(parser, 'onattribute', a)
-      }
-      parser.attribList.length = 0
-    }
-
-    parser.tag.isSelfClosing = !!selfClosing
-
-    // process the tag
-    parser.sawRoot = true
-    parser.tags.push(parser.tag)
-    emitNode(parser, 'onopentag', parser.tag)
-    if (!selfClosing) {
-      // special case for <script> in non-strict mode.
-      if (!parser.noscript && parser.tagName.toLowerCase() === 'script') {
-        parser.state = S.SCRIPT
-      } else {
-        parser.state = S.TEXT
-      }
-      parser.tag = null
-      parser.tagName = ''
-    }
-    parser.attribName = parser.attribValue = ''
-    parser.attribList.length = 0
-  }
-
-  function closeTag (parser) {
-    if (!parser.tagName) {
-      strictFail(parser, 'Weird empty close tag.')
-      parser.textNode += '</>'
-      parser.state = S.TEXT
-      return
-    }
-
-    if (parser.script) {
-      if (parser.tagName !== 'script') {
-        parser.script += '</' + parser.tagName + '>'
-        parser.tagName = ''
-        parser.state = S.SCRIPT
-        return
-      }
-      emitNode(parser, 'onscript', parser.script)
-      parser.script = ''
-    }
-
-    // first make sure that the closing tag actually exists.
-    // <a><b></c></b></a> will close everything, otherwise.
-    var t = parser.tags.length
-    var tagName = parser.tagName
-    if (!parser.strict) {
-      tagName = tagName[parser.looseCase]()
-    }
-    var closeTo = tagName
-    while (t--) {
-      var close = parser.tags[t]
-      if (close.name !== closeTo) {
-        // fail the first time in strict mode
-        strictFail(parser, 'Unexpected close tag')
-      } else {
-        break
-      }
-    }
-
-    // didn't find it.  we already failed for strict, so just abort.
-    if (t < 0) {
-      strictFail(parser, 'Unmatched closing tag: ' + parser.tagName)
-      parser.textNode += '</' + parser.tagName + '>'
-      parser.state = S.TEXT
-      return
-    }
-    parser.tagName = tagName
-    var s = parser.tags.length
-    while (s-- > t) {
-      var tag = parser.tag = parser.tags.pop()
-      parser.tagName = parser.tag.name
-      emitNode(parser, 'onclosetag', parser.tagName)
-
-      var x = {}
-      for (var i in tag.ns) {
-        x[i] = tag.ns[i]
-      }
-
-      var parent = parser.tags[parser.tags.length - 1] || parser
-      if (parser.opt.xmlns && tag.ns !== parent.ns) {
-        // remove namespace bindings introduced by tag
-        Object.keys(tag.ns).forEach(function (p) {
-          var n = tag.ns[p]
-          emitNode(parser, 'onclosenamespace', { prefix: p, uri: n })
-        })
-      }
-    }
-    if (t === 0) parser.closedRoot = true
-    parser.tagName = parser.attribValue = parser.attribName = ''
-    parser.attribList.length = 0
-    parser.state = S.TEXT
-  }
-
-  function parseEntity (parser) {
-    var entity = parser.entity
-    var entityLC = entity.toLowerCase()
-    var num
-    var numStr = ''
-
-    if (parser.ENTITIES[entity]) {
-      return parser.ENTITIES[entity]
-    }
-    if (parser.ENTITIES[entityLC]) {
-      return parser.ENTITIES[entityLC]
-    }
-    entity = entityLC
-    if (entity.charAt(0) === '#') {
-      if (entity.charAt(1) === 'x') {
-        entity = entity.slice(2)
-        num = parseInt(entity, 16)
-        numStr = num.toString(16)
-      } else {
-        entity = entity.slice(1)
-        num = parseInt(entity, 10)
-        numStr = num.toString(10)
-      }
-    }
-    entity = entity.replace(/^0+/, '')
-    if (isNaN(num) || numStr.toLowerCase() !== entity) {
-      strictFail(parser, 'Invalid character entity')
-      return '&' + parser.entity + ';'
-    }
-
-    return String.fromCodePoint(num)
-  }
-
-  function beginWhiteSpace (parser, c) {
-    if (c === '<') {
-      parser.state = S.OPEN_WAKA
-      parser.startTagPosition = parser.position
-    } else if (!isWhitespace(c)) {
-      // have to process this as a text node.
-      // weird, but happens.
-      strictFail(parser, 'Non-whitespace before first tag.')
-      parser.textNode = c
-      parser.state = S.TEXT
-    }
-  }
-
-  function charAt (chunk, i) {
-    var result = ''
-    if (i < chunk.length) {
-      result = chunk.charAt(i)
-    }
-    return result
-  }
-
-  function write (chunk) {
-    var parser = this
-    if (this.error) {
-      throw this.error
-    }
-    if (parser.closed) {
-      return error(parser,
-        'Cannot write after close. Assign an onready handler.')
-    }
-    if (chunk === null) {
-      return end(parser)
-    }
-    if (typeof chunk === 'object') {
-      chunk = chunk.toString()
-    }
-    var i = 0
-    var c = ''
-    while (true) {
-      c = charAt(chunk, i++)
-      parser.c = c
-
-      if (!c) {
-        break
-      }
-
-      if (parser.trackPosition) {
-        parser.position++
-        if (c === '\n') {
-          parser.line++
-          parser.column = 0
-        } else {
-          parser.column++
-        }
-      }
-
-      switch (parser.state) {
-        case S.BEGIN:
-          parser.state = S.BEGIN_WHITESPACE
-          if (c === '\uFEFF') {
-            continue
-          }
-          beginWhiteSpace(parser, c)
-          continue
-
-        case S.BEGIN_WHITESPACE:
-          beginWhiteSpace(parser, c)
-          continue
-
-        case S.TEXT:
-          if (parser.sawRoot && !parser.closedRoot) {
-            var starti = i - 1
-            while (c && c !== '<' && c !== '&') {
-              c = charAt(chunk, i++)
-              if (c && parser.trackPosition) {
-                parser.position++
-                if (c === '\n') {
-                  parser.line++
-                  parser.column = 0
-                } else {
-                  parser.column++
-                }
-              }
-            }
-            parser.textNode += chunk.substring(starti, i - 1)
-          }
-          if (c === '<' && !(parser.sawRoot && parser.closedRoot && !parser.strict)) {
-            parser.state = S.OPEN_WAKA
-            parser.startTagPosition = parser.position
-          } else {
-            if (!isWhitespace(c) && (!parser.sawRoot || parser.closedRoot)) {
-              strictFail(parser, 'Text data outside of root node.')
-            }
-            if (c === '&') {
-              parser.state = S.TEXT_ENTITY
-            } else {
-              parser.textNode += c
-            }
-          }
-          continue
-
-        case S.SCRIPT:
-          // only non-strict
-          if (c === '<') {
-            parser.state = S.SCRIPT_ENDING
-          } else {
-            parser.script += c
-          }
-          continue
-
-        case S.SCRIPT_ENDING:
-          if (c === '/') {
-            parser.state = S.CLOSE_TAG
-          } else {
-            parser.script += '<' + c
-            parser.state = S.SCRIPT
-          }
-          continue
-
-        case S.OPEN_WAKA:
-          // either a /, ?, !, or text is coming next.
-          if (c === '!') {
-            parser.state = S.SGML_DECL
-            parser.sgmlDecl = ''
-          } else if (isWhitespace(c)) {
-            // wait for it...
-          } else if (isMatch(nameStart, c)) {
-            parser.state = S.OPEN_TAG
-            parser.tagName = c
-          } else if (c === '/') {
-            parser.state = S.CLOSE_TAG
-            parser.tagName = ''
-          } else if (c === '?') {
-            parser.state = S.PROC_INST
-            parser.procInstName = parser.procInstBody = ''
-          } else {
-            strictFail(parser, 'Unencoded <')
-            // if there was some whitespace, then add that in.
-            if (parser.startTagPosition + 1 < parser.position) {
-              var pad = parser.position - parser.startTagPosition
-              c = new Array(pad).join(' ') + c
-            }
-            parser.textNode += '<' + c
-            parser.state = S.TEXT
-          }
-          continue
-
-        case S.SGML_DECL:
-          if ((parser.sgmlDecl + c).toUpperCase() === CDATA) {
-            emitNode(parser, 'onopencdata')
-            parser.state = S.CDATA
-            parser.sgmlDecl = ''
-            parser.cdata = ''
-          } else if (parser.sgmlDecl + c === '--') {
-            parser.state = S.COMMENT
-            parser.comment = ''
-            parser.sgmlDecl = ''
-          } else if ((parser.sgmlDecl + c).toUpperCase() === DOCTYPE) {
-            parser.state = S.DOCTYPE
-            if (parser.doctype || parser.sawRoot) {
-              strictFail(parser,
-                'Inappropriately located doctype declaration')
-            }
-            parser.doctype = ''
-            parser.sgmlDecl = ''
-          } else if (c === '>') {
-            emitNode(parser, 'onsgmldeclaration', parser.sgmlDecl)
-            parser.sgmlDecl = ''
-            parser.state = S.TEXT
-          } else if (isQuote(c)) {
-            parser.state = S.SGML_DECL_QUOTED
-            parser.sgmlDecl += c
-          } else {
-            parser.sgmlDecl += c
-          }
-          continue
-
-        case S.SGML_DECL_QUOTED:
-          if (c === parser.q) {
-            parser.state = S.SGML_DECL
-            parser.q = ''
-          }
-          parser.sgmlDecl += c
-          continue
-
-        case S.DOCTYPE:
-          if (c === '>') {
-            parser.state = S.TEXT
-            emitNode(parser, 'ondoctype', parser.doctype)
-            parser.doctype = true // just remember that we saw it.
-          } else {
-            parser.doctype += c
-            if (c === '[') {
-              parser.state = S.DOCTYPE_DTD
-            } else if (isQuote(c)) {
-              parser.state = S.DOCTYPE_QUOTED
-              parser.q = c
-            }
-          }
-          continue
-
-        case S.DOCTYPE_QUOTED:
-          parser.doctype += c
-          if (c === parser.q) {
-            parser.q = ''
-            parser.state = S.DOCTYPE
-          }
-          continue
-
-        case S.DOCTYPE_DTD:
-          parser.doctype += c
-          if (c === ']') {
-            parser.state = S.DOCTYPE
-          } else if (isQuote(c)) {
-            parser.state = S.DOCTYPE_DTD_QUOTED
-            parser.q = c
-          }
-          continue
-
-        case S.DOCTYPE_DTD_QUOTED:
-          parser.doctype += c
-          if (c === parser.q) {
-            parser.state = S.DOCTYPE_DTD
-            parser.q = ''
-          }
-          continue
-
-        case S.COMMENT:
-          if (c === '-') {
-            parser.state = S.COMMENT_ENDING
-          } else {
-            parser.comment += c
-          }
-          continue
-
-        case S.COMMENT_ENDING:
-          if (c === '-') {
-            parser.state = S.COMMENT_ENDED
-            parser.comment = textopts(parser.opt, parser.comment)
-            if (parser.comment) {
-              emitNode(parser, 'oncomment', parser.comment)
-            }
-            parser.comment = ''
-          } else {
-            parser.comment += '-' + c
-            parser.state = S.COMMENT
-          }
-          continue
-
-        case S.COMMENT_ENDED:
-          if (c !== '>') {
-            strictFail(parser, 'Malformed comment')
-            // allow <!-- blah -- bloo --> in non-strict mode,
-            // which is a comment of " blah -- bloo "
-            parser.comment += '--' + c
-            parser.state = S.COMMENT
-          } else {
-            parser.state = S.TEXT
-          }
-          continue
-
-        case S.CDATA:
-          if (c === ']') {
-            parser.state = S.CDATA_ENDING
-          } else {
-            parser.cdata += c
-          }
-          continue
-
-        case S.CDATA_ENDING:
-          if (c === ']') {
-            parser.state = S.CDATA_ENDING_2
-          } else {
-            parser.cdata += ']' + c
-            parser.state = S.CDATA
-          }
-          continue
-
-        case S.CDATA_ENDING_2:
-          if (c === '>') {
-            if (parser.cdata) {
-              emitNode(parser, 'oncdata', parser.cdata)
-            }
-            emitNode(parser, 'onclosecdata')
-            parser.cdata = ''
-            parser.state = S.TEXT
-          } else if (c === ']') {
-            parser.cdata += ']'
-          } else {
-            parser.cdata += ']]' + c
-            parser.state = S.CDATA
-          }
-          continue
-
-        case S.PROC_INST:
-          if (c === '?') {
-            parser.state = S.PROC_INST_ENDING
-          } else if (isWhitespace(c)) {
-            parser.state = S.PROC_INST_BODY
-          } else {
-            parser.procInstName += c
-          }
-          continue
-
-        case S.PROC_INST_BODY:
-          if (!parser.procInstBody && isWhitespace(c)) {
-            continue
-          } else if (c === '?') {
-            parser.state = S.PROC_INST_ENDING
-          } else {
-            parser.procInstBody += c
-          }
-          continue
-
-        case S.PROC_INST_ENDING:
-          if (c === '>') {
-            emitNode(parser, 'onprocessinginstruction', {
-              name: parser.procInstName,
-              body: parser.procInstBody
-            })
-            parser.procInstName = parser.procInstBody = ''
-            parser.state = S.TEXT
-          } else {
-            parser.procInstBody += '?' + c
-            parser.state = S.PROC_INST_BODY
-          }
-          continue
-
-        case S.OPEN_TAG:
-          if (isMatch(nameBody, c)) {
-            parser.tagName += c
-          } else {
-            newTag(parser)
-            if (c === '>') {
-              openTag(parser)
-            } else if (c === '/') {
-              parser.state = S.OPEN_TAG_SLASH
-            } else {
-              if (!isWhitespace(c)) {
-                strictFail(parser, 'Invalid character in tag name')
-              }
-              parser.state = S.ATTRIB
-            }
-          }
-          continue
-
-        case S.OPEN_TAG_SLASH:
-          if (c === '>') {
-            openTag(parser, true)
-            closeTag(parser)
-          } else {
-            strictFail(parser, 'Forward-slash in opening tag not followed by >')
-            parser.state = S.ATTRIB
-          }
-          continue
-
-        case S.ATTRIB:
-          // haven't read the attribute name yet.
-          if (isWhitespace(c)) {
-            continue
-          } else if (c === '>') {
-            openTag(parser)
-          } else if (c === '/') {
-            parser.state = S.OPEN_TAG_SLASH
-          } else if (isMatch(nameStart, c)) {
-            parser.attribName = c
-            parser.attribValue = ''
-            parser.state = S.ATTRIB_NAME
-          } else {
-            strictFail(parser, 'Invalid attribute name')
-          }
-          continue
-
-        case S.ATTRIB_NAME:
-          if (c === '=') {
-            parser.state = S.ATTRIB_VALUE
-          } else if (c === '>') {
-            strictFail(parser, 'Attribute without value')
-            parser.attribValue = parser.attribName
-            attrib(parser)
-            openTag(parser)
-          } else if (isWhitespace(c)) {
-            parser.state = S.ATTRIB_NAME_SAW_WHITE
-          } else if (isMatch(nameBody, c)) {
-            parser.attribName += c
-          } else {
-            strictFail(parser, 'Invalid attribute name')
-          }
-          continue
-
-        case S.ATTRIB_NAME_SAW_WHITE:
-          if (c === '=') {
-            parser.state = S.ATTRIB_VALUE
-          } else if (isWhitespace(c)) {
-            continue
-          } else {
-            strictFail(parser, 'Attribute without value')
-            parser.tag.attributes[parser.attribName] = ''
-            parser.attribValue = ''
-            emitNode(parser, 'onattribute', {
-              name: parser.attribName,
-              value: ''
-            })
-            parser.attribName = ''
-            if (c === '>') {
-              openTag(parser)
-            } else if (isMatch(nameStart, c)) {
-              parser.attribName = c
-              parser.state = S.ATTRIB_NAME
-            } else {
-              strictFail(parser, 'Invalid attribute name')
-              parser.state = S.ATTRIB
-            }
-          }
-          continue
-
-        case S.ATTRIB_VALUE:
-          if (isWhitespace(c)) {
-            continue
-          } else if (isQuote(c)) {
-            parser.q = c
-            parser.state = S.ATTRIB_VALUE_QUOTED
-          } else {
-            strictFail(parser, 'Unquoted attribute value')
-            parser.state = S.ATTRIB_VALUE_UNQUOTED
-            parser.attribValue = c
-          }
-          continue
-
-        case S.ATTRIB_VALUE_QUOTED:
-          if (c !== parser.q) {
-            if (c === '&') {
-              parser.state = S.ATTRIB_VALUE_ENTITY_Q
-            } else {
-              parser.attribValue += c
-            }
-            continue
-          }
-          attrib(parser)
-          parser.q = ''
-          parser.state = S.ATTRIB_VALUE_CLOSED
-          continue
-
-        case S.ATTRIB_VALUE_CLOSED:
-          if (isWhitespace(c)) {
-            parser.state = S.ATTRIB
-          } else if (c === '>') {
-            openTag(parser)
-          } else if (c === '/') {
-            parser.state = S.OPEN_TAG_SLASH
-          } else if (isMatch(nameStart, c)) {
-            strictFail(parser, 'No whitespace between attributes')
-            parser.attribName = c
-            parser.attribValue = ''
-            parser.state = S.ATTRIB_NAME
-          } else {
-            strictFail(parser, 'Invalid attribute name')
-          }
-          continue
-
-        case S.ATTRIB_VALUE_UNQUOTED:
-          if (!isAttribEnd(c)) {
-            if (c === '&') {
-              parser.state = S.ATTRIB_VALUE_ENTITY_U
-            } else {
-              parser.attribValue += c
-            }
-            continue
-          }
-          attrib(parser)
-          if (c === '>') {
-            openTag(parser)
-          } else {
-            parser.state = S.ATTRIB
-          }
-          continue
-
-        case S.CLOSE_TAG:
-          if (!parser.tagName) {
-            if (isWhitespace(c)) {
-              continue
-            } else if (notMatch(nameStart, c)) {
-              if (parser.script) {
-                parser.script += '</' + c
-                parser.state = S.SCRIPT
-              } else {
-                strictFail(parser, 'Invalid tagname in closing tag.')
-              }
-            } else {
-              parser.tagName = c
-            }
-          } else if (c === '>') {
-            closeTag(parser)
-          } else if (isMatch(nameBody, c)) {
-            parser.tagName += c
-          } else if (parser.script) {
-            parser.script += '</' + parser.tagName
-            parser.tagName = ''
-            parser.state = S.SCRIPT
-          } else {
-            if (!isWhitespace(c)) {
-              strictFail(parser, 'Invalid tagname in closing tag')
-            }
-            parser.state = S.CLOSE_TAG_SAW_WHITE
-          }
-          continue
-
-        case S.CLOSE_TAG_SAW_WHITE:
-          if (isWhitespace(c)) {
-            continue
-          }
-          if (c === '>') {
-            closeTag(parser)
-          } else {
-            strictFail(parser, 'Invalid characters in closing tag')
-          }
-          continue
-
-        case S.TEXT_ENTITY:
-        case S.ATTRIB_VALUE_ENTITY_Q:
-        case S.ATTRIB_VALUE_ENTITY_U:
-          var returnState
-          var buffer
-          switch (parser.state) {
-            case S.TEXT_ENTITY:
-              returnState = S.TEXT
-              buffer = 'textNode'
-              break
-
-            case S.ATTRIB_VALUE_ENTITY_Q:
-              returnState = S.ATTRIB_VALUE_QUOTED
-              buffer = 'attribValue'
-              break
-
-            case S.ATTRIB_VALUE_ENTITY_U:
-              returnState = S.ATTRIB_VALUE_UNQUOTED
-              buffer = 'attribValue'
-              break
-          }
-
-          if (c === ';') {
-            parser[buffer] += parseEntity(parser)
-            parser.entity = ''
-            parser.state = returnState
-          } else if (isMatch(parser.entity.length ? entityBody : entityStart, c)) {
-            parser.entity += c
-          } else {
-            strictFail(parser, 'Invalid character in entity name')
-            parser[buffer] += '&' + parser.entity + c
-            parser.entity = ''
-            parser.state = returnState
-          }
-
-          continue
-
-        default:
-          throw new Error(parser, 'Unknown state: ' + parser.state)
-      }
-    } // while
-
-    if (parser.position >= parser.bufferCheckPosition) {
-      checkBufferLength(parser)
-    }
-    return parser
-  }
-
-  /*! http://mths.be/fromcodepoint v0.1.0 by @mathias */
-  /* istanbul ignore next */
-  if (!String.fromCodePoint) {
-    (function () {
-      var stringFromCharCode = String.fromCharCode
-      var floor = Math.floor
-      var fromCodePoint = function () {
-        var MAX_SIZE = 0x4000
-        var codeUnits = []
-        var highSurrogate
-        var lowSurrogate
-        var index = -1
-        var length = arguments.length
-        if (!length) {
-          return ''
-        }
-        var result = ''
-        while (++index < length) {
-          var codePoint = Number(arguments[index])
-          if (
-            !isFinite(codePoint) || // `NaN`, `+Infinity`, or `-Infinity`
-            codePoint < 0 || // not a valid Unicode code point
-            codePoint > 0x10FFFF || // not a valid Unicode code point
-            floor(codePoint) !== codePoint // not an integer
-          ) {
-            throw RangeError('Invalid code point: ' + codePoint)
-          }
-          if (codePoint <= 0xFFFF) { // BMP code point
-            codeUnits.push(codePoint)
-          } else { // Astral code point; split in surrogate halves
-            // http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-            codePoint -= 0x10000
-            highSurrogate = (codePoint >> 10) + 0xD800
-            lowSurrogate = (codePoint % 0x400) + 0xDC00
-            codeUnits.push(highSurrogate, lowSurrogate)
-          }
-          if (index + 1 === length || codeUnits.length > MAX_SIZE) {
-            result += stringFromCharCode.apply(null, codeUnits)
-            codeUnits.length = 0
-          }
-        }
-        return result
-      }
-      /* istanbul ignore next */
-      if (Object.defineProperty) {
-        Object.defineProperty(String, 'fromCodePoint', {
-          value: fromCodePoint,
-          configurable: true,
-          writable: true
-        })
-      } else {
-        String.fromCodePoint = fromCodePoint
-      }
-    }())
-  }
-})( false ? 0 : exports)
-
-
-/***/ }),
-
-/***/ 4560:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.login = exports.pay = exports.game = exports.switchToCurrentChat = exports.switchToChat = exports.callback = exports.url = exports.pollRequest = exports.locationRequest = exports.contactRequest = exports.text = void 0;
-function text(text, hide = false) {
-    return { text, hide };
+  var name = fn.name || 'Function wrapped with `once`'
+  f.onceError = name + " shouldn't be called more than once"
+  f.called = false
+  return f
 }
-exports.text = text;
-function contactRequest(text, hide = false) {
-    return { text, request_contact: true, hide };
-}
-exports.contactRequest = contactRequest;
-function locationRequest(text, hide = false) {
-    return { text, request_location: true, hide };
-}
-exports.locationRequest = locationRequest;
-function pollRequest(text, type, hide = false) {
-    return { text, request_poll: { type }, hide };
-}
-exports.pollRequest = pollRequest;
-function url(text, url, hide = false) {
-    return { text, url, hide };
-}
-exports.url = url;
-function callback(text, data, hide = false) {
-    return { text, callback_data: data, hide };
-}
-exports.callback = callback;
-function switchToChat(text, value, hide = false) {
-    return { text, switch_inline_query: value, hide };
-}
-exports.switchToChat = switchToChat;
-function switchToCurrentChat(text, value, hide = false) {
-    return { text, switch_inline_query_current_chat: value, hide };
-}
-exports.switchToCurrentChat = switchToCurrentChat;
-function game(text, hide = false) {
-    return { text, callback_game: {}, hide };
-}
-exports.game = game;
-function pay(text, hide = false) {
-    return { text, pay: true, hide };
-}
-exports.pay = pay;
-function login(text, url, opts = {}, hide = false) {
-    return {
-        text,
-        login_url: { ...opts, url },
-        hide,
-    };
-}
-exports.login = login;
-
-
-/***/ }),
-
-/***/ 9066:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-/** @format */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Composer = void 0;
-const context_1 = __nccwpck_require__(9595);
-function always(x) {
-    return () => x;
-}
-const anoop = always(Promise.resolve());
-class Composer {
-    constructor(...fns) {
-        this.handler = Composer.compose(fns);
-    }
-    /**
-     * Registers a middleware.
-     */
-    use(...fns) {
-        this.handler = Composer.compose([this.handler, ...fns]);
-        return this;
-    }
-    /**
-     * Registers middleware for handling updates
-     * matching given type guard function.
-     */
-    guard(guardFn, ...fns) {
-        return this.use(Composer.guard(guardFn, ...fns));
-    }
-    /**
-     * Registers middleware for handling provided update types.
-     */
-    on(updateType, ...fns) {
-        return this.use(Composer.on(updateType, ...fns));
-    }
-    /**
-     * Registers middleware for handling matching text messages.
-     */
-    hears(triggers, ...fns) {
-        return this.use(Composer.hears(triggers, ...fns));
-    }
-    /**
-     * Registers middleware for handling specified commands.
-     */
-    command(command, ...fns) {
-        return this.use(Composer.command(command, ...fns));
-    }
-    /**
-     * Registers middleware for handling matching callback queries.
-     */
-    action(triggers, ...fns) {
-        return this.use(Composer.action(triggers, ...fns));
-    }
-    /**
-     * Registers middleware for handling matching inline queries.
-     */
-    inlineQuery(triggers, ...fns) {
-        return this.use(Composer.inlineQuery(triggers, ...fns));
-    }
-    /**
-     * Registers middleware for handling game queries
-     */
-    gameQuery(...fns) {
-        return this.use(Composer.gameQuery(...fns));
-    }
-    /**
-     * Registers middleware for dropping matching updates.
-     */
-    drop(predicate) {
-        return this.use(Composer.drop(predicate));
-    }
-    filter(predicate) {
-        return this.use(Composer.filter(predicate));
-    }
-    entity(predicate, ...fns) {
-        return this.use(Composer.entity(predicate, ...fns));
-    }
-    email(email, ...fns) {
-        return this.use(Composer.email(email, ...fns));
-    }
-    url(url, ...fns) {
-        return this.use(Composer.url(url, ...fns));
-    }
-    textLink(link, ...fns) {
-        return this.use(Composer.textLink(link, ...fns));
-    }
-    textMention(mention, ...fns) {
-        return this.use(Composer.textMention(mention, ...fns));
-    }
-    mention(mention, ...fns) {
-        return this.use(Composer.mention(mention, ...fns));
-    }
-    phone(number, ...fns) {
-        return this.use(Composer.phone(number, ...fns));
-    }
-    hashtag(hashtag, ...fns) {
-        return this.use(Composer.hashtag(hashtag, ...fns));
-    }
-    cashtag(cashtag, ...fns) {
-        return this.use(Composer.cashtag(cashtag, ...fns));
-    }
-    spoiler(text, ...fns) {
-        return this.use(Composer.spoiler(text, ...fns));
-    }
-    /**
-     * Registers a middleware for handling /start
-     */
-    start(...fns) {
-        const handler = Composer.compose(fns);
-        return this.command('start', (ctx, next) => {
-            // First entity is the /start bot_command itself
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const entity = ctx.message.entities[0];
-            const startPayload = ctx.message.text.slice(entity.length + 1);
-            return handler(Object.assign(ctx, { startPayload }), next);
-        });
-    }
-    /**
-     * Registers a middleware for handling /help
-     */
-    help(...fns) {
-        return this.command('help', ...fns);
-    }
-    /**
-     * Registers a middleware for handling /settings
-     */
-    settings(...fns) {
-        return this.command('settings', ...fns);
-    }
-    middleware() {
-        return this.handler;
-    }
-    static reply(...args) {
-        return (ctx) => ctx.reply(...args);
-    }
-    static catch(errorHandler, ...fns) {
-        const handler = Composer.compose(fns);
-        // prettier-ignore
-        return (ctx, next) => Promise.resolve(handler(ctx, next))
-            .catch((err) => errorHandler(err, ctx));
-    }
-    /**
-     * Generates middleware that runs in the background.
-     */
-    static fork(middleware) {
-        const handler = Composer.unwrap(middleware);
-        return async (ctx, next) => {
-            await Promise.all([handler(ctx, anoop), next()]);
-        };
-    }
-    static tap(middleware) {
-        const handler = Composer.unwrap(middleware);
-        return (ctx, next) => Promise.resolve(handler(ctx, anoop)).then(() => next());
-    }
-    /**
-     * Generates middleware that gives up control to the next middleware.
-     */
-    static passThru() {
-        return (ctx, next) => next();
-    }
-    static lazy(factoryFn) {
-        if (typeof factoryFn !== 'function') {
-            throw new Error('Argument must be a function');
-        }
-        return (ctx, next) => Promise.resolve(factoryFn(ctx)).then((middleware) => Composer.unwrap(middleware)(ctx, next));
-    }
-    static log(logFn = console.log) {
-        return (ctx, next) => {
-            logFn(JSON.stringify(ctx.update, null, 2));
-            return next();
-        };
-    }
-    /**
-     * @param trueMiddleware middleware to run if the predicate returns true
-     * @param falseMiddleware middleware to run if the predicate returns false
-     */
-    static branch(predicate, trueMiddleware, falseMiddleware) {
-        if (typeof predicate !== 'function') {
-            return Composer.unwrap(predicate ? trueMiddleware : falseMiddleware);
-        }
-        return Composer.lazy((ctx) => Promise.resolve(predicate(ctx)).then((value) => value ? trueMiddleware : falseMiddleware));
-    }
-    /**
-     * Generates optional middleware.
-     * @param predicate predicate to decide on a context object whether to run the middleware
-     * @param middleware middleware to run if the predicate returns true
-     */
-    static optional(predicate, ...fns) {
-        return Composer.branch(predicate, Composer.compose(fns), Composer.passThru());
-    }
-    static filter(predicate) {
-        return Composer.branch(predicate, Composer.passThru(), anoop);
-    }
-    /**
-     * Generates middleware for dropping matching updates.
-     */
-    static drop(predicate) {
-        return Composer.branch(predicate, anoop, Composer.passThru());
-    }
-    static dispatch(routeFn, handlers) {
-        return Composer.lazy((ctx) => Promise.resolve(routeFn(ctx)).then((value) => handlers[value]));
-    }
-    // EXPLANATION FOR THE ts-expect-error ANNOTATIONS
-    // The annotations around function invocations with `...fns` are there
-    // whenever we perform validation logic that the flow analysis of TypeScript
-    // cannot comprehend. We always make sure that the middleware functions are
-    // only invoked with properly constrained context objects, but this cannot be
-    // determined automatically.
-    /**
-     * Generates optional middleware based on a predicate that only operates on `ctx.update`.
-     *
-     * Example:
-     * ```ts
-     * import { Composer, Update } from 'telegraf'
-     *
-     * const predicate = (u): u is Update.MessageUpdate => 'message' in u
-     * const middleware = Composer.guard(predicate, (ctx) => {
-     *   const message = ctx.update.message
-     * })
-     * ```
-     *
-     * Note that `Composer.on('message')` is preferred over this.
-     *
-     * @param guardFn predicate to decide whether to run the middleware based on the `ctx.update` object
-     * @param fns middleware to run if the predicate returns true
-     * @see `Composer.optional` for a more generic version of this method that allows the predicate to operate on `ctx` itself
-     */
-    static guard(guardFn, ...fns) {
-        return Composer.optional((ctx) => guardFn(ctx.update), 
-        // @ts-expect-error see explanation above
-        ...fns);
-    }
-    /**
-     * Generates middleware for handling provided update types.
-     * @deprecated use `Composer.on`
-     */
-    static mount(updateType, ...fns) {
-        return Composer.on(updateType, ...fns);
-    }
-    /**
-     * Generates middleware for handling provided update types.
-     */
-    static on(updateType, ...fns) {
-        const updateTypes = normalizeTextArguments(updateType);
-        const predicate = (update) => updateTypes.some((type) => 
-        // Check update type
-        type in update ||
-            // Check message sub-type
-            ('message' in update && type in update.message));
-        return Composer.guard(predicate, ...fns);
-    }
-    static entity(predicate, ...fns) {
-        if (typeof predicate !== 'function') {
-            const entityTypes = normalizeTextArguments(predicate);
-            return Composer.entity(({ type }) => entityTypes.includes(type), ...fns);
-        }
-        return Composer.optional((ctx) => {
-            var _a;
-            const msg = (_a = ctx.message) !== null && _a !== void 0 ? _a : ctx.channelPost;
-            if (msg === undefined) {
-                return false;
-            }
-            const text = getText(msg);
-            const entities = getEntities(msg);
-            if (text === undefined)
-                return false;
-            return entities.some((entity) => predicate(entity, text.substring(entity.offset, entity.offset + entity.length), ctx));
-            // @ts-expect-error see explanation above
-        }, ...fns);
-    }
-    static entityText(entityType, predicate, ...fns) {
-        if (fns.length === 0) {
-            // prettier-ignore
-            return Array.isArray(predicate)
-                // @ts-expect-error predicate is really the middleware
-                ? Composer.entity(entityType, ...predicate)
-                // @ts-expect-error predicate is really the middleware
-                : Composer.entity(entityType, predicate);
-        }
-        const triggers = normalizeTriggers(predicate);
-        return Composer.entity(({ type }, value, ctx) => {
-            if (type !== entityType) {
-                return false;
-            }
-            for (const trigger of triggers) {
-                // @ts-expect-error define so far unknown property `match`
-                if ((ctx.match = trigger(value, ctx))) {
-                    return true;
-                }
-            }
-            return false;
-            // @ts-expect-error see explanation above
-        }, ...fns);
-    }
-    static email(email, ...fns) {
-        return Composer.entityText('email', email, ...fns);
-    }
-    static phone(number, ...fns) {
-        return Composer.entityText('phone_number', number, ...fns);
-    }
-    static url(url, ...fns) {
-        return Composer.entityText('url', url, ...fns);
-    }
-    static textLink(link, ...fns) {
-        return Composer.entityText('text_link', link, ...fns);
-    }
-    static textMention(mention, ...fns) {
-        return Composer.entityText('text_mention', mention, ...fns);
-    }
-    static mention(mention, ...fns) {
-        return Composer.entityText('mention', normalizeTextArguments(mention, '@'), ...fns);
-    }
-    static hashtag(hashtag, ...fns) {
-        return Composer.entityText('hashtag', normalizeTextArguments(hashtag, '#'), ...fns);
-    }
-    static cashtag(cashtag, ...fns) {
-        return Composer.entityText('cashtag', normalizeTextArguments(cashtag, '$'), ...fns);
-    }
-    static spoiler(text, ...fns) {
-        return Composer.entityText('spoiler', text, ...fns);
-    }
-    static match(triggers, ...fns) {
-        const handler = Composer.compose(fns);
-        return (ctx, next) => {
-            var _a, _b, _c, _d;
-            const text = (_c = (_b = (_a = getText(ctx.message)) !== null && _a !== void 0 ? _a : getText(ctx.channelPost)) !== null && _b !== void 0 ? _b : getText(ctx.callbackQuery)) !== null && _c !== void 0 ? _c : (_d = ctx.inlineQuery) === null || _d === void 0 ? void 0 : _d.query;
-            if (text === undefined)
-                return next();
-            for (const trigger of triggers) {
-                // @ts-expect-error Trust me, TS!
-                const match = trigger(text, ctx);
-                if (match) {
-                    // @ts-expect-error define so far unknown property `match`
-                    return handler(Object.assign(ctx, { match }), next);
-                }
-            }
-            return next();
-        };
-    }
-    /**
-     * Generates middleware for handling matching text messages.
-     */
-    static hears(triggers, ...fns) {
-        return Composer.on('text', Composer.match(normalizeTriggers(triggers), ...fns));
-    }
-    /**
-     * Generates middleware for handling specified commands.
-     */
-    static command(command, ...fns) {
-        if (fns.length === 0) {
-            // @ts-expect-error command is really the middleware
-            return Composer.entity('bot_command', command);
-        }
-        const commands = normalizeTextArguments(command, '/');
-        return Composer.on('text', Composer.lazy((ctx) => {
-            var _a;
-            const groupCommands = ctx.me && ((_a = ctx.chat) === null || _a === void 0 ? void 0 : _a.type.endsWith('group'))
-                ? commands.map((command) => `${command}@${ctx.me}`)
-                : [];
-            return Composer.entity(({ offset, type }, value) => offset === 0 &&
-                type === 'bot_command' &&
-                (commands.includes(value) || groupCommands.includes(value)), 
-            // @ts-expect-error see explanation above
-            ...fns);
-        }));
-    }
-    /**
-     * Generates middleware for handling matching callback queries.
-     */
-    static action(triggers, ...fns) {
-        return Composer.on('callback_query', Composer.match(normalizeTriggers(triggers), ...fns));
-    }
-    /**
-     * Generates middleware for handling matching inline queries.
-     */
-    static inlineQuery(triggers, ...fns) {
-        return Composer.on('inline_query', Composer.match(normalizeTriggers(triggers), ...fns));
-    }
-    /**
-     * Generates middleware responding only to specified users.
-     */
-    static acl(userId, ...fns) {
-        if (typeof userId === 'function') {
-            return Composer.optional(userId, ...fns);
-        }
-        const allowed = Array.isArray(userId) ? userId : [userId];
-        // prettier-ignore
-        return Composer.optional((ctx) => !ctx.from || allowed.includes(ctx.from.id), ...fns);
-    }
-    static memberStatus(status, ...fns) {
-        const statuses = Array.isArray(status) ? status : [status];
-        return Composer.optional(async (ctx) => {
-            if (ctx.message === undefined)
-                return false;
-            const member = await ctx.getChatMember(ctx.message.from.id);
-            return statuses.includes(member.status);
-        }, ...fns);
-    }
-    /**
-     * Generates middleware responding only to chat admins and chat creator.
-     */
-    static admin(...fns) {
-        return Composer.memberStatus(['administrator', 'creator'], ...fns);
-    }
-    /**
-     * Generates middleware responding only to chat creator.
-     */
-    static creator(...fns) {
-        return Composer.memberStatus('creator', ...fns);
-    }
-    /**
-     * Generates middleware running only in specified chat types.
-     */
-    static chatType(type, ...fns) {
-        const types = Array.isArray(type) ? type : [type];
-        return Composer.optional((ctx) => {
-            const chat = ctx.chat;
-            return chat !== undefined && types.includes(chat.type);
-        }, ...fns);
-    }
-    /**
-     * Generates middleware running only in private chats.
-     */
-    static privateChat(...fns) {
-        return Composer.chatType('private', ...fns);
-    }
-    /**
-     * Generates middleware running only in groups and supergroups.
-     */
-    static groupChat(...fns) {
-        return Composer.chatType(['group', 'supergroup'], ...fns);
-    }
-    /**
-     * Generates middleware for handling game queries.
-     */
-    static gameQuery(...fns) {
-        return Composer.guard((u) => 'callback_query' in u && 'game_short_name' in u.callback_query, ...fns);
-    }
-    static unwrap(handler) {
-        if (!handler) {
-            throw new Error('Handler is undefined');
-        }
-        return 'middleware' in handler ? handler.middleware() : handler;
-    }
-    static compose(middlewares) {
-        if (!Array.isArray(middlewares)) {
-            throw new Error('Middlewares must be an array');
-        }
-        if (middlewares.length === 0) {
-            return Composer.passThru();
-        }
-        if (middlewares.length === 1) {
-            // Quite literally asserted in the above condition
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            return Composer.unwrap(middlewares[0]);
-        }
-        return (ctx, next) => {
-            let index = -1;
-            return execute(0, ctx);
-            async function execute(i, context) {
-                var _a;
-                if (!(context instanceof context_1.default)) {
-                    throw new Error('next(ctx) called with invalid context');
-                }
-                if (i <= index) {
-                    throw new Error('next() called multiple times');
-                }
-                index = i;
-                const handler = Composer.unwrap((_a = middlewares[i]) !== null && _a !== void 0 ? _a : next);
-                await handler(context, async (ctx = context) => {
-                    await execute(i + 1, ctx);
-                });
-            }
-        };
-    }
-}
-exports.Composer = Composer;
-function escapeRegExp(s) {
-    // $& means the whole matched string
-    return s.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
-}
-function normalizeTriggers(triggers) {
-    if (!Array.isArray(triggers)) {
-        triggers = [triggers];
-    }
-    return triggers.map((trigger) => {
-        if (!trigger) {
-            throw new Error('Invalid trigger');
-        }
-        if (typeof trigger === 'function') {
-            return trigger;
-        }
-        if (trigger instanceof RegExp) {
-            return (value = '') => {
-                trigger.lastIndex = 0;
-                return trigger.exec(value);
-            };
-        }
-        const regex = new RegExp(`^${escapeRegExp(trigger)}$`);
-        return (value) => regex.exec(value);
-    });
-}
-function getEntities(msg) {
-    var _a, _b;
-    if (msg == null)
-        return [];
-    if ('caption_entities' in msg)
-        return (_a = msg.caption_entities) !== null && _a !== void 0 ? _a : [];
-    if ('entities' in msg)
-        return (_b = msg.entities) !== null && _b !== void 0 ? _b : [];
-    return [];
-}
-function getText(msg) {
-    if (msg == null)
-        return undefined;
-    if ('caption' in msg)
-        return msg.caption;
-    if ('text' in msg)
-        return msg.text;
-    if ('data' in msg)
-        return msg.data;
-    if ('game_short_name' in msg)
-        return msg.game_short_name;
-    return undefined;
-}
-function normalizeTextArguments(argument, prefix = '') {
-    const args = Array.isArray(argument) ? argument : [argument];
-    // prettier-ignore
-    return args
-        .filter(Boolean)
-        .map((arg) => prefix && typeof arg === 'string' && !arg.startsWith(prefix) ? `${prefix}${arg}` : arg);
-}
-exports.default = Composer;
-
-
-/***/ }),
-
-/***/ 9595:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Context = void 0;
-class Context {
-    constructor(update, tg, botInfo) {
-        this.update = update;
-        this.tg = tg;
-        this.botInfo = botInfo;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.state = {};
-    }
-    get updateType() {
-        const types = Object.keys(this.update).filter((k) => typeof this.update[k] === 'object');
-        if (types.length !== 1) {
-            throw new Error(`Cannot determine \`updateType\` of ${JSON.stringify(this.update)}`);
-        }
-        return types[0];
-    }
-    get me() {
-        var _a;
-        return (_a = this.botInfo) === null || _a === void 0 ? void 0 : _a.username;
-    }
-    get telegram() {
-        return this.tg;
-    }
-    get message() {
-        return this.update.message;
-    }
-    get editedMessage() {
-        return this.update.edited_message;
-    }
-    get inlineQuery() {
-        return this.update.inline_query;
-    }
-    get shippingQuery() {
-        return this.update.shipping_query;
-    }
-    get preCheckoutQuery() {
-        return this.update.pre_checkout_query;
-    }
-    get chosenInlineResult() {
-        return this.update.chosen_inline_result;
-    }
-    get channelPost() {
-        return this.update.channel_post;
-    }
-    get editedChannelPost() {
-        return this.update.edited_channel_post;
-    }
-    get callbackQuery() {
-        return this.update.callback_query;
-    }
-    get poll() {
-        return this.update.poll;
-    }
-    get pollAnswer() {
-        return this.update.poll_answer;
-    }
-    get myChatMember() {
-        return this.update.my_chat_member;
-    }
-    get chatMember() {
-        return this.update.chat_member;
-    }
-    get chatJoinRequest() {
-        return this.update.chat_join_request;
-    }
-    get chat() {
-        var _a, _b, _c, _d;
-        return (_d = ((_c = (_b = (_a = this.chatMember) !== null && _a !== void 0 ? _a : this.myChatMember) !== null && _b !== void 0 ? _b : this.chatJoinRequest) !== null && _c !== void 0 ? _c : getMessageFromAnySource(this))) === null || _d === void 0 ? void 0 : _d.chat;
-    }
-    get senderChat() {
-        var _a;
-        return (_a = getMessageFromAnySource(this)) === null || _a === void 0 ? void 0 : _a.sender_chat;
-    }
-    get from() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-        return (_j = ((_h = (_g = (_f = (_e = (_d = (_c = (_b = (_a = this.callbackQuery) !== null && _a !== void 0 ? _a : this.inlineQuery) !== null && _b !== void 0 ? _b : this.shippingQuery) !== null && _c !== void 0 ? _c : this.preCheckoutQuery) !== null && _d !== void 0 ? _d : this.chosenInlineResult) !== null && _e !== void 0 ? _e : this.chatMember) !== null && _f !== void 0 ? _f : this.myChatMember) !== null && _g !== void 0 ? _g : this.chatJoinRequest) !== null && _h !== void 0 ? _h : getMessageFromAnySource(this))) === null || _j === void 0 ? void 0 : _j.from;
-    }
-    get inlineMessageId() {
-        var _a, _b;
-        return (_b = ((_a = this.callbackQuery) !== null && _a !== void 0 ? _a : this.chosenInlineResult)) === null || _b === void 0 ? void 0 : _b.inline_message_id;
-    }
-    get passportData() {
-        var _a;
-        if (this.message == null)
-            return undefined;
-        if (!('passport_data' in this.message))
-            return undefined;
-        return (_a = this.message) === null || _a === void 0 ? void 0 : _a.passport_data;
-    }
-    /**
-     * @deprecated use {@link Telegram.webhookReply}
-     */
-    get webhookReply() {
-        return this.tg.webhookReply;
-    }
-    set webhookReply(enable) {
-        this.tg.webhookReply = enable;
-    }
-    assert(value, method) {
-        if (value === undefined) {
-            throw new TypeError(`Telegraf: "${method}" isn't available for "${this.updateType}"`);
-        }
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#answerinlinequery
-     */
-    answerInlineQuery(...args) {
-        this.assert(this.inlineQuery, 'answerInlineQuery');
-        return this.telegram.answerInlineQuery(this.inlineQuery.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#answercallbackquery
-     */
-    answerCbQuery(...args) {
-        this.assert(this.callbackQuery, 'answerCbQuery');
-        return this.telegram.answerCbQuery(this.callbackQuery.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#answercallbackquery
-     */
-    answerGameQuery(...args) {
-        this.assert(this.callbackQuery, 'answerGameQuery');
-        return this.telegram.answerGameQuery(this.callbackQuery.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#answershippingquery
-     */
-    answerShippingQuery(...args) {
-        this.assert(this.shippingQuery, 'answerShippingQuery');
-        return this.telegram.answerShippingQuery(this.shippingQuery.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#answerprecheckoutquery
-     */
-    answerPreCheckoutQuery(...args) {
-        this.assert(this.preCheckoutQuery, 'answerPreCheckoutQuery');
-        return this.telegram.answerPreCheckoutQuery(this.preCheckoutQuery.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#editmessagetext
-     */
-    editMessageText(text, extra) {
-        var _a, _b, _c, _d;
-        this.assert((_a = this.callbackQuery) !== null && _a !== void 0 ? _a : this.inlineMessageId, 'editMessageText');
-        return this.telegram.editMessageText((_b = this.chat) === null || _b === void 0 ? void 0 : _b.id, (_d = (_c = this.callbackQuery) === null || _c === void 0 ? void 0 : _c.message) === null || _d === void 0 ? void 0 : _d.message_id, this.inlineMessageId, text, extra);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#editmessagecaption
-     */
-    editMessageCaption(caption, extra) {
-        var _a, _b, _c, _d;
-        this.assert((_a = this.callbackQuery) !== null && _a !== void 0 ? _a : this.inlineMessageId, 'editMessageCaption');
-        return this.telegram.editMessageCaption((_b = this.chat) === null || _b === void 0 ? void 0 : _b.id, (_d = (_c = this.callbackQuery) === null || _c === void 0 ? void 0 : _c.message) === null || _d === void 0 ? void 0 : _d.message_id, this.inlineMessageId, caption, extra);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#editmessagemedia
-     */
-    editMessageMedia(media, extra) {
-        var _a, _b, _c, _d;
-        this.assert((_a = this.callbackQuery) !== null && _a !== void 0 ? _a : this.inlineMessageId, 'editMessageMedia');
-        return this.telegram.editMessageMedia((_b = this.chat) === null || _b === void 0 ? void 0 : _b.id, (_d = (_c = this.callbackQuery) === null || _c === void 0 ? void 0 : _c.message) === null || _d === void 0 ? void 0 : _d.message_id, this.inlineMessageId, media, extra);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#editmessagereplymarkup
-     */
-    editMessageReplyMarkup(markup) {
-        var _a, _b, _c, _d;
-        this.assert((_a = this.callbackQuery) !== null && _a !== void 0 ? _a : this.inlineMessageId, 'editMessageReplyMarkup');
-        return this.telegram.editMessageReplyMarkup((_b = this.chat) === null || _b === void 0 ? void 0 : _b.id, (_d = (_c = this.callbackQuery) === null || _c === void 0 ? void 0 : _c.message) === null || _d === void 0 ? void 0 : _d.message_id, this.inlineMessageId, markup);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#editmessagelivelocation
-     */
-    editMessageLiveLocation(latitude, longitude, extra) {
-        var _a, _b, _c, _d;
-        this.assert((_a = this.callbackQuery) !== null && _a !== void 0 ? _a : this.inlineMessageId, 'editMessageLiveLocation');
-        return this.telegram.editMessageLiveLocation((_b = this.chat) === null || _b === void 0 ? void 0 : _b.id, (_d = (_c = this.callbackQuery) === null || _c === void 0 ? void 0 : _c.message) === null || _d === void 0 ? void 0 : _d.message_id, this.inlineMessageId, latitude, longitude, extra);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#stopmessagelivelocation
-     */
-    stopMessageLiveLocation(markup) {
-        var _a, _b, _c, _d;
-        this.assert((_a = this.callbackQuery) !== null && _a !== void 0 ? _a : this.inlineMessageId, 'stopMessageLiveLocation');
-        return this.telegram.stopMessageLiveLocation((_b = this.chat) === null || _b === void 0 ? void 0 : _b.id, (_d = (_c = this.callbackQuery) === null || _c === void 0 ? void 0 : _c.message) === null || _d === void 0 ? void 0 : _d.message_id, this.inlineMessageId, markup);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#sendmessage
-     */
-    reply(...args) {
-        this.assert(this.chat, 'reply');
-        return this.telegram.sendMessage(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#getchat
-     */
-    getChat(...args) {
-        this.assert(this.chat, 'getChat');
-        return this.telegram.getChat(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#exportchatinvitelink
-     */
-    exportChatInviteLink(...args) {
-        this.assert(this.chat, 'exportChatInviteLink');
-        return this.telegram.exportChatInviteLink(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#createchatinvitelink
-     */
-    createChatInviteLink(...args) {
-        this.assert(this.chat, 'createChatInviteLink');
-        return this.telegram.createChatInviteLink(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#editchatinvitelink
-     */
-    editChatInviteLink(...args) {
-        this.assert(this.chat, 'editChatInviteLink');
-        return this.telegram.editChatInviteLink(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#revokechatinvitelink
-     */
-    revokeChatInviteLink(...args) {
-        this.assert(this.chat, 'revokeChatInviteLink');
-        return this.telegram.revokeChatInviteLink(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#banchatmember
-     */
-    banChatMember(...args) {
-        this.assert(this.chat, 'banChatMember');
-        return this.telegram.banChatMember(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#banchatmember
-     * @deprecated since API 5.3. Use {@link Context.banChatMember}
-     */
-    get kickChatMember() {
-        return this.banChatMember;
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#unbanchatmember
-     */
-    unbanChatMember(...args) {
-        this.assert(this.chat, 'unbanChatMember');
-        return this.telegram.unbanChatMember(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#restrictchatmember
-     */
-    restrictChatMember(...args) {
-        this.assert(this.chat, 'restrictChatMember');
-        return this.telegram.restrictChatMember(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#promotechatmember
-     */
-    promoteChatMember(...args) {
-        this.assert(this.chat, 'promoteChatMember');
-        return this.telegram.promoteChatMember(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#setchatadministratorcustomtitle
-     */
-    setChatAdministratorCustomTitle(...args) {
-        this.assert(this.chat, 'setChatAdministratorCustomTitle');
-        return this.telegram.setChatAdministratorCustomTitle(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#setchatphoto
-     */
-    setChatPhoto(...args) {
-        this.assert(this.chat, 'setChatPhoto');
-        return this.telegram.setChatPhoto(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#deletechatphoto
-     */
-    deleteChatPhoto(...args) {
-        this.assert(this.chat, 'deleteChatPhoto');
-        return this.telegram.deleteChatPhoto(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#setchattitle
-     */
-    setChatTitle(...args) {
-        this.assert(this.chat, 'setChatTitle');
-        return this.telegram.setChatTitle(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#setchatdescription
-     */
-    setChatDescription(...args) {
-        this.assert(this.chat, 'setChatDescription');
-        return this.telegram.setChatDescription(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#pinchatmessage
-     */
-    pinChatMessage(...args) {
-        this.assert(this.chat, 'pinChatMessage');
-        return this.telegram.pinChatMessage(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#unpinchatmessage
-     */
-    unpinChatMessage(...args) {
-        this.assert(this.chat, 'unpinChatMessage');
-        return this.telegram.unpinChatMessage(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#unpinallchatmessages
-     */
-    unpinAllChatMessages(...args) {
-        this.assert(this.chat, 'unpinAllChatMessages');
-        return this.telegram.unpinAllChatMessages(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#leavechat
-     */
-    leaveChat(...args) {
-        this.assert(this.chat, 'leaveChat');
-        return this.telegram.leaveChat(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#setchatpermissions
-     */
-    setChatPermissions(...args) {
-        this.assert(this.chat, 'setChatPermissions');
-        return this.telegram.setChatPermissions(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#getchatadministrators
-     */
-    getChatAdministrators(...args) {
-        this.assert(this.chat, 'getChatAdministrators');
-        return this.telegram.getChatAdministrators(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#getchatmember
-     */
-    getChatMember(...args) {
-        this.assert(this.chat, 'getChatMember');
-        return this.telegram.getChatMember(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#getchatmembercount
-     */
-    getChatMembersCount(...args) {
-        this.assert(this.chat, 'getChatMembersCount');
-        return this.telegram.getChatMembersCount(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#setpassportdataerrors
-     */
-    setPassportDataErrors(errors) {
-        this.assert(this.from, 'setPassportDataErrors');
-        return this.telegram.setPassportDataErrors(this.from.id, errors);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithphoto
-     */
-    replyWithPhoto(...args) {
-        this.assert(this.chat, 'replyWithPhoto');
-        return this.telegram.sendPhoto(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithmediagroup
-     */
-    replyWithMediaGroup(...args) {
-        this.assert(this.chat, 'replyWithMediaGroup');
-        return this.telegram.sendMediaGroup(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithaudio
-     */
-    replyWithAudio(...args) {
-        this.assert(this.chat, 'replyWithAudio');
-        return this.telegram.sendAudio(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithdice
-     */
-    replyWithDice(...args) {
-        this.assert(this.chat, 'replyWithDice');
-        return this.telegram.sendDice(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithdocument
-     */
-    replyWithDocument(...args) {
-        this.assert(this.chat, 'replyWithDocument');
-        return this.telegram.sendDocument(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithsticker
-     */
-    replyWithSticker(...args) {
-        this.assert(this.chat, 'replyWithSticker');
-        return this.telegram.sendSticker(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithvideo
-     */
-    replyWithVideo(...args) {
-        this.assert(this.chat, 'replyWithVideo');
-        return this.telegram.sendVideo(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithanimation
-     */
-    replyWithAnimation(...args) {
-        this.assert(this.chat, 'replyWithAnimation');
-        return this.telegram.sendAnimation(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithvideonote
-     */
-    replyWithVideoNote(...args) {
-        this.assert(this.chat, 'replyWithVideoNote');
-        return this.telegram.sendVideoNote(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithinvoice
-     */
-    replyWithInvoice(...args) {
-        this.assert(this.chat, 'replyWithInvoice');
-        return this.telegram.sendInvoice(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithgame
-     */
-    replyWithGame(...args) {
-        this.assert(this.chat, 'replyWithGame');
-        return this.telegram.sendGame(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithvoice
-     */
-    replyWithVoice(...args) {
-        this.assert(this.chat, 'replyWithVoice');
-        return this.telegram.sendVoice(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithpoll
-     */
-    replyWithPoll(...args) {
-        this.assert(this.chat, 'replyWithPoll');
-        return this.telegram.sendPoll(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithquiz
-     */
-    replyWithQuiz(...args) {
-        this.assert(this.chat, 'replyWithQuiz');
-        return this.telegram.sendQuiz(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#stoppoll
-     */
-    stopPoll(...args) {
-        this.assert(this.chat, 'stopPoll');
-        return this.telegram.stopPoll(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithchataction
-     */
-    replyWithChatAction(...args) {
-        this.assert(this.chat, 'replyWithChatAction');
-        return this.telegram.sendChatAction(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithlocation
-     */
-    replyWithLocation(...args) {
-        this.assert(this.chat, 'replyWithLocation');
-        return this.telegram.sendLocation(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithvenue
-     */
-    replyWithVenue(...args) {
-        this.assert(this.chat, 'replyWithVenue');
-        return this.telegram.sendVenue(this.chat.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#replywithcontact
-     */
-    replyWithContact(...args) {
-        this.assert(this.chat, 'replyWithContact');
-        return this.telegram.sendContact(this.chat.id, ...args);
-    }
-    /**
-     * @deprecated use {@link Telegram.getStickerSet}
-     * @see https://core.telegram.org/bots/api#getstickerset
-     */
-    getStickerSet(setName) {
-        return this.telegram.getStickerSet(setName);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#setchatstickerset
-     */
-    setChatStickerSet(setName) {
-        this.assert(this.chat, 'setChatStickerSet');
-        return this.telegram.setChatStickerSet(this.chat.id, setName);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#deletechatstickerset
-     */
-    deleteChatStickerSet() {
-        this.assert(this.chat, 'deleteChatStickerSet');
-        return this.telegram.deleteChatStickerSet(this.chat.id);
-    }
-    /**
-     * @deprecated use {@link Telegram.setStickerPositionInSet}
-     * @see https://core.telegram.org/bots/api#setstickerpositioninset
-     */
-    setStickerPositionInSet(sticker, position) {
-        return this.telegram.setStickerPositionInSet(sticker, position);
-    }
-    /**
-     * @deprecated use {@link Telegram.setStickerSetThumb}
-     * @see https://core.telegram.org/bots/api#setstickersetthumb
-     */
-    setStickerSetThumb(...args) {
-        return this.telegram.setStickerSetThumb(...args);
-    }
-    /**
-     * @deprecated use {@link Telegram.deleteStickerFromSet}
-     * @see https://core.telegram.org/bots/api#deletestickerfromset
-     */
-    deleteStickerFromSet(sticker) {
-        return this.telegram.deleteStickerFromSet(sticker);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#uploadstickerfile
-     */
-    uploadStickerFile(...args) {
-        this.assert(this.from, 'uploadStickerFile');
-        return this.telegram.uploadStickerFile(this.from.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#createnewstickerset
-     */
-    createNewStickerSet(...args) {
-        this.assert(this.from, 'createNewStickerSet');
-        return this.telegram.createNewStickerSet(this.from.id, ...args);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#addstickertoset
-     */
-    addStickerToSet(...args) {
-        this.assert(this.from, 'addStickerToSet');
-        return this.telegram.addStickerToSet(this.from.id, ...args);
-    }
-    /**
-     * @deprecated use {@link Telegram.getMyCommands}
-     * @see https://core.telegram.org/bots/api#getmycommands
-     */
-    getMyCommands() {
-        return this.telegram.getMyCommands();
-    }
-    /**
-     * @deprecated use {@link Telegram.setMyCommands}
-     * @see https://core.telegram.org/bots/api#setmycommands
-     */
-    setMyCommands(commands) {
-        return this.telegram.setMyCommands(commands);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#sendmessage
-     */
-    replyWithMarkdown(markdown, extra) {
-        return this.reply(markdown, { parse_mode: 'Markdown', ...extra });
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#sendmessage
-     */
-    replyWithMarkdownV2(markdown, extra) {
-        return this.reply(markdown, { parse_mode: 'MarkdownV2', ...extra });
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#sendmessage
-     */
-    replyWithHTML(html, extra) {
-        return this.reply(html, { parse_mode: 'HTML', ...extra });
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#deletemessage
-     */
-    deleteMessage(messageId) {
-        this.assert(this.chat, 'deleteMessage');
-        if (typeof messageId !== 'undefined') {
-            return this.telegram.deleteMessage(this.chat.id, messageId);
-        }
-        const message = getMessageFromAnySource(this);
-        this.assert(message, 'deleteMessage');
-        return this.telegram.deleteMessage(this.chat.id, message.message_id);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#forwardmessage
-     */
-    forwardMessage(chatId, extra) {
-        const message = getMessageFromAnySource(this);
-        this.assert(message, 'forwardMessage');
-        return this.telegram.forwardMessage(chatId, message.chat.id, message.message_id, extra);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#copymessage
-     */
-    copyMessage(chatId, extra) {
-        const message = getMessageFromAnySource(this);
-        this.assert(message, 'copyMessage');
-        return this.telegram.copyMessage(chatId, message.chat.id, message.message_id, extra);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#approvechatjoinrequest
-     */
-    approveChatJoinRequest(userId) {
-        this.assert(this.chat, 'approveChatJoinRequest');
-        return this.telegram.approveChatJoinRequest(this.chat.id, userId);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#declinechatjoinrequest
-     */
-    declineChatJoinRequest(userId) {
-        this.assert(this.chat, 'declineChatJoinRequest');
-        return this.telegram.declineChatJoinRequest(this.chat.id, userId);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#banchatsenderchat
-     */
-    banChatSenderChat(senderChatId) {
-        this.assert(this.chat, 'banChatSenderChat');
-        return this.telegram.banChatSenderChat(this.chat.id, senderChatId);
-    }
-    /**
-     * @see https://core.telegram.org/bots/api#unbanchatsenderchat
-     */
-    unbanChatSenderChat(senderChatId) {
-        this.assert(this.chat, 'unbanChatSenderChat');
-        return this.telegram.unbanChatSenderChat(this.chat.id, senderChatId);
-    }
-}
-exports.Context = Context;
-exports.default = Context;
-function getMessageFromAnySource(ctx) {
-    var _a, _b, _c, _d, _e;
-    return ((_e = (_d = (_b = (_a = ctx.message) !== null && _a !== void 0 ? _a : ctx.editedMessage) !== null && _b !== void 0 ? _b : (_c = ctx.callbackQuery) === null || _c === void 0 ? void 0 : _c.message) !== null && _d !== void 0 ? _d : ctx.channelPost) !== null && _e !== void 0 ? _e : ctx.editedChannelPost);
-}
-
-
-/***/ }),
-
-/***/ 518:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.is2D = exports.hasPropType = exports.hasProp = void 0;
-/**
- * Checks if a given object has a property with a given name.
- *
- * Example invocation:
- * ```js
- * let obj = { 'foo': 'bar', 'baz': () => {} }
- * hasProp(obj, 'foo') // true
- * hasProp(obj, 'baz') // true
- * hasProp(obj, 'abc') // false
- * ```
- *
- * @param obj An object to test
- * @param prop The name of the property
- */
-function hasProp(obj, prop) {
-    return obj !== undefined && prop in obj;
-}
-exports.hasProp = hasProp;
-/**
- * Checks if a given object has a property with a given name.
- * Furthermore performs a `typeof` check on the property if it exists.
- *
- * Example invocation:
- * ```js
- * let obj = { 'foo': 'bar', 'baz': () => {} }
- * hasPropType(obj, 'foo', 'string') // true
- * hasPropType(obj, 'baz', 'function') // true
- * hasPropType(obj, 'abc', 'number') // false
- * ```
- *
- * @param obj An object to test
- * @param prop The name of the property
- * @param type The type the property is expected to have
- */
-function hasPropType(obj, prop, type) {
-    return hasProp(obj, prop) && type === typeof obj[prop];
-}
-exports.hasPropType = hasPropType;
-/**
- * Checks if the supplied array has two dimensions or not.
- *
- * Example invocations:
- * is2D([]) // false
- * is2D([[]]) // true
- * is2D([[], []]) // true
- * is2D([42]) // false
- *
- * @param arr an array with one or two dimensions
- */
-function is2D(arr) {
-    return Array.isArray(arr[0]);
-}
-exports.is2D = is2D;
-
-
-/***/ }),
-
-/***/ 1437:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.compactOptions = void 0;
-function compactOptions(options) {
-    if (!options) {
-        return options;
-    }
-    const keys = Object.keys(options);
-    const compactKeys = keys.filter((key) => options[key] !== undefined);
-    const compactEntries = compactKeys.map((key) => [key, options[key]]);
-    return Object.fromEntries(compactEntries);
-}
-exports.compactOptions = compactOptions;
-
-
-/***/ }),
-
-/***/ 1990:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-/* eslint @typescript-eslint/restrict-template-expressions: [ "error", { "allowNumber": true, "allowBoolean": true } ] */
-const crypto = __nccwpck_require__(6417);
-const fs = __nccwpck_require__(5747);
-const https = __nccwpck_require__(7211);
-const path = __nccwpck_require__(5622);
-const node_fetch_1 = __nccwpck_require__(467);
-const check_1 = __nccwpck_require__(518);
-const compact_1 = __nccwpck_require__(1437);
-const multipart_stream_1 = __nccwpck_require__(7968);
-const error_1 = __nccwpck_require__(3341);
-const url_1 = __nccwpck_require__(8835);
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const debug = __nccwpck_require__(8237)('telegraf:client');
-const { isStream } = multipart_stream_1.default;
-const WEBHOOK_REPLY_METHOD_ALLOWLIST = new Set([
-    'answerCallbackQuery',
-    'answerInlineQuery',
-    'deleteMessage',
-    'leaveChat',
-    'sendChatAction',
-]);
-const DEFAULT_EXTENSIONS = {
-    audio: 'mp3',
-    photo: 'jpg',
-    sticker: 'webp',
-    video: 'mp4',
-    animation: 'mp4',
-    video_note: 'mp4',
-    voice: 'ogg',
-};
-const DEFAULT_OPTIONS = {
-    apiRoot: 'https://api.telegram.org',
-    apiMode: 'bot',
-    webhookReply: true,
-    agent: new https.Agent({
-        keepAlive: true,
-        keepAliveMsecs: 10000,
-    }),
-    attachmentAgent: undefined,
-};
-function includesMedia(payload) {
-    return Object.values(payload).some((value) => {
-        if (Array.isArray(value)) {
-            return value.some(({ media }) => media && typeof media === 'object' && (media.source || media.url));
-        }
-        return (value &&
-            typeof value === 'object' &&
-            (((0, check_1.hasProp)(value, 'source') && value.source) ||
-                ((0, check_1.hasProp)(value, 'url') && value.url) ||
-                ((0, check_1.hasPropType)(value, 'media', 'object') &&
-                    (((0, check_1.hasProp)(value.media, 'source') && value.media.source) ||
-                        ((0, check_1.hasProp)(value.media, 'url') && value.media.url)))));
-    });
-}
-function replacer(_, value) {
-    if (value == null)
-        return undefined;
-    return value;
-}
-function buildJSONConfig(payload) {
-    return Promise.resolve({
-        method: 'POST',
-        compress: true,
-        headers: { 'content-type': 'application/json', connection: 'keep-alive' },
-        body: JSON.stringify(payload, replacer),
-    });
-}
-const FORM_DATA_JSON_FIELDS = [
-    'results',
-    'reply_markup',
-    'mask_position',
-    'shipping_options',
-    'errors',
-];
-async function buildFormDataConfig(payload, agent) {
-    for (const field of FORM_DATA_JSON_FIELDS) {
-        if ((0, check_1.hasProp)(payload, field) && typeof payload[field] !== 'string') {
-            payload[field] = JSON.stringify(payload[field]);
-        }
-    }
-    const boundary = crypto.randomBytes(32).toString('hex');
-    const formData = new multipart_stream_1.default(boundary);
-    const tasks = Object.keys(payload).map((key) => attachFormValue(formData, key, payload[key], agent));
-    await Promise.all(tasks);
-    return {
-        method: 'POST',
-        compress: true,
-        headers: {
-            'content-type': `multipart/form-data; boundary=${boundary}`,
-            connection: 'keep-alive',
-        },
-        body: formData,
-    };
-}
-async function attachFormValue(form, id, value, agent) {
-    if (value == null) {
-        return;
-    }
-    if (typeof value === 'string' ||
-        typeof value === 'boolean' ||
-        typeof value === 'number') {
-        form.addPart({
-            headers: { 'content-disposition': `form-data; name="${id}"` },
-            body: `${value}`,
-        });
-        return;
-    }
-    if (id === 'thumb') {
-        const attachmentId = crypto.randomBytes(16).toString('hex');
-        await attachFormMedia(form, value, attachmentId, agent);
-        return form.addPart({
-            headers: { 'content-disposition': `form-data; name="${id}"` },
-            body: `attach://${attachmentId}`,
-        });
-    }
-    if (Array.isArray(value)) {
-        const items = await Promise.all(value.map(async (item) => {
-            if (typeof item.media !== 'object') {
-                return await Promise.resolve(item);
-            }
-            const attachmentId = crypto.randomBytes(16).toString('hex');
-            await attachFormMedia(form, item.media, attachmentId, agent);
-            return { ...item, media: `attach://${attachmentId}` };
-        }));
-        return form.addPart({
-            headers: { 'content-disposition': `form-data; name="${id}"` },
-            body: JSON.stringify(items),
-        });
-    }
-    if (value &&
-        typeof value === 'object' &&
-        (0, check_1.hasProp)(value, 'media') &&
-        (0, check_1.hasProp)(value, 'type') &&
-        typeof value.media !== 'undefined' &&
-        typeof value.type !== 'undefined') {
-        const attachmentId = crypto.randomBytes(16).toString('hex');
-        await attachFormMedia(form, value.media, attachmentId, agent);
-        return form.addPart({
-            headers: { 'content-disposition': `form-data; name="${id}"` },
-            body: JSON.stringify({
-                ...value,
-                media: `attach://${attachmentId}`,
-            }),
-        });
-    }
-    return await attachFormMedia(form, value, id, agent);
-}
-async function attachFormMedia(form, media, id, agent) {
-    var _a, _b, _c;
-    let fileName = (_a = media.filename) !== null && _a !== void 0 ? _a : `${id}.${(_b = DEFAULT_EXTENSIONS[id]) !== null && _b !== void 0 ? _b : 'dat'}`;
-    if (media.url !== undefined) {
-        const res = await (0, node_fetch_1.default)(media.url, { agent });
-        return form.addPart({
-            headers: {
-                'content-disposition': `form-data; name="${id}"; filename="${fileName}"`,
-            },
-            body: res.body,
-        });
-    }
-    if (media.source) {
-        let mediaSource = media.source;
-        if (fs.existsSync(media.source)) {
-            fileName = (_c = media.filename) !== null && _c !== void 0 ? _c : path.basename(media.source);
-            mediaSource = fs.createReadStream(media.source);
-        }
-        if (isStream(mediaSource) || Buffer.isBuffer(mediaSource)) {
-            form.addPart({
-                headers: {
-                    'content-disposition': `form-data; name="${id}"; filename="${fileName}"`,
-                },
-                body: mediaSource,
-            });
-        }
-    }
-}
-async function answerToWebhook(response, payload, options) {
-    if (!includesMedia(payload)) {
-        if (!response.headersSent) {
-            response.setHeader('content-type', 'application/json');
-        }
-        response.end(JSON.stringify(payload), 'utf-8');
-        return true;
-    }
-    const { headers, body } = await buildFormDataConfig(payload, options.attachmentAgent);
-    if (!response.headersSent) {
-        for (const [key, value] of Object.entries(headers)) {
-            response.setHeader(key, value);
-        }
-    }
-    await new Promise((resolve) => {
-        response.on('finish', resolve);
-        body.pipe(response);
-    });
-    return true;
-}
-function redactToken(error) {
-    error.message = error.message.replace(/\/(bot|user)(\d+):[^/]+\//, '/$1$2:[REDACTED]/');
-    throw error;
-}
-class ApiClient {
-    constructor(token, options, response) {
-        this.token = token;
-        this.response = response;
-        this.options = {
-            ...DEFAULT_OPTIONS,
-            ...(0, compact_1.compactOptions)(options),
-        };
-        if (this.options.apiRoot.startsWith('http://')) {
-            this.options.agent = undefined;
-        }
-    }
-    /**
-     * If set to `true`, first _eligible_ call will avoid performing a POST request.
-     * Note that such a call:
-     * 1. cannot report errors or return meaningful values,
-     * 2. resolves before bot API has a chance to process it,
-     * 3. prematurely confirms the update as processed.
-     *
-     * https://core.telegram.org/bots/faq#how-can-i-make-requests-in-response-to-updates
-     * https://github.com/telegraf/telegraf/pull/1250
-     */
-    set webhookReply(enable) {
-        this.options.webhookReply = enable;
-    }
-    get webhookReply() {
-        return this.options.webhookReply;
-    }
-    async callApi(method, payload, { signal } = {}) {
-        const { token, options, response } = this;
-        if (options.webhookReply &&
-            (response === null || response === void 0 ? void 0 : response.writableEnded) === false &&
-            WEBHOOK_REPLY_METHOD_ALLOWLIST.has(method)) {
-            debug('Call via webhook', method, payload);
-            // @ts-expect-error using webhookReply is an optimisation that doesn't respond with normal result
-            // up to the user to deal with this
-            return await answerToWebhook(response, { method, ...payload }, options);
-        }
-        if (!token) {
-            throw new error_1.default({
-                error_code: 401,
-                description: 'Bot Token is required',
-            });
-        }
-        debug('HTTP call', method, payload);
-        const config = includesMedia(payload)
-            ? await buildFormDataConfig({ method, ...payload }, options.attachmentAgent)
-            : await buildJSONConfig(payload);
-        const apiUrl = new url_1.URL(`./${options.apiMode}${token}/${method}`, options.apiRoot);
-        config.agent = options.agent;
-        config.signal = signal;
-        const res = await (0, node_fetch_1.default)(apiUrl, config).catch(redactToken);
-        if (res.status >= 500) {
-            const errorPayload = {
-                error_code: res.status,
-                description: res.statusText,
-            };
-            throw new error_1.default(errorPayload, { method, payload });
-        }
-        const data = await res.json();
-        if (!data.ok) {
-            debug('API call failed', data);
-            throw new error_1.default(data, { method, payload });
-        }
-        return data.result;
-    }
-}
-exports.default = ApiClient;
-
-
-/***/ }),
-
-/***/ 3341:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TelegramError = void 0;
-class TelegramError extends Error {
-    constructor(response, on = {}) {
-        super(`${response.error_code}: ${response.description}`);
-        this.response = response;
-        this.on = on;
-    }
-    get code() {
-        return this.response.error_code;
-    }
-    get description() {
-        return this.response.description;
-    }
-    get parameters() {
-        return this.response.parameters;
-    }
-}
-exports.TelegramError = TelegramError;
-exports.default = TelegramError;
-
-
-/***/ }),
-
-/***/ 7968:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const stream = __nccwpck_require__(2413);
-const check_1 = __nccwpck_require__(518);
-const sandwich_stream_1 = __nccwpck_require__(521);
-const CRNL = '\r\n';
-class MultipartStream extends sandwich_stream_1.default {
-    constructor(boundary) {
-        super({
-            head: `--${boundary}${CRNL}`,
-            tail: `${CRNL}--${boundary}--`,
-            separator: `${CRNL}--${boundary}${CRNL}`,
-        });
-    }
-    addPart(part) {
-        const partStream = new stream.PassThrough();
-        for (const [key, header] of Object.entries(part.headers)) {
-            partStream.write(`${key}:${header}${CRNL}`);
-        }
-        partStream.write(CRNL);
-        if (MultipartStream.isStream(part.body)) {
-            part.body.pipe(partStream);
-        }
-        else {
-            partStream.end(part.body);
-        }
-        this.add(partStream);
-    }
-    static isStream(stream) {
-        return (typeof stream === 'object' &&
-            stream !== null &&
-            (0, check_1.hasPropType)(stream, 'pipe', 'function'));
-    }
-}
-exports.default = MultipartStream;
-
-
-/***/ }),
-
-/***/ 1319:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Polling = void 0;
-const abort_controller_1 = __nccwpck_require__(1659);
-const debug_1 = __nccwpck_require__(8237);
-const util_1 = __nccwpck_require__(1669);
-const error_1 = __nccwpck_require__(3341);
-const debug = (0, debug_1.default)('telegraf:polling');
-const wait = (0, util_1.promisify)(setTimeout);
-function always(x) {
-    return () => x;
-}
-const noop = always(Promise.resolve());
-class Polling {
-    constructor(telegram, allowedUpdates) {
-        this.telegram = telegram;
-        this.allowedUpdates = allowedUpdates;
-        this.abortController = new abort_controller_1.default();
-        this.skipOffsetSync = false;
-        this.offset = 0;
-    }
-    async *[Symbol.asyncIterator]() {
-        var _a, _b;
-        debug('Starting long polling');
-        do {
-            try {
-                const updates = await this.telegram.callApi('getUpdates', {
-                    timeout: 50,
-                    offset: this.offset,
-                    allowed_updates: this.allowedUpdates,
-                }, this.abortController);
-                const last = updates[updates.length - 1];
-                if (last !== undefined) {
-                    this.offset = last.update_id + 1;
-                }
-                yield updates;
-            }
-            catch (error) {
-                const err = error;
-                if (err.name === 'AbortError')
-                    return;
-                if (err.name === 'FetchError' ||
-                    (err instanceof error_1.TelegramError && err.code >= 500)) {
-                    const retryAfter = (_b = (_a = err.parameters) === null || _a === void 0 ? void 0 : _a.retry_after) !== null && _b !== void 0 ? _b : 5;
-                    debug('Failed to fetch updates, retrying after %ds.', retryAfter, err);
-                    await wait(retryAfter * 1000);
-                    continue;
-                }
-                if (err instanceof error_1.TelegramError &&
-                    // Unauthorized      Conflict
-                    (err.code === 401 || err.code === 409)) {
-                    this.skipOffsetSync = true;
-                    throw err;
-                }
-                throw err;
-            }
-        } while (!this.abortController.signal.aborted);
-    }
-    async syncUpdateOffset() {
-        if (this.skipOffsetSync)
-            return;
-        debug('Syncing update offset...');
-        await this.telegram.callApi('getUpdates', { offset: this.offset, limit: 1 });
-    }
-    async loop(handleUpdates) {
-        if (this.abortController.signal.aborted) {
-            throw new Error('Polling instances must not be reused!');
-        }
-        try {
-            for await (const updates of this) {
-                await handleUpdates(updates);
-            }
-        }
-        finally {
-            debug('Long polling stopped');
-            // prevent instance reuse
-            this.stop();
-            await this.syncUpdateOffset().catch(noop);
-        }
-    }
-    stop() {
-        this.abortController.abort();
-    }
-}
-exports.Polling = Polling;
-
-
-/***/ }),
-
-/***/ 2309:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const debug_1 = __nccwpck_require__(8237);
-const safeCompare = __nccwpck_require__(9373);
-const debug = (0, debug_1.default)('telegraf:webhook');
-function default_1(hookPath, updateHandler) {
-    return async (req, res, next = () => {
-        res.statusCode = 403;
-        debug('Replying with status code', res.statusCode);
-        res.end();
-    }) => {
-        debug('Incoming request', req.method, req.url);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        if (req.method !== 'POST' || !safeCompare(hookPath, req.url)) {
-            return next();
-        }
-        let update;
-        if (req.body != null) {
-            update = req.body;
-            await updateHandler(update, res);
-            return;
-        }
-        let body = '';
-        for await (const chunk of req) {
-            body += String(chunk);
-        }
-        try {
-            update = JSON.parse(body);
-        }
-        catch (error) {
-            res.writeHead(415);
-            res.end();
-            debug('Failed to parse request body:', error);
-            return;
-        }
-        await updateHandler(update, res);
-    };
-}
-exports.default = default_1;
-
-
-/***/ }),
-
-/***/ 4898:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.deunionize = void 0;
-/**
- * Expose properties from all union variants.
- * @see https://github.com/telegraf/telegraf/issues/1388#issuecomment-791573609
- * @see https://millsp.github.io/ts-toolbelt/modules/union_strict.html
- */
-function deunionize(t) {
-    return t;
-}
-exports.deunionize = deunionize;
-
-
-/***/ }),
-
-/***/ 6790:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-var __webpack_unused_export__;
-
-__webpack_unused_export__ = ({ value: true });
-__webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = exports.mC = void 0;
-var telegraf_1 = __nccwpck_require__(5971);
-Object.defineProperty(exports, "mC", ({ enumerable: true, get: function () { return telegraf_1.Telegraf; } }));
-var context_1 = __nccwpck_require__(9595);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return context_1.Context; } });
-var composer_1 = __nccwpck_require__(9066);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return composer_1.Composer; } });
-var router_1 = __nccwpck_require__(8076);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return router_1.Router; } });
-var error_1 = __nccwpck_require__(3341);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return error_1.TelegramError; } });
-var telegram_1 = __nccwpck_require__(6871);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return telegram_1.Telegram; } });
-/* unused reexport */ __nccwpck_require__(8148);
-/* unused reexport */ __nccwpck_require__(6352);
-var deunionize_1 = __nccwpck_require__(4898);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return deunionize_1.deunionize; } });
-var session_1 = __nccwpck_require__(5754);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return session_1.session; } });
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return session_1.MemorySessionStore; } });
-/* unused reexport */ __nccwpck_require__(3659);
-
-
-/***/ }),
-
-/***/ 6352:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.inlineKeyboard = exports.keyboard = exports.forceReply = exports.removeKeyboard = exports.button = exports.Markup = void 0;
-const check_1 = __nccwpck_require__(518);
-class Markup {
-    constructor(reply_markup) {
-        this.reply_markup = reply_markup;
-    }
-    selective(value = true) {
-        return new Markup({ ...this.reply_markup, selective: value });
-    }
-    placeholder(placeholder) {
-        return new Markup({
-            ...this.reply_markup,
-            input_field_placeholder: placeholder,
-        });
-    }
-    resize(value = true) {
-        return new Markup({
-            ...this.reply_markup,
-            resize_keyboard: value,
-        });
-    }
-    oneTime(value = true) {
-        return new Markup({
-            ...this.reply_markup,
-            one_time_keyboard: value,
-        });
-    }
-}
-exports.Markup = Markup;
-exports.button = __nccwpck_require__(4560);
-function removeKeyboard() {
-    return new Markup({ remove_keyboard: true });
-}
-exports.removeKeyboard = removeKeyboard;
-function forceReply() {
-    return new Markup({ force_reply: true });
-}
-exports.forceReply = forceReply;
-function keyboard(buttons, options) {
-    const keyboard = buildKeyboard(buttons, {
-        columns: 1,
-        ...options,
-    });
-    return new Markup({ keyboard });
-}
-exports.keyboard = keyboard;
-function inlineKeyboard(buttons, options) {
-    const inlineKeyboard = buildKeyboard(buttons, {
-        columns: buttons.length,
-        ...options,
-    });
-    return new Markup({ inline_keyboard: inlineKeyboard });
-}
-exports.inlineKeyboard = inlineKeyboard;
-function buildKeyboard(buttons, options) {
-    const result = [];
-    if (!Array.isArray(buttons)) {
-        return result;
-    }
-    if ((0, check_1.is2D)(buttons)) {
-        return buttons.map((row) => row.filter((button) => !button.hide));
-    }
-    const wrapFn = options.wrap !== undefined
-        ? options.wrap
-        : (_btn, _index, currentRow) => currentRow.length >= options.columns;
-    let currentRow = [];
-    let index = 0;
-    for (const btn of buttons.filter((button) => !button.hide)) {
-        if (wrapFn(btn, index, currentRow) && currentRow.length > 0) {
-            result.push(currentRow);
-            currentRow = [];
-        }
-        currentRow.push(btn);
-        index++;
-    }
-    if (currentRow.length > 0) {
-        result.push(currentRow);
-    }
-    return result;
-}
-
-
-/***/ }),
-
-/***/ 8076:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-/** @format */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Router = void 0;
-const composer_1 = __nccwpck_require__(9066);
-class Router {
-    constructor(routeFn, handlers = new Map()) {
-        this.routeFn = routeFn;
-        this.handlers = handlers;
-        this.otherwiseHandler = composer_1.default.passThru();
-        if (typeof routeFn !== 'function') {
-            throw new Error('Missing routing function');
-        }
-    }
-    on(route, ...fns) {
-        if (fns.length === 0) {
-            throw new TypeError('At least one handler must be provided');
-        }
-        this.handlers.set(route, composer_1.default.compose(fns));
-        return this;
-    }
-    otherwise(...fns) {
-        if (fns.length === 0) {
-            throw new TypeError('At least one otherwise handler must be provided');
-        }
-        this.otherwiseHandler = composer_1.default.compose(fns);
-        return this;
-    }
-    middleware() {
-        return composer_1.default.lazy((ctx) => {
-            var _a;
-            const result = this.routeFn(ctx);
-            if (result == null) {
-                return this.otherwiseHandler;
-            }
-            Object.assign(ctx, result.context);
-            Object.assign(ctx.state, result.state);
-            return (_a = this.handlers.get(result.route)) !== null && _a !== void 0 ? _a : this.otherwiseHandler;
-        });
-    }
-}
-exports.Router = Router;
-
-
-/***/ }),
-
-/***/ 1863:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BaseScene = void 0;
-const composer_1 = __nccwpck_require__(9066);
-const { compose } = composer_1.default;
-class BaseScene extends composer_1.default {
-    constructor(id, options) {
-        const opts = {
-            handlers: [],
-            enterHandlers: [],
-            leaveHandlers: [],
-            ...options,
-        };
-        super(...opts.handlers);
-        this.id = id;
-        this.ttl = opts.ttl;
-        this.enterHandler = compose(opts.enterHandlers);
-        this.leaveHandler = compose(opts.leaveHandlers);
-    }
-    enter(...fns) {
-        this.enterHandler = compose([this.enterHandler, ...fns]);
-        return this;
-    }
-    leave(...fns) {
-        this.leaveHandler = compose([this.leaveHandler, ...fns]);
-        return this;
-    }
-    enterMiddleware() {
-        return this.enterHandler;
-    }
-    leaveMiddleware() {
-        return this.leaveHandler;
-    }
-}
-exports.BaseScene = BaseScene;
-exports.default = BaseScene;
-
-
-/***/ }),
-
-/***/ 1737:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const composer_1 = __nccwpck_require__(9066);
-const debug_1 = __nccwpck_require__(8237);
-const debug = (0, debug_1.default)('telegraf:scenes:context');
-const noop = () => Promise.resolve();
-const now = () => Math.floor(Date.now() / 1000);
-class SceneContextScene {
-    constructor(ctx, scenes, options) {
-        this.ctx = ctx;
-        this.scenes = scenes;
-        this.leaving = false;
-        // @ts-expect-error {} might not be assignable to D
-        const fallbackSessionDefault = {};
-        this.options = { defaultSession: fallbackSessionDefault, ...options };
-    }
-    get session() {
-        var _a, _b;
-        const defaultSession = this.options.defaultSession;
-        let session = (_b = (_a = this.ctx.session) === null || _a === void 0 ? void 0 : _a.__scenes) !== null && _b !== void 0 ? _b : defaultSession;
-        if (session.expires !== undefined && session.expires < now()) {
-            session = defaultSession;
-        }
-        if (this.ctx.session === undefined) {
-            this.ctx.session = { __scenes: session };
-        }
-        else {
-            this.ctx.session.__scenes = session;
-        }
-        return session;
-    }
-    get state() {
-        var _a;
-        var _b;
-        return ((_a = (_b = this.session).state) !== null && _a !== void 0 ? _a : (_b.state = {}));
-    }
-    set state(value) {
-        this.session.state = { ...value };
-    }
-    get current() {
-        var _a;
-        const sceneId = (_a = this.session.current) !== null && _a !== void 0 ? _a : this.options.default;
-        return sceneId === undefined || !this.scenes.has(sceneId)
-            ? undefined
-            : this.scenes.get(sceneId);
-    }
-    reset() {
-        if (this.ctx.session !== undefined)
-            this.ctx.session.__scenes = this.options.defaultSession;
-    }
-    async enter(sceneId, initialState = {}, silent = false) {
-        var _a, _b;
-        if (!this.scenes.has(sceneId)) {
-            throw new Error(`Can't find scene: ${sceneId}`);
-        }
-        if (!silent) {
-            await this.leave();
-        }
-        debug('Entering scene', sceneId, initialState, silent);
-        this.session.current = sceneId;
-        this.state = initialState;
-        const ttl = (_b = (_a = this.current) === null || _a === void 0 ? void 0 : _a.ttl) !== null && _b !== void 0 ? _b : this.options.ttl;
-        if (ttl !== undefined) {
-            this.session.expires = now() + ttl;
-        }
-        if (this.current === undefined || silent) {
-            return;
-        }
-        const handler = 'enterMiddleware' in this.current &&
-            typeof this.current.enterMiddleware === 'function'
-            ? this.current.enterMiddleware()
-            : this.current.middleware();
-        return await handler(this.ctx, noop);
-    }
-    reenter() {
-        return this.session.current === undefined
-            ? undefined
-            : this.enter(this.session.current, this.state);
-    }
-    async leave() {
-        if (this.leaving)
-            return;
-        debug('Leaving scene');
-        try {
-            this.leaving = true;
-            if (this.current === undefined) {
-                return;
-            }
-            const handler = 'leaveMiddleware' in this.current &&
-                typeof this.current.leaveMiddleware === 'function'
-                ? this.current.leaveMiddleware()
-                : composer_1.default.passThru();
-            await handler(this.ctx, noop);
-            return this.reset();
-        }
-        finally {
-            this.leaving = false;
-        }
-    }
-}
-exports.default = SceneContextScene;
-
-
-/***/ }),
-
-/***/ 3659:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-var __webpack_unused_export__;
-
-/**
- * @see https://github.com/telegraf/telegraf/issues/705#issuecomment-549056045
- * @see https://www.npmjs.com/package/telegraf-stateless-question
- * @packageDocumentation
- */
-__webpack_unused_export__ = ({ value: true });
-__webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = void 0;
-var stage_1 = __nccwpck_require__(3468);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return stage_1.Stage; } });
-var context_1 = __nccwpck_require__(1737);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return context_1.default; } });
-var base_1 = __nccwpck_require__(1863);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return base_1.BaseScene; } });
-var wizard_1 = __nccwpck_require__(3618);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return wizard_1.WizardScene; } });
-var context_2 = __nccwpck_require__(5492);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return context_2.default; } });
-
-
-/***/ }),
-
-/***/ 3468:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Stage = void 0;
-const session_1 = __nccwpck_require__(5754);
-const context_1 = __nccwpck_require__(1737);
-const composer_1 = __nccwpck_require__(9066);
-class Stage extends composer_1.Composer {
-    constructor(scenes = [], options) {
-        super();
-        this.options = { ...options };
-        this.scenes = new Map();
-        scenes.forEach((scene) => this.register(scene));
-    }
-    register(...scenes) {
-        scenes.forEach((scene) => {
-            if ((scene === null || scene === void 0 ? void 0 : scene.id) == null || typeof scene.middleware !== 'function') {
-                throw new Error('telegraf: Unsupported scene');
-            }
-            this.scenes.set(scene.id, scene);
-        });
-        return this;
-    }
-    middleware() {
-        const handler = composer_1.Composer.compose([
-            (ctx, next) => {
-                const scenes = this.scenes;
-                const scene = new context_1.default(ctx, scenes, this.options);
-                ctx.scene = scene;
-                return next();
-            },
-            super.middleware(),
-            composer_1.Composer.lazy((ctx) => { var _a; return (_a = ctx.scene.current) !== null && _a !== void 0 ? _a : composer_1.Composer.passThru(); }),
-        ]);
-        return composer_1.Composer.optional(session_1.isSessionContext, handler);
-    }
-    static enter(...args) {
-        return (ctx) => ctx.scene.enter(...args);
-    }
-    static reenter(...args) {
-        return (ctx) => ctx.scene.reenter(...args);
-    }
-    static leave(...args) {
-        return (ctx) => ctx.scene.leave(...args);
-    }
-}
-exports.Stage = Stage;
-
-
-/***/ }),
-
-/***/ 5492:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-class WizardContextWizard {
-    constructor(ctx, steps) {
-        var _a;
-        this.ctx = ctx;
-        this.steps = steps;
-        this.state = ctx.scene.state;
-        this.cursor = (_a = ctx.scene.session.cursor) !== null && _a !== void 0 ? _a : 0;
-    }
-    get step() {
-        return this.steps[this.cursor];
-    }
-    get cursor() {
-        return this.ctx.scene.session.cursor;
-    }
-    set cursor(cursor) {
-        this.ctx.scene.session.cursor = cursor;
-    }
-    selectStep(index) {
-        this.cursor = index;
-        return this;
-    }
-    next() {
-        return this.selectStep(this.cursor + 1);
-    }
-    back() {
-        return this.selectStep(this.cursor - 1);
-    }
-}
-exports.default = WizardContextWizard;
-
-
-/***/ }),
-
-/***/ 3618:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.WizardScene = void 0;
-const base_1 = __nccwpck_require__(1863);
-const context_1 = __nccwpck_require__(5492);
-const composer_1 = __nccwpck_require__(9066);
-class WizardScene extends base_1.default {
-    constructor(id, options, ...steps) {
-        let opts;
-        let s;
-        if (typeof options === 'function' || 'middleware' in options) {
-            opts = undefined;
-            s = [options, ...steps];
-        }
-        else {
-            opts = options;
-            s = steps;
-        }
-        super(id, opts);
-        this.steps = s;
-    }
-    middleware() {
-        return composer_1.default.compose([
-            (ctx, next) => {
-                ctx.wizard = new context_1.default(ctx, this.steps);
-                return next();
-            },
-            super.middleware(),
-            (ctx, next) => {
-                if (ctx.wizard.step === undefined) {
-                    ctx.wizard.selectStep(0);
-                    return ctx.scene.leave();
-                }
-                return composer_1.default.unwrap(ctx.wizard.step)(ctx, next);
-            },
-        ]);
-    }
-    enterMiddleware() {
-        return composer_1.default.compose([this.enterHandler, this.middleware()]);
-    }
-}
-exports.WizardScene = WizardScene;
-
-
-/***/ }),
-
-/***/ 5754:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isSessionContext = exports.MemorySessionStore = exports.session = void 0;
-/**
- * Returns middleware that adds `ctx.session` for storing arbitrary state per session key.
- *
- * The default `getSessionKey` is <code>\`${ctx.from.id}:${ctx.chat.id}\`</code>.
- * If either `ctx.from` or `ctx.chat` is `undefined`, default session key and thus `ctx.session` are also `undefined`.
- *
- * Session data is kept only in memory by default,
- * which means that all data will be lost when the process is terminated.
- * If you want to store data across restarts, or share it among workers,
- * you can [install persistent session middleware from npm](https://www.npmjs.com/search?q=telegraf-session),
- * or pass custom `storage`.
- *
- * @example https://github.com/telegraf/telegraf/blob/develop/docs/examples/session-bot.ts
- * @deprecated https://github.com/telegraf/telegraf/issues/1372#issuecomment-782668499
- */
-function session(options) {
-    var _a, _b;
-    const getSessionKey = (_a = options === null || options === void 0 ? void 0 : options.getSessionKey) !== null && _a !== void 0 ? _a : defaultGetSessionKey;
-    const store = (_b = options === null || options === void 0 ? void 0 : options.store) !== null && _b !== void 0 ? _b : new MemorySessionStore();
-    return async (ctx, next) => {
-        const key = await getSessionKey(ctx);
-        if (key == null) {
-            return await next();
-        }
-        ctx.session = await store.get(key);
-        await next();
-        if (ctx.session == null) {
-            await store.delete(key);
-        }
-        else {
-            await store.set(key, ctx.session);
-        }
-    };
-}
-exports.session = session;
-async function defaultGetSessionKey(ctx) {
-    var _a, _b;
-    const fromId = (_a = ctx.from) === null || _a === void 0 ? void 0 : _a.id;
-    const chatId = (_b = ctx.chat) === null || _b === void 0 ? void 0 : _b.id;
-    if (fromId == null || chatId == null) {
-        return undefined;
-    }
-    return `${fromId}:${chatId}`;
-}
-/** @deprecated https://github.com/telegraf/telegraf/issues/1372#issuecomment-782668499 */
-class MemorySessionStore {
-    constructor(ttl = Infinity) {
-        this.ttl = ttl;
-        this.store = new Map();
-    }
-    get(name) {
-        const entry = this.store.get(name);
-        if (entry == null) {
-            return undefined;
-        }
-        else if (entry.expires < Date.now()) {
-            this.delete(name);
-            return undefined;
-        }
-        return entry.session;
-    }
-    set(name, value) {
-        const now = Date.now();
-        this.store.set(name, { session: value, expires: now + this.ttl });
-    }
-    delete(name) {
-        this.store.delete(name);
-    }
-}
-exports.MemorySessionStore = MemorySessionStore;
-function isSessionContext(ctx) {
-    return 'session' in ctx;
-}
-exports.isSessionContext = isSessionContext;
-
-
-/***/ }),
-
-/***/ 5971:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Telegraf = void 0;
-const crypto = __nccwpck_require__(6417);
-const http = __nccwpck_require__(8605);
-const https = __nccwpck_require__(7211);
-const util = __nccwpck_require__(1669);
-const composer_1 = __nccwpck_require__(9066);
-const compact_1 = __nccwpck_require__(1437);
-const context_1 = __nccwpck_require__(9595);
-const debug_1 = __nccwpck_require__(8237);
-const webhook_1 = __nccwpck_require__(2309);
-const polling_1 = __nccwpck_require__(1319);
-const p_timeout_1 = __nccwpck_require__(6424);
-const telegram_1 = __nccwpck_require__(6871);
-const url_1 = __nccwpck_require__(8835);
-const debug = (0, debug_1.default)('telegraf:main');
-const DEFAULT_OPTIONS = {
-    telegram: {},
-    handlerTimeout: 90000,
-    contextType: context_1.default,
-};
-function always(x) {
-    return () => x;
-}
-const anoop = always(Promise.resolve());
-class Telegraf extends composer_1.Composer {
-    constructor(token, options) {
-        super();
-        this.context = {};
-        this.handleError = (err, ctx) => {
-            // set exit code to emulate `warn-with-error-code` behavior of
-            // https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode
-            // to prevent a clean exit despite an error being thrown
-            process.exitCode = 1;
-            console.error('Unhandled error while processing', ctx.update);
-            throw err;
-        };
-        // @ts-expect-error Trust me, TS
-        this.options = {
-            ...DEFAULT_OPTIONS,
-            ...(0, compact_1.compactOptions)(options),
-        };
-        this.telegram = new telegram_1.default(token, this.options.telegram);
-        debug('Created a `Telegraf` instance');
-    }
-    get token() {
-        return this.telegram.token;
-    }
-    /** @deprecated use `ctx.telegram.webhookReply` */
-    set webhookReply(webhookReply) {
-        this.telegram.webhookReply = webhookReply;
-    }
-    get webhookReply() {
-        return this.telegram.webhookReply;
-    }
-    /**
-     * _Override_ error handling
-     */
-    catch(handler) {
-        this.handleError = handler;
-        return this;
-    }
-    webhookCallback(path = '/') {
-        return (0, webhook_1.default)(path, (update, res) => this.handleUpdate(update, res));
-    }
-    startPolling(allowedUpdates = []) {
-        this.polling = new polling_1.Polling(this.telegram, allowedUpdates);
-        this.polling.loop(async (updates) => {
-            await this.handleUpdates(updates);
-        });
-    }
-    startWebhook(hookPath, tlsOptions, port, host, cb) {
-        const webhookCb = this.webhookCallback(hookPath);
-        const callback = typeof cb === 'function'
-            ? (req, res) => webhookCb(req, res, () => cb(req, res))
-            : webhookCb;
-        this.webhookServer =
-            tlsOptions != null
-                ? https.createServer(tlsOptions, callback)
-                : http.createServer(callback);
-        this.webhookServer.listen(port, host, () => {
-            debug('Webhook listening on port: %s', port);
-        });
-        return this;
-    }
-    secretPathComponent() {
-        return crypto
-            .createHash('sha3-256')
-            .update(this.token)
-            .update(process.version) // salt
-            .digest('hex');
-    }
-    /**
-     * @see https://github.com/telegraf/telegraf/discussions/1344#discussioncomment-335700
-     */
-    async launch(config = {}) {
-        var _a, _b, _c;
-        debug('Connecting to Telegram');
-        (_a = this.botInfo) !== null && _a !== void 0 ? _a : (this.botInfo = await this.telegram.getMe());
-        debug(`Launching @${this.botInfo.username}`);
-        if (config.webhook === undefined) {
-            await this.telegram.deleteWebhook({
-                drop_pending_updates: config.dropPendingUpdates,
-            });
-            this.startPolling(config.allowedUpdates);
-            debug('Bot started with long polling');
-            return;
-        }
-        if (typeof config.webhook.domain !== 'string' &&
-            typeof config.webhook.hookPath !== 'string') {
-            throw new Error('Webhook domain or webhook path is required');
-        }
-        let domain = (_b = config.webhook.domain) !== null && _b !== void 0 ? _b : '';
-        if (domain.startsWith('https://') || domain.startsWith('http://')) {
-            domain = new url_1.URL(domain).host;
-        }
-        const hookPath = (_c = config.webhook.hookPath) !== null && _c !== void 0 ? _c : `/telegraf/${this.secretPathComponent()}`;
-        const { port, host, tlsOptions, cb } = config.webhook;
-        this.startWebhook(hookPath, tlsOptions, port, host, cb);
-        if (!domain) {
-            debug('Bot started with webhook');
-            return;
-        }
-        await this.telegram.setWebhook(`https://${domain}${hookPath}`, {
-            drop_pending_updates: config.dropPendingUpdates,
-            allowed_updates: config.allowedUpdates,
-            ip_address: config.webhook.ipAddress,
-            max_connections: config.webhook.maxConnections,
-        });
-        debug(`Bot started with webhook @ https://${domain}`);
-    }
-    stop(reason = 'unspecified') {
-        var _a, _b;
-        debug('Stopping bot... Reason:', reason);
-        // https://github.com/telegraf/telegraf/pull/1224#issuecomment-742693770
-        if (this.polling === undefined && this.webhookServer === undefined) {
-            throw new Error('Bot is not running!');
-        }
-        (_a = this.webhookServer) === null || _a === void 0 ? void 0 : _a.close();
-        (_b = this.polling) === null || _b === void 0 ? void 0 : _b.stop();
-    }
-    handleUpdates(updates) {
-        if (!Array.isArray(updates)) {
-            throw new TypeError(util.format('Updates must be an array, got', updates));
-        }
-        return Promise.all(updates.map((update) => this.handleUpdate(update)));
-    }
-    async handleUpdate(update, webhookResponse) {
-        var _a, _b;
-        (_a = this.botInfo) !== null && _a !== void 0 ? _a : (this.botInfo = (debug('Update %d is waiting for `botInfo` to be initialized', update.update_id),
-            await ((_b = this.botInfoCall) !== null && _b !== void 0 ? _b : (this.botInfoCall = this.telegram.getMe()))));
-        debug('Processing update', update.update_id);
-        const tg = new telegram_1.default(this.token, this.telegram.options, webhookResponse);
-        const TelegrafContext = this.options.contextType;
-        const ctx = new TelegrafContext(update, tg, this.botInfo);
-        Object.assign(ctx, this.context);
-        try {
-            await (0, p_timeout_1.default)(Promise.resolve(this.middleware()(ctx, anoop)), this.options.handlerTimeout);
-        }
-        catch (err) {
-            return await this.handleError(err, ctx);
-        }
-        finally {
-            if ((webhookResponse === null || webhookResponse === void 0 ? void 0 : webhookResponse.writableEnded) === false) {
-                webhookResponse.end();
-            }
-            debug('Finished processing update', update.update_id);
-        }
-    }
-}
-exports.Telegraf = Telegraf;
-
-
-/***/ }),
-
-/***/ 8148:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-var __webpack_unused_export__;
-
-/** @format */
-__webpack_unused_export__ = ({ value: true });
-__webpack_unused_export__ = void 0;
-var markup_1 = __nccwpck_require__(6352);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return markup_1.Markup; } });
-
-
-/***/ }),
-
-/***/ 6871:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Telegram = void 0;
-const client_1 = __nccwpck_require__(1990);
-const path_1 = __nccwpck_require__(5622);
-const url_1 = __nccwpck_require__(8835);
-class Telegram extends client_1.default {
-    /**
-     * Get basic information about the bot
-     */
-    getMe() {
-        return this.callApi('getMe', {});
-    }
-    /**
-     * Get basic info about a file and prepare it for downloading.
-     * @param fileId Id of file to get link to
-     */
-    getFile(fileId) {
-        return this.callApi('getFile', { file_id: fileId });
-    }
-    /**
-     * Get download link to a file.
-     */
-    async getFileLink(fileId) {
-        if (typeof fileId === 'string') {
-            fileId = await this.getFile(fileId);
-        }
-        else if (fileId.file_path === undefined) {
-            fileId = await this.getFile(fileId.file_id);
-        }
-        // Local bot API instances return the absolute path to the file
-        if (fileId.file_path !== undefined && (0, path_1.isAbsolute)(fileId.file_path)) {
-            const url = new url_1.URL(this.options.apiRoot);
-            url.port = '';
-            url.pathname = fileId.file_path;
-            url.protocol = 'file:';
-            return url;
-        }
-        return new url_1.URL(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        `./file/${this.options.apiMode}${this.token}/${fileId.file_path}`, this.options.apiRoot);
-    }
-    /**
-     * Directly request incoming updates.
-     * You should probably use `Telegraf::launch` instead.
-     */
-    getUpdates(timeout, limit, offset, allowedUpdates) {
-        return this.callApi('getUpdates', {
-            allowed_updates: allowedUpdates,
-            limit,
-            offset,
-            timeout,
-        });
-    }
-    getWebhookInfo() {
-        return this.callApi('getWebhookInfo', {});
-    }
-    getGameHighScores(userId, inlineMessageId, chatId, messageId) {
-        return this.callApi('getGameHighScores', {
-            user_id: userId,
-            inline_message_id: inlineMessageId,
-            chat_id: chatId,
-            message_id: messageId,
-        });
-    }
-    setGameScore(userId, score, inlineMessageId, chatId, messageId, editMessage = true, force = false) {
-        return this.callApi('setGameScore', {
-            force,
-            score,
-            user_id: userId,
-            inline_message_id: inlineMessageId,
-            chat_id: chatId,
-            message_id: messageId,
-            disable_edit_message: !editMessage,
-        });
-    }
-    /**
-     * Specify a url to receive incoming updates via an outgoing webhook.
-     * @param url HTTPS url to send updates to. Use an empty string to remove webhook integration
-     */
-    setWebhook(url, extra) {
-        return this.callApi('setWebhook', {
-            url,
-            ...extra,
-        });
-    }
-    /**
-     * Remove webhook integration.
-     */
-    deleteWebhook(extra) {
-        return this.callApi('deleteWebhook', {
-            ...extra,
-        });
-    }
-    /**
-     * Send a text message.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param text Text of the message to be sent
-     */
-    sendMessage(chatId, text, extra) {
-        return this.callApi('sendMessage', { chat_id: chatId, text, ...extra });
-    }
-    /**
-     * Forward existing message.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param fromChatId Unique identifier for the chat where the original message was sent (or channel username in the format @channelusername)
-     * @param messageId Message identifier in the chat specified in from_chat_id
-     */
-    forwardMessage(chatId, fromChatId, messageId, extra) {
-        return this.callApi('forwardMessage', {
-            chat_id: chatId,
-            from_chat_id: fromChatId,
-            message_id: messageId,
-            ...extra,
-        });
-    }
-    /**
-     * Use this method when you need to tell the user that something is happening on the bot's side.
-     * The status is set for 5 seconds or less (when a message arrives from your bot, Telegram clients clear its typing status).
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendChatAction(chatId, action) {
-        return this.callApi('sendChatAction', { chat_id: chatId, action });
-    }
-    getUserProfilePhotos(userId, offset, limit) {
-        return this.callApi('getUserProfilePhotos', {
-            user_id: userId,
-            offset,
-            limit,
-        });
-    }
-    /**
-     * Send point on the map.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendLocation(chatId, latitude, longitude, extra) {
-        return this.callApi('sendLocation', {
-            chat_id: chatId,
-            latitude,
-            longitude,
-            ...extra,
-        });
-    }
-    sendVenue(chatId, latitude, longitude, title, address, extra) {
-        return this.callApi('sendVenue', {
-            latitude,
-            longitude,
-            title,
-            address,
-            chat_id: chatId,
-            ...extra,
-        });
-    }
-    /**
-     * @param chatId Unique identifier for the target private chat
-     */
-    sendInvoice(chatId, invoice, extra) {
-        return this.callApi('sendInvoice', {
-            chat_id: chatId,
-            ...invoice,
-            ...extra,
-        });
-    }
-    sendContact(chatId, phoneNumber, firstName, extra) {
-        return this.callApi('sendContact', {
-            chat_id: chatId,
-            phone_number: phoneNumber,
-            first_name: firstName,
-            ...extra,
-        });
-    }
-    /**
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendPhoto(chatId, photo, extra) {
-        return this.callApi('sendPhoto', { chat_id: chatId, photo, ...extra });
-    }
-    /**
-     * Send a dice, which will have a random value from 1 to 6.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendDice(chatId, extra) {
-        return this.callApi('sendDice', { chat_id: chatId, ...extra });
-    }
-    /**
-     * Send general files. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendDocument(chatId, document, extra) {
-        return this.callApi('sendDocument', { chat_id: chatId, document, ...extra });
-    }
-    /**
-     * Send audio files, if you want Telegram clients to display them in the music player.
-     * Your audio must be in the .mp3 format.
-     * Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendAudio(chatId, audio, extra) {
-        return this.callApi('sendAudio', { chat_id: chatId, audio, ...extra });
-    }
-    /**
-     * Send .webp, animated .tgs, or video .webm stickers
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendSticker(chatId, sticker, extra) {
-        return this.callApi('sendSticker', { chat_id: chatId, sticker, ...extra });
-    }
-    /**
-     * Send video files, Telegram clients support mp4 videos (other formats may be sent as Document).
-     * Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendVideo(chatId, video, extra) {
-        return this.callApi('sendVideo', { chat_id: chatId, video, ...extra });
-    }
-    /**
-     * Send .gif animations.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendAnimation(chatId, animation, extra) {
-        return this.callApi('sendAnimation', {
-            chat_id: chatId,
-            animation,
-            ...extra,
-        });
-    }
-    /**
-     * Send video messages.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendVideoNote(chatId, videoNote, extra) {
-        return this.callApi('sendVideoNote', {
-            chat_id: chatId,
-            video_note: videoNote,
-            ...extra,
-        });
-    }
-    /**
-     * Send audio files, if you want Telegram clients to display the file as a playable voice message. For this to work, your audio must be in an .ogg file encoded with OPUS (other formats may be sent as Audio or Document). On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size, this limit may be changed in the future.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    sendVoice(chatId, voice, extra) {
-        return this.callApi('sendVoice', { chat_id: chatId, voice, ...extra });
-    }
-    /**
-     * @param chatId Unique identifier for the target chat
-     * @param gameShortName Short name of the game, serves as the unique identifier for the game. Set up your games via Botfather.
-     */
-    sendGame(chatId, gameName, extra) {
-        return this.callApi('sendGame', {
-            chat_id: chatId,
-            game_short_name: gameName,
-            ...extra,
-        });
-    }
-    /**
-     * Send a group of photos or videos as an album.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param media A JSON-serialized array describing photos and videos to be sent, must include 2–10 items
-     */
-    sendMediaGroup(chatId, media, extra) {
-        return this.callApi('sendMediaGroup', { chat_id: chatId, media, ...extra });
-    }
-    /**
-     * Send a native poll.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param question Poll question, 1-255 characters
-     * @param options A JSON-serialized list of answer options, 2-10 strings 1-100 characters each
-     */
-    sendPoll(chatId, question, options, extra) {
-        return this.callApi('sendPoll', {
-            chat_id: chatId,
-            type: 'regular',
-            question,
-            options,
-            ...extra,
-        });
-    }
-    /**
-     * Send a native quiz.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param question Poll question, 1-255 characters
-     * @param options A JSON-serialized list of answer options, 2-10 strings 1-100 characters each
-     */
-    sendQuiz(chatId, question, options, extra) {
-        return this.callApi('sendPoll', {
-            chat_id: chatId,
-            type: 'quiz',
-            question,
-            options,
-            ...extra,
-        });
-    }
-    /**
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param messageId Identifier of the original message with the poll
-     */
-    stopPoll(chatId, messageId, extra) {
-        return this.callApi('stopPoll', {
-            chat_id: chatId,
-            message_id: messageId,
-            ...extra,
-        });
-    }
-    /**
-     * Get up to date information about the chat (current name of the user for one-on-one conversations, current username of a user, group or channel, etc.).
-     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-     */
-    getChat(chatId) {
-        return this.callApi('getChat', { chat_id: chatId });
-    }
-    /**
-     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-     */
-    getChatAdministrators(chatId) {
-        return this.callApi('getChatAdministrators', { chat_id: chatId });
-    }
-    /**
-     * Get information about a member of a chat.
-     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-     * @param userId Unique identifier of the target user
-     */
-    getChatMember(chatId, userId) {
-        return this.callApi('getChatMember', { chat_id: chatId, user_id: userId });
-    }
-    /**
-     * Get the number of members in a chat.
-     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-     */
-    getChatMembersCount(chatId) {
-        return this.callApi('getChatMembersCount', { chat_id: chatId });
-    }
-    /**
-     * Send answers to an inline query.
-     * No more than 50 results per query are allowed.
-     */
-    answerInlineQuery(inlineQueryId, results, extra) {
-        return this.callApi('answerInlineQuery', {
-            inline_query_id: inlineQueryId,
-            results,
-            ...extra,
-        });
-    }
-    setChatPermissions(chatId, permissions) {
-        return this.callApi('setChatPermissions', { chat_id: chatId, permissions });
-    }
-    /**
-     * Kick a user from a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the group on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights.
-     * @param chatId Unique identifier for the target group or username of the target supergroup or channel (in the format `@channelusername`)
-     * @param untilDate Date when the user will be unbanned, unix time. If user is banned for more than 366 days or less than 30 seconds from the current time they are considered to be banned forever
-     */
-    banChatMember(chatId, userId, untilDate, extra) {
-        return this.callApi('banChatMember', {
-            chat_id: chatId,
-            user_id: userId,
-            until_date: untilDate,
-            ...extra,
-        });
-    }
-    /**
-     * Kick a user from a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the group on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights.
-     * @param chatId Unique identifier for the target group or username of the target supergroup or channel (in the format `@channelusername`)
-     * @param untilDate Date when the user will be unbanned, unix time. If user is banned for more than 366 days or less than 30 seconds from the current time they are considered to be banned forever
-     * @deprecated since API 5.3. Use {@link Telegram.banChatMember}
-     */
-    get kickChatMember() {
-        return this.banChatMember;
-    }
-    /**
-     * Promote or demote a user in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Pass False for all boolean parameters to demote a user.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
-     */
-    promoteChatMember(chatId, userId, extra) {
-        return this.callApi('promoteChatMember', {
-            chat_id: chatId,
-            user_id: userId,
-            ...extra,
-        });
-    }
-    /**
-     * Restrict a user in a supergroup. The bot must be an administrator in the supergroup for this to work and must have the appropriate admin rights. Pass True for all boolean parameters to lift restrictions from a user.
-     * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-     */
-    restrictChatMember(chatId, userId, extra) {
-        return this.callApi('restrictChatMember', {
-            chat_id: chatId,
-            user_id: userId,
-            ...extra,
-        });
-    }
-    setChatAdministratorCustomTitle(chatId, userId, title) {
-        return this.callApi('setChatAdministratorCustomTitle', {
-            chat_id: chatId,
-            user_id: userId,
-            custom_title: title,
-        });
-    }
-    /**
-     * Export an invite link to a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    exportChatInviteLink(chatId) {
-        return this.callApi('exportChatInviteLink', { chat_id: chatId });
-    }
-    createChatInviteLink(chatId, extra) {
-        return this.callApi('createChatInviteLink', {
-            chat_id: chatId,
-            ...extra,
-        });
-    }
-    editChatInviteLink(chatId, inviteLink, extra) {
-        return this.callApi('editChatInviteLink', {
-            chat_id: chatId,
-            invite_link: inviteLink,
-            ...extra,
-        });
-    }
-    revokeChatInviteLink(chatId, inviteLink) {
-        return this.callApi('revokeChatInviteLink', {
-            chat_id: chatId,
-            invite_link: inviteLink,
-        });
-    }
-    setChatPhoto(chatId, photo) {
-        return this.callApi('setChatPhoto', { chat_id: chatId, photo });
-    }
-    deleteChatPhoto(chatId) {
-        return this.callApi('deleteChatPhoto', { chat_id: chatId });
-    }
-    /**
-     * Change the title of a chat. Titles can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights.
-     * @param chatId Unique identifier for the target group or username of the target supergroup or channel (in the format `@channelusername`)
-     * @param title New chat title, 1-255 characters
-     */
-    setChatTitle(chatId, title) {
-        return this.callApi('setChatTitle', { chat_id: chatId, title });
-    }
-    setChatDescription(chatId, description) {
-        return this.callApi('setChatDescription', { chat_id: chatId, description });
-    }
-    /**
-     * Pin a message in a group, a supergroup, or a channel. The bot must be an administrator in the chat for this to work and must have the 'can_pin_messages' admin right in the supergroup or 'can_edit_messages' admin right in the channel.
-     * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-     */
-    pinChatMessage(chatId, messageId, extra) {
-        return this.callApi('pinChatMessage', {
-            chat_id: chatId,
-            message_id: messageId,
-            ...extra,
-        });
-    }
-    /**
-     * Unpin a message in a group, a supergroup, or a channel. The bot must be an administrator in the chat for this to work and must have the 'can_pin_messages' admin right in the supergroup or 'can_edit_messages' admin right in the channel.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    unpinChatMessage(chatId, messageId) {
-        return this.callApi('unpinChatMessage', {
-            chat_id: chatId,
-            message_id: messageId,
-        });
-    }
-    /**
-     * Clear the list of pinned messages in a chat.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    unpinAllChatMessages(chatId) {
-        return this.callApi('unpinAllChatMessages', { chat_id: chatId });
-    }
-    /**
-     * Use this method for your bot to leave a group, supergroup or channel.
-     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-     */
-    leaveChat(chatId) {
-        return this.callApi('leaveChat', { chat_id: chatId });
-    }
-    /**
-     * Unban a user from a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights.
-     * @param chatId Unique identifier for the target group or username of the target supergroup or channel (in the format @username)
-     * @param userId Unique identifier of the target user
-     */
-    unbanChatMember(chatId, userId, extra) {
-        return this.callApi('unbanChatMember', {
-            chat_id: chatId,
-            user_id: userId,
-            ...extra,
-        });
-    }
-    answerCbQuery(callbackQueryId, text, extra) {
-        return this.callApi('answerCallbackQuery', {
-            text,
-            callback_query_id: callbackQueryId,
-            ...extra,
-        });
-    }
-    answerGameQuery(callbackQueryId, url) {
-        return this.callApi('answerCallbackQuery', {
-            url,
-            callback_query_id: callbackQueryId,
-        });
-    }
-    /**
-     * If you sent an invoice requesting a shipping address and the parameter is_flexible was specified,
-     * the Bot API will send an Update with a shipping_query field to the bot.
-     * Reply to shipping queries.
-     * @param ok  Specify True if delivery to the specified address is possible and False if there are any problems (for example, if delivery to the specified address is not possible)
-     * @param shippingOptions Required if ok is True. A JSON-serialized array of available shipping options.
-     * @param errorMessage Required if ok is False. Error message in human readable form that explains why it is impossible to complete the order (e.g. "Sorry, delivery to your desired address is unavailable'). Telegram will display this message to the user.
-     */
-    answerShippingQuery(shippingQueryId, ok, shippingOptions, errorMessage) {
-        return this.callApi('answerShippingQuery', {
-            ok,
-            shipping_query_id: shippingQueryId,
-            shipping_options: shippingOptions,
-            error_message: errorMessage,
-        });
-    }
-    /**
-     * Once the user has confirmed their payment and shipping details, the Bot API sends the final confirmation in the form of an Update with the field pre_checkout_query.
-     * Respond to such pre-checkout queries. On success, True is returned.
-     * Note: The Bot API must receive an answer within 10 seconds after the pre-checkout query was sent.
-     * @param ok  Specify True if everything is alright (goods are available, etc.) and the bot is ready to proceed with the order. Use False if there are any problems.
-     * @param errorMessage Required if ok is False. Error message in human readable form that explains the reason for failure to proceed with the checkout (e.g. "Sorry, somebody just bought the last of our amazing black T-shirts while you were busy filling out your payment details. Please choose a different color or garment!"). Telegram will display this message to the user.
-     */
-    answerPreCheckoutQuery(preCheckoutQueryId, ok, errorMessage) {
-        return this.callApi('answerPreCheckoutQuery', {
-            ok,
-            pre_checkout_query_id: preCheckoutQueryId,
-            error_message: errorMessage,
-        });
-    }
-    /**
-     * Edit text and game messages sent by the bot or via the bot (for inline bots).
-     * On success, if edited message is sent by the bot, the edited Message is returned, otherwise True is returned.
-     * @param chatId Required if inlineMessageId is not specified. Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param messageId Required if inlineMessageId is not specified. Identifier of the sent message
-     * @param inlineMessageId Required if chatId and messageId are not specified. Identifier of the inline message
-     * @param text New text of the message
-     */
-    editMessageText(chatId, messageId, inlineMessageId, text, extra) {
-        return this.callApi('editMessageText', {
-            text,
-            chat_id: chatId,
-            message_id: messageId,
-            inline_message_id: inlineMessageId,
-            ...extra,
-        });
-    }
-    /**
-     * Edit captions of messages sent by the bot or via the bot (for inline bots).
-     * On success, if edited message is sent by the bot, the edited Message is returned, otherwise True is returned.
-     * @param chatId Required if inlineMessageId is not specified. Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param messageId Required if inlineMessageId is not specified. Identifier of the sent message
-     * @param inlineMessageId Required if chatId and messageId are not specified. Identifier of the inline message
-     * @param caption New caption of the message
-     * @param markup A JSON-serialized object for an inline keyboard.
-     */
-    editMessageCaption(chatId, messageId, inlineMessageId, caption, extra) {
-        return this.callApi('editMessageCaption', {
-            caption,
-            chat_id: chatId,
-            message_id: messageId,
-            inline_message_id: inlineMessageId,
-            ...extra,
-        });
-    }
-    /**
-     * Edit animation, audio, document, photo, or video messages.
-     * If a message is a part of a message album, then it can be edited only to a photo or a video.
-     * Otherwise, message type can be changed arbitrarily.
-     * When inline message is edited, new file can't be uploaded.
-     * Use previously uploaded file via its file_id or specify a URL.
-     * @param chatId Required if inlineMessageId is not specified. Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param messageId Required if inlineMessageId is not specified. Identifier of the sent message
-     * @param inlineMessageId Required if chatId and messageId are not specified. Identifier of the inline message
-     * @param media New media of message
-     * @param markup Markup of inline keyboard
-     */
-    editMessageMedia(chatId, messageId, inlineMessageId, media, extra) {
-        return this.callApi('editMessageMedia', {
-            chat_id: chatId,
-            message_id: messageId,
-            inline_message_id: inlineMessageId,
-            media,
-            ...extra,
-        });
-    }
-    /**
-     * Edit only the reply markup of messages sent by the bot or via the bot (for inline bots).
-     * @param chatId Required if inlineMessageId is not specified. Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param messageId Required if inlineMessageId is not specified. Identifier of the sent message
-     * @param inlineMessageId Required if chatId and messageId are not specified. Identifier of the inline message
-     * @param markup A JSON-serialized object for an inline keyboard.
-     * @returns If edited message is sent by the bot, the edited Message is returned, otherwise True is returned.
-     */
-    editMessageReplyMarkup(chatId, messageId, inlineMessageId, markup) {
-        return this.callApi('editMessageReplyMarkup', {
-            chat_id: chatId,
-            message_id: messageId,
-            inline_message_id: inlineMessageId,
-            reply_markup: markup,
-        });
-    }
-    editMessageLiveLocation(chatId, messageId, inlineMessageId, latitude, longitude, extra) {
-        return this.callApi('editMessageLiveLocation', {
-            latitude,
-            longitude,
-            chat_id: chatId,
-            message_id: messageId,
-            inline_message_id: inlineMessageId,
-            ...extra,
-        });
-    }
-    stopMessageLiveLocation(chatId, messageId, inlineMessageId, markup) {
-        return this.callApi('stopMessageLiveLocation', {
-            chat_id: chatId,
-            message_id: messageId,
-            inline_message_id: inlineMessageId,
-            reply_markup: markup,
-        });
-    }
-    /**
-     * Delete a message, including service messages, with the following limitations:
-     * - A message can only be deleted if it was sent less than 48 hours ago.
-     * - Bots can delete outgoing messages in groups and supergroups.
-     * - Bots granted can_post_messages permissions can delete outgoing messages in channels.
-     * - If the bot is an administrator of a group, it can delete any message there.
-     * - If the bot has can_delete_messages permission in a supergroup or a channel, it can delete any message there.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     */
-    deleteMessage(chatId, messageId) {
-        return this.callApi('deleteMessage', {
-            chat_id: chatId,
-            message_id: messageId,
-        });
-    }
-    setChatStickerSet(chatId, setName) {
-        return this.callApi('setChatStickerSet', {
-            chat_id: chatId,
-            sticker_set_name: setName,
-        });
-    }
-    deleteChatStickerSet(chatId) {
-        return this.callApi('deleteChatStickerSet', { chat_id: chatId });
-    }
-    getStickerSet(name) {
-        return this.callApi('getStickerSet', { name });
-    }
-    /**
-     * Upload a .png file with a sticker for later use in createNewStickerSet and addStickerToSet methods (can be used multiple times).
-     * https://core.telegram.org/bots/api#sending-files
-     * @param ownerId User identifier of sticker file owner
-     * @param stickerFile Png image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px.
-     */
-    uploadStickerFile(ownerId, stickerFile) {
-        return this.callApi('uploadStickerFile', {
-            user_id: ownerId,
-            png_sticker: stickerFile,
-        });
-    }
-    /**
-     * Create new sticker set owned by a user. The bot will be able to edit the created sticker set.
-     * @param ownerId User identifier of created sticker set owner
-     * @param name Short name of sticker set, to be used in t.me/addstickers/ URLs (e.g., animals). Can contain only english letters, digits and underscores. Must begin with a letter, can't contain consecutive underscores and must end in “_by_<bot username>”. <bot_username> is case insensitive. 1-64 characters.
-     * @param title Sticker set title, 1-64 characters
-     */
-    createNewStickerSet(ownerId, name, title, stickerData) {
-        return this.callApi('createNewStickerSet', {
-            name,
-            title,
-            user_id: ownerId,
-            ...stickerData,
-        });
-    }
-    /**
-     * Add a new sticker to a set created by the bot.
-     * @param ownerId User identifier of sticker set owner
-     * @param name Sticker set name
-     */
-    addStickerToSet(ownerId, name, stickerData) {
-        return this.callApi('addStickerToSet', {
-            name,
-            user_id: ownerId,
-            ...stickerData,
-        });
-    }
-    /**
-     * Move a sticker in a set created by the bot to a specific position.
-     * @param sticker File identifier of the sticker
-     * @param position New sticker position in the set, zero-based
-     */
-    setStickerPositionInSet(sticker, position) {
-        return this.callApi('setStickerPositionInSet', {
-            sticker,
-            position,
-        });
-    }
-    setStickerSetThumb(name, userId, thumb) {
-        return this.callApi('setStickerSetThumb', { name, user_id: userId, thumb });
-    }
-    /**
-     * Delete a sticker from a set created by the bot.
-     * @param sticker File identifier of the sticker
-     */
-    deleteStickerFromSet(sticker) {
-        return this.callApi('deleteStickerFromSet', { sticker });
-    }
-    /**
-     * Get the current list of the bot's commands.
-     */
-    getMyCommands(extra = {}) {
-        return this.callApi('getMyCommands', extra);
-    }
-    /**
-     * Change the list of the bot's commands.
-     * @param commands A list of bot commands to be set as the list of the bot's commands. At most 100 commands can be specified.
-     */
-    setMyCommands(commands, extra) {
-        return this.callApi('setMyCommands', { commands, ...extra });
-    }
-    deleteMyCommands(extra = {}) {
-        return this.callApi('deleteMyCommands', extra);
-    }
-    setPassportDataErrors(userId, errors) {
-        return this.callApi('setPassportDataErrors', {
-            user_id: userId,
-            errors: errors,
-        });
-    }
-    /**
-     * Send copy of existing message.
-     * @deprecated use `copyMessage` instead
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param message Received message object
-     */
-    sendCopy(chatId, message, extra) {
-        return this.copyMessage(chatId, message.chat.id, message.message_id, extra);
-    }
-    /**
-     * Send copy of existing message.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param fromChatId Unique identifier for the chat where the original message was sent (or channel username in the format @channelusername)
-     * @param messageId Message identifier in the chat specified in from_chat_id
-     */
-    copyMessage(chatId, fromChatId, messageId, extra) {
-        return this.callApi('copyMessage', {
-            chat_id: chatId,
-            from_chat_id: fromChatId,
-            message_id: messageId,
-            ...extra,
-        });
-    }
-    /**
-     * Approve a chat join request.
-     * The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param userId Unique identifier of the target user
-     */
-    approveChatJoinRequest(chatId, userId) {
-        return this.callApi('approveChatJoinRequest', {
-            chat_id: chatId,
-            user_id: userId,
-        });
-    }
-    /**
-     * Decline a chat join request.
-     * The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param userId Unique identifier of the target user
-     */
-    declineChatJoinRequest(chatId, userId) {
-        return this.callApi('declineChatJoinRequest', {
-            chat_id: chatId,
-            user_id: userId,
-        });
-    }
-    /**
-     * Ban a channel chat in a supergroup or a channel. The owner of the chat will not be able to send messages and join live streams on behalf of the chat, unless it is unbanned first.
-     * The bot must be an administrator in the supergroup or channel for this to work and must have the appropriate administrator rights.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param senderChatId Unique identifier of the target sender chat
-     */
-    banChatSenderChat(chatId, senderChatId, extra) {
-        return this.callApi('banChatSenderChat', {
-            chat_id: chatId,
-            sender_chat_id: senderChatId,
-            ...extra,
-        });
-    }
-    /**
-     * Unban a previously banned channel chat in a supergroup or channel.
-     * The bot must be an administrator for this to work and must have the appropriate administrator rights.
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-     * @param senderChatId Unique identifier of the target sender chat
-     */
-    unbanChatSenderChat(chatId, senderChatId) {
-        return this.callApi('unbanChatSenderChat', {
-            chat_id: chatId,
-            sender_chat_id: senderChatId,
-        });
-    }
-    /**
-     * Log out from the cloud Bot API server before launching the bot locally.
-     */
-    logOut() {
-        return this.callApi('logOut', {});
-    }
-    /**
-     * Close the bot instance before moving it from one local server to another.
-     */
-    close() {
-        return this.callApi('close', {});
-    }
-}
-exports.Telegram = Telegram;
-exports.default = Telegram;
 
 
 /***/ }),
@@ -11889,6 +6468,32 @@ if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
   debug = function() {};
 }
 exports.debug = debug; // for test
+
+
+/***/ }),
+
+/***/ 5030:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+function getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && "version" in process) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
+  }
+
+  return "<environment undetectable>";
+}
+
+exports.getUserAgent = getUserAgent;
+//# sourceMappingURL=index.js.map
 
 
 /***/ }),
@@ -13854,5005 +8459,42 @@ module.exports.implForWrapper = function (wrapper) {
 
 /***/ }),
 
-/***/ 2624:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ 2940:
+/***/ ((module) => {
 
-// Generated by CoffeeScript 1.12.7
-(function() {
-  "use strict";
-  exports.stripBOM = function(str) {
-    if (str[0] === '\uFEFF') {
-      return str.substring(1);
-    } else {
-      return str;
+// Returns a wrapper function that returns a wrapped callback
+// The wrapper function should do some stuff, and return a
+// presumably different callback function.
+// This makes sure that own properties are retained, so that
+// decorations and such are not lost along the way.
+module.exports = wrappy
+function wrappy (fn, cb) {
+  if (fn && cb) return wrappy(fn)(cb)
+
+  if (typeof fn !== 'function')
+    throw new TypeError('need wrapper function')
+
+  Object.keys(fn).forEach(function (k) {
+    wrapper[k] = fn[k]
+  })
+
+  return wrapper
+
+  function wrapper() {
+    var args = new Array(arguments.length)
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i]
     }
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 3337:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  "use strict";
-  var builder, defaults, escapeCDATA, requiresCDATA, wrapCDATA,
-    hasProp = {}.hasOwnProperty;
-
-  builder = __nccwpck_require__(2958);
-
-  defaults = __nccwpck_require__(7251).defaults;
-
-  requiresCDATA = function(entry) {
-    return typeof entry === "string" && (entry.indexOf('&') >= 0 || entry.indexOf('>') >= 0 || entry.indexOf('<') >= 0);
-  };
-
-  wrapCDATA = function(entry) {
-    return "<![CDATA[" + (escapeCDATA(entry)) + "]]>";
-  };
-
-  escapeCDATA = function(entry) {
-    return entry.replace(']]>', ']]]]><![CDATA[>');
-  };
-
-  exports.Builder = (function() {
-    function Builder(opts) {
-      var key, ref, value;
-      this.options = {};
-      ref = defaults["0.2"];
-      for (key in ref) {
-        if (!hasProp.call(ref, key)) continue;
-        value = ref[key];
-        this.options[key] = value;
-      }
-      for (key in opts) {
-        if (!hasProp.call(opts, key)) continue;
-        value = opts[key];
-        this.options[key] = value;
-      }
+    var ret = fn.apply(this, args)
+    var cb = args[args.length-1]
+    if (typeof ret === 'function' && ret !== cb) {
+      Object.keys(cb).forEach(function (k) {
+        ret[k] = cb[k]
+      })
     }
-
-    Builder.prototype.buildObject = function(rootObj) {
-      var attrkey, charkey, render, rootElement, rootName;
-      attrkey = this.options.attrkey;
-      charkey = this.options.charkey;
-      if ((Object.keys(rootObj).length === 1) && (this.options.rootName === defaults['0.2'].rootName)) {
-        rootName = Object.keys(rootObj)[0];
-        rootObj = rootObj[rootName];
-      } else {
-        rootName = this.options.rootName;
-      }
-      render = (function(_this) {
-        return function(element, obj) {
-          var attr, child, entry, index, key, value;
-          if (typeof obj !== 'object') {
-            if (_this.options.cdata && requiresCDATA(obj)) {
-              element.raw(wrapCDATA(obj));
-            } else {
-              element.txt(obj);
-            }
-          } else if (Array.isArray(obj)) {
-            for (index in obj) {
-              if (!hasProp.call(obj, index)) continue;
-              child = obj[index];
-              for (key in child) {
-                entry = child[key];
-                element = render(element.ele(key), entry).up();
-              }
-            }
-          } else {
-            for (key in obj) {
-              if (!hasProp.call(obj, key)) continue;
-              child = obj[key];
-              if (key === attrkey) {
-                if (typeof child === "object") {
-                  for (attr in child) {
-                    value = child[attr];
-                    element = element.att(attr, value);
-                  }
-                }
-              } else if (key === charkey) {
-                if (_this.options.cdata && requiresCDATA(child)) {
-                  element = element.raw(wrapCDATA(child));
-                } else {
-                  element = element.txt(child);
-                }
-              } else if (Array.isArray(child)) {
-                for (index in child) {
-                  if (!hasProp.call(child, index)) continue;
-                  entry = child[index];
-                  if (typeof entry === 'string') {
-                    if (_this.options.cdata && requiresCDATA(entry)) {
-                      element = element.ele(key).raw(wrapCDATA(entry)).up();
-                    } else {
-                      element = element.ele(key, entry).up();
-                    }
-                  } else {
-                    element = render(element.ele(key), entry).up();
-                  }
-                }
-              } else if (typeof child === "object") {
-                element = render(element.ele(key), child).up();
-              } else {
-                if (typeof child === 'string' && _this.options.cdata && requiresCDATA(child)) {
-                  element = element.ele(key).raw(wrapCDATA(child)).up();
-                } else {
-                  if (child == null) {
-                    child = '';
-                  }
-                  element = element.ele(key, child.toString()).up();
-                }
-              }
-            }
-          }
-          return element;
-        };
-      })(this);
-      rootElement = builder.create(rootName, this.options.xmldec, this.options.doctype, {
-        headless: this.options.headless,
-        allowSurrogateChars: this.options.allowSurrogateChars
-      });
-      return render(rootElement, rootObj).end(this.options.renderOpts);
-    };
-
-    return Builder;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 7251:
-/***/ (function(__unused_webpack_module, exports) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  exports.defaults = {
-    "0.1": {
-      explicitCharkey: false,
-      trim: true,
-      normalize: true,
-      normalizeTags: false,
-      attrkey: "@",
-      charkey: "#",
-      explicitArray: false,
-      ignoreAttrs: false,
-      mergeAttrs: false,
-      explicitRoot: false,
-      validator: null,
-      xmlns: false,
-      explicitChildren: false,
-      childkey: '@@',
-      charsAsChildren: false,
-      includeWhiteChars: false,
-      async: false,
-      strict: true,
-      attrNameProcessors: null,
-      attrValueProcessors: null,
-      tagNameProcessors: null,
-      valueProcessors: null,
-      emptyTag: ''
-    },
-    "0.2": {
-      explicitCharkey: false,
-      trim: false,
-      normalize: false,
-      normalizeTags: false,
-      attrkey: "$",
-      charkey: "_",
-      explicitArray: true,
-      ignoreAttrs: false,
-      mergeAttrs: false,
-      explicitRoot: true,
-      validator: null,
-      xmlns: false,
-      explicitChildren: false,
-      preserveChildrenOrder: false,
-      childkey: '$$',
-      charsAsChildren: false,
-      includeWhiteChars: false,
-      async: false,
-      strict: true,
-      attrNameProcessors: null,
-      attrValueProcessors: null,
-      tagNameProcessors: null,
-      valueProcessors: null,
-      rootName: 'root',
-      xmldec: {
-        'version': '1.0',
-        'encoding': 'UTF-8',
-        'standalone': true
-      },
-      doctype: null,
-      renderOpts: {
-        'pretty': true,
-        'indent': '  ',
-        'newline': '\n'
-      },
-      headless: false,
-      chunkSize: 10000,
-      emptyTag: '',
-      cdata: false
-    }
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 3314:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  "use strict";
-  var bom, defaults, events, isEmpty, processItem, processors, sax, setImmediate,
-    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  sax = __nccwpck_require__(2043);
-
-  events = __nccwpck_require__(8614);
-
-  bom = __nccwpck_require__(2624);
-
-  processors = __nccwpck_require__(9236);
-
-  setImmediate = __nccwpck_require__(8213).setImmediate;
-
-  defaults = __nccwpck_require__(7251).defaults;
-
-  isEmpty = function(thing) {
-    return typeof thing === "object" && (thing != null) && Object.keys(thing).length === 0;
-  };
-
-  processItem = function(processors, item, key) {
-    var i, len, process;
-    for (i = 0, len = processors.length; i < len; i++) {
-      process = processors[i];
-      item = process(item, key);
-    }
-    return item;
-  };
-
-  exports.Parser = (function(superClass) {
-    extend(Parser, superClass);
-
-    function Parser(opts) {
-      this.parseStringPromise = bind(this.parseStringPromise, this);
-      this.parseString = bind(this.parseString, this);
-      this.reset = bind(this.reset, this);
-      this.assignOrPush = bind(this.assignOrPush, this);
-      this.processAsync = bind(this.processAsync, this);
-      var key, ref, value;
-      if (!(this instanceof exports.Parser)) {
-        return new exports.Parser(opts);
-      }
-      this.options = {};
-      ref = defaults["0.2"];
-      for (key in ref) {
-        if (!hasProp.call(ref, key)) continue;
-        value = ref[key];
-        this.options[key] = value;
-      }
-      for (key in opts) {
-        if (!hasProp.call(opts, key)) continue;
-        value = opts[key];
-        this.options[key] = value;
-      }
-      if (this.options.xmlns) {
-        this.options.xmlnskey = this.options.attrkey + "ns";
-      }
-      if (this.options.normalizeTags) {
-        if (!this.options.tagNameProcessors) {
-          this.options.tagNameProcessors = [];
-        }
-        this.options.tagNameProcessors.unshift(processors.normalize);
-      }
-      this.reset();
-    }
-
-    Parser.prototype.processAsync = function() {
-      var chunk, err;
-      try {
-        if (this.remaining.length <= this.options.chunkSize) {
-          chunk = this.remaining;
-          this.remaining = '';
-          this.saxParser = this.saxParser.write(chunk);
-          return this.saxParser.close();
-        } else {
-          chunk = this.remaining.substr(0, this.options.chunkSize);
-          this.remaining = this.remaining.substr(this.options.chunkSize, this.remaining.length);
-          this.saxParser = this.saxParser.write(chunk);
-          return setImmediate(this.processAsync);
-        }
-      } catch (error1) {
-        err = error1;
-        if (!this.saxParser.errThrown) {
-          this.saxParser.errThrown = true;
-          return this.emit(err);
-        }
-      }
-    };
-
-    Parser.prototype.assignOrPush = function(obj, key, newValue) {
-      if (!(key in obj)) {
-        if (!this.options.explicitArray) {
-          return obj[key] = newValue;
-        } else {
-          return obj[key] = [newValue];
-        }
-      } else {
-        if (!(obj[key] instanceof Array)) {
-          obj[key] = [obj[key]];
-        }
-        return obj[key].push(newValue);
-      }
-    };
-
-    Parser.prototype.reset = function() {
-      var attrkey, charkey, ontext, stack;
-      this.removeAllListeners();
-      this.saxParser = sax.parser(this.options.strict, {
-        trim: false,
-        normalize: false,
-        xmlns: this.options.xmlns
-      });
-      this.saxParser.errThrown = false;
-      this.saxParser.onerror = (function(_this) {
-        return function(error) {
-          _this.saxParser.resume();
-          if (!_this.saxParser.errThrown) {
-            _this.saxParser.errThrown = true;
-            return _this.emit("error", error);
-          }
-        };
-      })(this);
-      this.saxParser.onend = (function(_this) {
-        return function() {
-          if (!_this.saxParser.ended) {
-            _this.saxParser.ended = true;
-            return _this.emit("end", _this.resultObject);
-          }
-        };
-      })(this);
-      this.saxParser.ended = false;
-      this.EXPLICIT_CHARKEY = this.options.explicitCharkey;
-      this.resultObject = null;
-      stack = [];
-      attrkey = this.options.attrkey;
-      charkey = this.options.charkey;
-      this.saxParser.onopentag = (function(_this) {
-        return function(node) {
-          var key, newValue, obj, processedKey, ref;
-          obj = {};
-          obj[charkey] = "";
-          if (!_this.options.ignoreAttrs) {
-            ref = node.attributes;
-            for (key in ref) {
-              if (!hasProp.call(ref, key)) continue;
-              if (!(attrkey in obj) && !_this.options.mergeAttrs) {
-                obj[attrkey] = {};
-              }
-              newValue = _this.options.attrValueProcessors ? processItem(_this.options.attrValueProcessors, node.attributes[key], key) : node.attributes[key];
-              processedKey = _this.options.attrNameProcessors ? processItem(_this.options.attrNameProcessors, key) : key;
-              if (_this.options.mergeAttrs) {
-                _this.assignOrPush(obj, processedKey, newValue);
-              } else {
-                obj[attrkey][processedKey] = newValue;
-              }
-            }
-          }
-          obj["#name"] = _this.options.tagNameProcessors ? processItem(_this.options.tagNameProcessors, node.name) : node.name;
-          if (_this.options.xmlns) {
-            obj[_this.options.xmlnskey] = {
-              uri: node.uri,
-              local: node.local
-            };
-          }
-          return stack.push(obj);
-        };
-      })(this);
-      this.saxParser.onclosetag = (function(_this) {
-        return function() {
-          var cdata, emptyStr, key, node, nodeName, obj, objClone, old, s, xpath;
-          obj = stack.pop();
-          nodeName = obj["#name"];
-          if (!_this.options.explicitChildren || !_this.options.preserveChildrenOrder) {
-            delete obj["#name"];
-          }
-          if (obj.cdata === true) {
-            cdata = obj.cdata;
-            delete obj.cdata;
-          }
-          s = stack[stack.length - 1];
-          if (obj[charkey].match(/^\s*$/) && !cdata) {
-            emptyStr = obj[charkey];
-            delete obj[charkey];
-          } else {
-            if (_this.options.trim) {
-              obj[charkey] = obj[charkey].trim();
-            }
-            if (_this.options.normalize) {
-              obj[charkey] = obj[charkey].replace(/\s{2,}/g, " ").trim();
-            }
-            obj[charkey] = _this.options.valueProcessors ? processItem(_this.options.valueProcessors, obj[charkey], nodeName) : obj[charkey];
-            if (Object.keys(obj).length === 1 && charkey in obj && !_this.EXPLICIT_CHARKEY) {
-              obj = obj[charkey];
-            }
-          }
-          if (isEmpty(obj)) {
-            obj = _this.options.emptyTag !== '' ? _this.options.emptyTag : emptyStr;
-          }
-          if (_this.options.validator != null) {
-            xpath = "/" + ((function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = stack.length; i < len; i++) {
-                node = stack[i];
-                results.push(node["#name"]);
-              }
-              return results;
-            })()).concat(nodeName).join("/");
-            (function() {
-              var err;
-              try {
-                return obj = _this.options.validator(xpath, s && s[nodeName], obj);
-              } catch (error1) {
-                err = error1;
-                return _this.emit("error", err);
-              }
-            })();
-          }
-          if (_this.options.explicitChildren && !_this.options.mergeAttrs && typeof obj === 'object') {
-            if (!_this.options.preserveChildrenOrder) {
-              node = {};
-              if (_this.options.attrkey in obj) {
-                node[_this.options.attrkey] = obj[_this.options.attrkey];
-                delete obj[_this.options.attrkey];
-              }
-              if (!_this.options.charsAsChildren && _this.options.charkey in obj) {
-                node[_this.options.charkey] = obj[_this.options.charkey];
-                delete obj[_this.options.charkey];
-              }
-              if (Object.getOwnPropertyNames(obj).length > 0) {
-                node[_this.options.childkey] = obj;
-              }
-              obj = node;
-            } else if (s) {
-              s[_this.options.childkey] = s[_this.options.childkey] || [];
-              objClone = {};
-              for (key in obj) {
-                if (!hasProp.call(obj, key)) continue;
-                objClone[key] = obj[key];
-              }
-              s[_this.options.childkey].push(objClone);
-              delete obj["#name"];
-              if (Object.keys(obj).length === 1 && charkey in obj && !_this.EXPLICIT_CHARKEY) {
-                obj = obj[charkey];
-              }
-            }
-          }
-          if (stack.length > 0) {
-            return _this.assignOrPush(s, nodeName, obj);
-          } else {
-            if (_this.options.explicitRoot) {
-              old = obj;
-              obj = {};
-              obj[nodeName] = old;
-            }
-            _this.resultObject = obj;
-            _this.saxParser.ended = true;
-            return _this.emit("end", _this.resultObject);
-          }
-        };
-      })(this);
-      ontext = (function(_this) {
-        return function(text) {
-          var charChild, s;
-          s = stack[stack.length - 1];
-          if (s) {
-            s[charkey] += text;
-            if (_this.options.explicitChildren && _this.options.preserveChildrenOrder && _this.options.charsAsChildren && (_this.options.includeWhiteChars || text.replace(/\\n/g, '').trim() !== '')) {
-              s[_this.options.childkey] = s[_this.options.childkey] || [];
-              charChild = {
-                '#name': '__text__'
-              };
-              charChild[charkey] = text;
-              if (_this.options.normalize) {
-                charChild[charkey] = charChild[charkey].replace(/\s{2,}/g, " ").trim();
-              }
-              s[_this.options.childkey].push(charChild);
-            }
-            return s;
-          }
-        };
-      })(this);
-      this.saxParser.ontext = ontext;
-      return this.saxParser.oncdata = (function(_this) {
-        return function(text) {
-          var s;
-          s = ontext(text);
-          if (s) {
-            return s.cdata = true;
-          }
-        };
-      })(this);
-    };
-
-    Parser.prototype.parseString = function(str, cb) {
-      var err;
-      if ((cb != null) && typeof cb === "function") {
-        this.on("end", function(result) {
-          this.reset();
-          return cb(null, result);
-        });
-        this.on("error", function(err) {
-          this.reset();
-          return cb(err);
-        });
-      }
-      try {
-        str = str.toString();
-        if (str.trim() === '') {
-          this.emit("end", null);
-          return true;
-        }
-        str = bom.stripBOM(str);
-        if (this.options.async) {
-          this.remaining = str;
-          setImmediate(this.processAsync);
-          return this.saxParser;
-        }
-        return this.saxParser.write(str).close();
-      } catch (error1) {
-        err = error1;
-        if (!(this.saxParser.errThrown || this.saxParser.ended)) {
-          this.emit('error', err);
-          return this.saxParser.errThrown = true;
-        } else if (this.saxParser.ended) {
-          throw err;
-        }
-      }
-    };
-
-    Parser.prototype.parseStringPromise = function(str) {
-      return new Promise((function(_this) {
-        return function(resolve, reject) {
-          return _this.parseString(str, function(err, value) {
-            if (err) {
-              return reject(err);
-            } else {
-              return resolve(value);
-            }
-          });
-        };
-      })(this));
-    };
-
-    return Parser;
-
-  })(events);
-
-  exports.parseString = function(str, a, b) {
-    var cb, options, parser;
-    if (b != null) {
-      if (typeof b === 'function') {
-        cb = b;
-      }
-      if (typeof a === 'object') {
-        options = a;
-      }
-    } else {
-      if (typeof a === 'function') {
-        cb = a;
-      }
-      options = {};
-    }
-    parser = new exports.Parser(options);
-    return parser.parseString(str, cb);
-  };
-
-  exports.parseStringPromise = function(str, a) {
-    var options, parser;
-    if (typeof a === 'object') {
-      options = a;
-    }
-    parser = new exports.Parser(options);
-    return parser.parseStringPromise(str);
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 9236:
-/***/ (function(__unused_webpack_module, exports) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  "use strict";
-  var prefixMatch;
-
-  prefixMatch = new RegExp(/(?!xmlns)^.*:/);
-
-  exports.normalize = function(str) {
-    return str.toLowerCase();
-  };
-
-  exports.firstCharLowerCase = function(str) {
-    return str.charAt(0).toLowerCase() + str.slice(1);
-  };
-
-  exports.stripPrefix = function(str) {
-    return str.replace(prefixMatch, '');
-  };
-
-  exports.parseNumbers = function(str) {
-    if (!isNaN(str)) {
-      str = str % 1 === 0 ? parseInt(str, 10) : parseFloat(str);
-    }
-    return str;
-  };
-
-  exports.parseBooleans = function(str) {
-    if (/^(?:true|false)$/i.test(str)) {
-      str = str.toLowerCase() === 'true';
-    }
-    return str;
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 6189:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  "use strict";
-  var builder, defaults, parser, processors,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  defaults = __nccwpck_require__(7251);
-
-  builder = __nccwpck_require__(3337);
-
-  parser = __nccwpck_require__(3314);
-
-  processors = __nccwpck_require__(9236);
-
-  exports.defaults = defaults.defaults;
-
-  exports.processors = processors;
-
-  exports.ValidationError = (function(superClass) {
-    extend(ValidationError, superClass);
-
-    function ValidationError(message) {
-      this.message = message;
-    }
-
-    return ValidationError;
-
-  })(Error);
-
-  exports.Builder = builder.Builder;
-
-  exports.Parser = parser.Parser;
-
-  exports.parseString = parser.parseString;
-
-  exports.parseStringPromise = parser.parseStringPromise;
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 2839:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  module.exports = {
-    Disconnected: 1,
-    Preceding: 2,
-    Following: 4,
-    Contains: 8,
-    ContainedBy: 16,
-    ImplementationSpecific: 32
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 9267:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  module.exports = {
-    Element: 1,
-    Attribute: 2,
-    Text: 3,
-    CData: 4,
-    EntityReference: 5,
-    EntityDeclaration: 6,
-    ProcessingInstruction: 7,
-    Comment: 8,
-    Document: 9,
-    DocType: 10,
-    DocumentFragment: 11,
-    NotationDeclaration: 12,
-    Declaration: 201,
-    Raw: 202,
-    AttributeDeclaration: 203,
-    ElementDeclaration: 204,
-    Dummy: 205
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 8229:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var assign, getValue, isArray, isEmpty, isFunction, isObject, isPlainObject,
-    slice = [].slice,
-    hasProp = {}.hasOwnProperty;
-
-  assign = function() {
-    var i, key, len, source, sources, target;
-    target = arguments[0], sources = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-    if (isFunction(Object.assign)) {
-      Object.assign.apply(null, arguments);
-    } else {
-      for (i = 0, len = sources.length; i < len; i++) {
-        source = sources[i];
-        if (source != null) {
-          for (key in source) {
-            if (!hasProp.call(source, key)) continue;
-            target[key] = source[key];
-          }
-        }
-      }
-    }
-    return target;
-  };
-
-  isFunction = function(val) {
-    return !!val && Object.prototype.toString.call(val) === '[object Function]';
-  };
-
-  isObject = function(val) {
-    var ref;
-    return !!val && ((ref = typeof val) === 'function' || ref === 'object');
-  };
-
-  isArray = function(val) {
-    if (isFunction(Array.isArray)) {
-      return Array.isArray(val);
-    } else {
-      return Object.prototype.toString.call(val) === '[object Array]';
-    }
-  };
-
-  isEmpty = function(val) {
-    var key;
-    if (isArray(val)) {
-      return !val.length;
-    } else {
-      for (key in val) {
-        if (!hasProp.call(val, key)) continue;
-        return false;
-      }
-      return true;
-    }
-  };
-
-  isPlainObject = function(val) {
-    var ctor, proto;
-    return isObject(val) && (proto = Object.getPrototypeOf(val)) && (ctor = proto.constructor) && (typeof ctor === 'function') && (ctor instanceof ctor) && (Function.prototype.toString.call(ctor) === Function.prototype.toString.call(Object));
-  };
-
-  getValue = function(obj) {
-    if (isFunction(obj.valueOf)) {
-      return obj.valueOf();
-    } else {
-      return obj;
-    }
-  };
-
-  module.exports.assign = assign;
-
-  module.exports.isFunction = isFunction;
-
-  module.exports.isObject = isObject;
-
-  module.exports.isArray = isArray;
-
-  module.exports.isEmpty = isEmpty;
-
-  module.exports.isPlainObject = isPlainObject;
-
-  module.exports.getValue = getValue;
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 9766:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  module.exports = {
-    None: 0,
-    OpenTag: 1,
-    InsideTag: 2,
-    CloseTag: 3
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 8376:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLAttribute, XMLNode;
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLNode = __nccwpck_require__(7608);
-
-  module.exports = XMLAttribute = (function() {
-    function XMLAttribute(parent, name, value) {
-      this.parent = parent;
-      if (this.parent) {
-        this.options = this.parent.options;
-        this.stringify = this.parent.stringify;
-      }
-      if (name == null) {
-        throw new Error("Missing attribute name. " + this.debugInfo(name));
-      }
-      this.name = this.stringify.name(name);
-      this.value = this.stringify.attValue(value);
-      this.type = NodeType.Attribute;
-      this.isId = false;
-      this.schemaTypeInfo = null;
-    }
-
-    Object.defineProperty(XMLAttribute.prototype, 'nodeType', {
-      get: function() {
-        return this.type;
-      }
-    });
-
-    Object.defineProperty(XMLAttribute.prototype, 'ownerElement', {
-      get: function() {
-        return this.parent;
-      }
-    });
-
-    Object.defineProperty(XMLAttribute.prototype, 'textContent', {
-      get: function() {
-        return this.value;
-      },
-      set: function(value) {
-        return this.value = value || '';
-      }
-    });
-
-    Object.defineProperty(XMLAttribute.prototype, 'namespaceURI', {
-      get: function() {
-        return '';
-      }
-    });
-
-    Object.defineProperty(XMLAttribute.prototype, 'prefix', {
-      get: function() {
-        return '';
-      }
-    });
-
-    Object.defineProperty(XMLAttribute.prototype, 'localName', {
-      get: function() {
-        return this.name;
-      }
-    });
-
-    Object.defineProperty(XMLAttribute.prototype, 'specified', {
-      get: function() {
-        return true;
-      }
-    });
-
-    XMLAttribute.prototype.clone = function() {
-      return Object.create(this);
-    };
-
-    XMLAttribute.prototype.toString = function(options) {
-      return this.options.writer.attribute(this, this.options.writer.filterOptions(options));
-    };
-
-    XMLAttribute.prototype.debugInfo = function(name) {
-      name = name || this.name;
-      if (name == null) {
-        return "parent: <" + this.parent.name + ">";
-      } else {
-        return "attribute: {" + name + "}, parent: <" + this.parent.name + ">";
-      }
-    };
-
-    XMLAttribute.prototype.isEqualNode = function(node) {
-      if (node.namespaceURI !== this.namespaceURI) {
-        return false;
-      }
-      if (node.prefix !== this.prefix) {
-        return false;
-      }
-      if (node.localName !== this.localName) {
-        return false;
-      }
-      if (node.value !== this.value) {
-        return false;
-      }
-      return true;
-    };
-
-    return XMLAttribute;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 333:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLCData, XMLCharacterData,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLCharacterData = __nccwpck_require__(7709);
-
-  module.exports = XMLCData = (function(superClass) {
-    extend(XMLCData, superClass);
-
-    function XMLCData(parent, text) {
-      XMLCData.__super__.constructor.call(this, parent);
-      if (text == null) {
-        throw new Error("Missing CDATA text. " + this.debugInfo());
-      }
-      this.name = "#cdata-section";
-      this.type = NodeType.CData;
-      this.value = this.stringify.cdata(text);
-    }
-
-    XMLCData.prototype.clone = function() {
-      return Object.create(this);
-    };
-
-    XMLCData.prototype.toString = function(options) {
-      return this.options.writer.cdata(this, this.options.writer.filterOptions(options));
-    };
-
-    return XMLCData;
-
-  })(XMLCharacterData);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 7709:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var XMLCharacterData, XMLNode,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  XMLNode = __nccwpck_require__(7608);
-
-  module.exports = XMLCharacterData = (function(superClass) {
-    extend(XMLCharacterData, superClass);
-
-    function XMLCharacterData(parent) {
-      XMLCharacterData.__super__.constructor.call(this, parent);
-      this.value = '';
-    }
-
-    Object.defineProperty(XMLCharacterData.prototype, 'data', {
-      get: function() {
-        return this.value;
-      },
-      set: function(value) {
-        return this.value = value || '';
-      }
-    });
-
-    Object.defineProperty(XMLCharacterData.prototype, 'length', {
-      get: function() {
-        return this.value.length;
-      }
-    });
-
-    Object.defineProperty(XMLCharacterData.prototype, 'textContent', {
-      get: function() {
-        return this.value;
-      },
-      set: function(value) {
-        return this.value = value || '';
-      }
-    });
-
-    XMLCharacterData.prototype.clone = function() {
-      return Object.create(this);
-    };
-
-    XMLCharacterData.prototype.substringData = function(offset, count) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLCharacterData.prototype.appendData = function(arg) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLCharacterData.prototype.insertData = function(offset, arg) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLCharacterData.prototype.deleteData = function(offset, count) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLCharacterData.prototype.replaceData = function(offset, count, arg) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLCharacterData.prototype.isEqualNode = function(node) {
-      if (!XMLCharacterData.__super__.isEqualNode.apply(this, arguments).isEqualNode(node)) {
-        return false;
-      }
-      if (node.data !== this.data) {
-        return false;
-      }
-      return true;
-    };
-
-    return XMLCharacterData;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 4407:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLCharacterData, XMLComment,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLCharacterData = __nccwpck_require__(7709);
-
-  module.exports = XMLComment = (function(superClass) {
-    extend(XMLComment, superClass);
-
-    function XMLComment(parent, text) {
-      XMLComment.__super__.constructor.call(this, parent);
-      if (text == null) {
-        throw new Error("Missing comment text. " + this.debugInfo());
-      }
-      this.name = "#comment";
-      this.type = NodeType.Comment;
-      this.value = this.stringify.comment(text);
-    }
-
-    XMLComment.prototype.clone = function() {
-      return Object.create(this);
-    };
-
-    XMLComment.prototype.toString = function(options) {
-      return this.options.writer.comment(this, this.options.writer.filterOptions(options));
-    };
-
-    return XMLComment;
-
-  })(XMLCharacterData);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 7465:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var XMLDOMConfiguration, XMLDOMErrorHandler, XMLDOMStringList;
-
-  XMLDOMErrorHandler = __nccwpck_require__(6744);
-
-  XMLDOMStringList = __nccwpck_require__(7028);
-
-  module.exports = XMLDOMConfiguration = (function() {
-    function XMLDOMConfiguration() {
-      var clonedSelf;
-      this.defaultParams = {
-        "canonical-form": false,
-        "cdata-sections": false,
-        "comments": false,
-        "datatype-normalization": false,
-        "element-content-whitespace": true,
-        "entities": true,
-        "error-handler": new XMLDOMErrorHandler(),
-        "infoset": true,
-        "validate-if-schema": false,
-        "namespaces": true,
-        "namespace-declarations": true,
-        "normalize-characters": false,
-        "schema-location": '',
-        "schema-type": '',
-        "split-cdata-sections": true,
-        "validate": false,
-        "well-formed": true
-      };
-      this.params = clonedSelf = Object.create(this.defaultParams);
-    }
-
-    Object.defineProperty(XMLDOMConfiguration.prototype, 'parameterNames', {
-      get: function() {
-        return new XMLDOMStringList(Object.keys(this.defaultParams));
-      }
-    });
-
-    XMLDOMConfiguration.prototype.getParameter = function(name) {
-      if (this.params.hasOwnProperty(name)) {
-        return this.params[name];
-      } else {
-        return null;
-      }
-    };
-
-    XMLDOMConfiguration.prototype.canSetParameter = function(name, value) {
-      return true;
-    };
-
-    XMLDOMConfiguration.prototype.setParameter = function(name, value) {
-      if (value != null) {
-        return this.params[name] = value;
-      } else {
-        return delete this.params[name];
-      }
-    };
-
-    return XMLDOMConfiguration;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 6744:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var XMLDOMErrorHandler;
-
-  module.exports = XMLDOMErrorHandler = (function() {
-    function XMLDOMErrorHandler() {}
-
-    XMLDOMErrorHandler.prototype.handleError = function(error) {
-      throw new Error(error);
-    };
-
-    return XMLDOMErrorHandler;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 8310:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var XMLDOMImplementation;
-
-  module.exports = XMLDOMImplementation = (function() {
-    function XMLDOMImplementation() {}
-
-    XMLDOMImplementation.prototype.hasFeature = function(feature, version) {
-      return true;
-    };
-
-    XMLDOMImplementation.prototype.createDocumentType = function(qualifiedName, publicId, systemId) {
-      throw new Error("This DOM method is not implemented.");
-    };
-
-    XMLDOMImplementation.prototype.createDocument = function(namespaceURI, qualifiedName, doctype) {
-      throw new Error("This DOM method is not implemented.");
-    };
-
-    XMLDOMImplementation.prototype.createHTMLDocument = function(title) {
-      throw new Error("This DOM method is not implemented.");
-    };
-
-    XMLDOMImplementation.prototype.getFeature = function(feature, version) {
-      throw new Error("This DOM method is not implemented.");
-    };
-
-    return XMLDOMImplementation;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 7028:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var XMLDOMStringList;
-
-  module.exports = XMLDOMStringList = (function() {
-    function XMLDOMStringList(arr) {
-      this.arr = arr || [];
-    }
-
-    Object.defineProperty(XMLDOMStringList.prototype, 'length', {
-      get: function() {
-        return this.arr.length;
-      }
-    });
-
-    XMLDOMStringList.prototype.item = function(index) {
-      return this.arr[index] || null;
-    };
-
-    XMLDOMStringList.prototype.contains = function(str) {
-      return this.arr.indexOf(str) !== -1;
-    };
-
-    return XMLDOMStringList;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 1015:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLDTDAttList, XMLNode,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  XMLNode = __nccwpck_require__(7608);
-
-  NodeType = __nccwpck_require__(9267);
-
-  module.exports = XMLDTDAttList = (function(superClass) {
-    extend(XMLDTDAttList, superClass);
-
-    function XMLDTDAttList(parent, elementName, attributeName, attributeType, defaultValueType, defaultValue) {
-      XMLDTDAttList.__super__.constructor.call(this, parent);
-      if (elementName == null) {
-        throw new Error("Missing DTD element name. " + this.debugInfo());
-      }
-      if (attributeName == null) {
-        throw new Error("Missing DTD attribute name. " + this.debugInfo(elementName));
-      }
-      if (!attributeType) {
-        throw new Error("Missing DTD attribute type. " + this.debugInfo(elementName));
-      }
-      if (!defaultValueType) {
-        throw new Error("Missing DTD attribute default. " + this.debugInfo(elementName));
-      }
-      if (defaultValueType.indexOf('#') !== 0) {
-        defaultValueType = '#' + defaultValueType;
-      }
-      if (!defaultValueType.match(/^(#REQUIRED|#IMPLIED|#FIXED|#DEFAULT)$/)) {
-        throw new Error("Invalid default value type; expected: #REQUIRED, #IMPLIED, #FIXED or #DEFAULT. " + this.debugInfo(elementName));
-      }
-      if (defaultValue && !defaultValueType.match(/^(#FIXED|#DEFAULT)$/)) {
-        throw new Error("Default value only applies to #FIXED or #DEFAULT. " + this.debugInfo(elementName));
-      }
-      this.elementName = this.stringify.name(elementName);
-      this.type = NodeType.AttributeDeclaration;
-      this.attributeName = this.stringify.name(attributeName);
-      this.attributeType = this.stringify.dtdAttType(attributeType);
-      if (defaultValue) {
-        this.defaultValue = this.stringify.dtdAttDefault(defaultValue);
-      }
-      this.defaultValueType = defaultValueType;
-    }
-
-    XMLDTDAttList.prototype.toString = function(options) {
-      return this.options.writer.dtdAttList(this, this.options.writer.filterOptions(options));
-    };
-
-    return XMLDTDAttList;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 2421:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLDTDElement, XMLNode,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  XMLNode = __nccwpck_require__(7608);
-
-  NodeType = __nccwpck_require__(9267);
-
-  module.exports = XMLDTDElement = (function(superClass) {
-    extend(XMLDTDElement, superClass);
-
-    function XMLDTDElement(parent, name, value) {
-      XMLDTDElement.__super__.constructor.call(this, parent);
-      if (name == null) {
-        throw new Error("Missing DTD element name. " + this.debugInfo());
-      }
-      if (!value) {
-        value = '(#PCDATA)';
-      }
-      if (Array.isArray(value)) {
-        value = '(' + value.join(',') + ')';
-      }
-      this.name = this.stringify.name(name);
-      this.type = NodeType.ElementDeclaration;
-      this.value = this.stringify.dtdElementValue(value);
-    }
-
-    XMLDTDElement.prototype.toString = function(options) {
-      return this.options.writer.dtdElement(this, this.options.writer.filterOptions(options));
-    };
-
-    return XMLDTDElement;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 53:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLDTDEntity, XMLNode, isObject,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  isObject = __nccwpck_require__(8229).isObject;
-
-  XMLNode = __nccwpck_require__(7608);
-
-  NodeType = __nccwpck_require__(9267);
-
-  module.exports = XMLDTDEntity = (function(superClass) {
-    extend(XMLDTDEntity, superClass);
-
-    function XMLDTDEntity(parent, pe, name, value) {
-      XMLDTDEntity.__super__.constructor.call(this, parent);
-      if (name == null) {
-        throw new Error("Missing DTD entity name. " + this.debugInfo(name));
-      }
-      if (value == null) {
-        throw new Error("Missing DTD entity value. " + this.debugInfo(name));
-      }
-      this.pe = !!pe;
-      this.name = this.stringify.name(name);
-      this.type = NodeType.EntityDeclaration;
-      if (!isObject(value)) {
-        this.value = this.stringify.dtdEntityValue(value);
-        this.internal = true;
-      } else {
-        if (!value.pubID && !value.sysID) {
-          throw new Error("Public and/or system identifiers are required for an external entity. " + this.debugInfo(name));
-        }
-        if (value.pubID && !value.sysID) {
-          throw new Error("System identifier is required for a public external entity. " + this.debugInfo(name));
-        }
-        this.internal = false;
-        if (value.pubID != null) {
-          this.pubID = this.stringify.dtdPubID(value.pubID);
-        }
-        if (value.sysID != null) {
-          this.sysID = this.stringify.dtdSysID(value.sysID);
-        }
-        if (value.nData != null) {
-          this.nData = this.stringify.dtdNData(value.nData);
-        }
-        if (this.pe && this.nData) {
-          throw new Error("Notation declaration is not allowed in a parameter entity. " + this.debugInfo(name));
-        }
-      }
-    }
-
-    Object.defineProperty(XMLDTDEntity.prototype, 'publicId', {
-      get: function() {
-        return this.pubID;
-      }
-    });
-
-    Object.defineProperty(XMLDTDEntity.prototype, 'systemId', {
-      get: function() {
-        return this.sysID;
-      }
-    });
-
-    Object.defineProperty(XMLDTDEntity.prototype, 'notationName', {
-      get: function() {
-        return this.nData || null;
-      }
-    });
-
-    Object.defineProperty(XMLDTDEntity.prototype, 'inputEncoding', {
-      get: function() {
-        return null;
-      }
-    });
-
-    Object.defineProperty(XMLDTDEntity.prototype, 'xmlEncoding', {
-      get: function() {
-        return null;
-      }
-    });
-
-    Object.defineProperty(XMLDTDEntity.prototype, 'xmlVersion', {
-      get: function() {
-        return null;
-      }
-    });
-
-    XMLDTDEntity.prototype.toString = function(options) {
-      return this.options.writer.dtdEntity(this, this.options.writer.filterOptions(options));
-    };
-
-    return XMLDTDEntity;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 2837:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLDTDNotation, XMLNode,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  XMLNode = __nccwpck_require__(7608);
-
-  NodeType = __nccwpck_require__(9267);
-
-  module.exports = XMLDTDNotation = (function(superClass) {
-    extend(XMLDTDNotation, superClass);
-
-    function XMLDTDNotation(parent, name, value) {
-      XMLDTDNotation.__super__.constructor.call(this, parent);
-      if (name == null) {
-        throw new Error("Missing DTD notation name. " + this.debugInfo(name));
-      }
-      if (!value.pubID && !value.sysID) {
-        throw new Error("Public or system identifiers are required for an external entity. " + this.debugInfo(name));
-      }
-      this.name = this.stringify.name(name);
-      this.type = NodeType.NotationDeclaration;
-      if (value.pubID != null) {
-        this.pubID = this.stringify.dtdPubID(value.pubID);
-      }
-      if (value.sysID != null) {
-        this.sysID = this.stringify.dtdSysID(value.sysID);
-      }
-    }
-
-    Object.defineProperty(XMLDTDNotation.prototype, 'publicId', {
-      get: function() {
-        return this.pubID;
-      }
-    });
-
-    Object.defineProperty(XMLDTDNotation.prototype, 'systemId', {
-      get: function() {
-        return this.sysID;
-      }
-    });
-
-    XMLDTDNotation.prototype.toString = function(options) {
-      return this.options.writer.dtdNotation(this, this.options.writer.filterOptions(options));
-    };
-
-    return XMLDTDNotation;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 6364:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLDeclaration, XMLNode, isObject,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  isObject = __nccwpck_require__(8229).isObject;
-
-  XMLNode = __nccwpck_require__(7608);
-
-  NodeType = __nccwpck_require__(9267);
-
-  module.exports = XMLDeclaration = (function(superClass) {
-    extend(XMLDeclaration, superClass);
-
-    function XMLDeclaration(parent, version, encoding, standalone) {
-      var ref;
-      XMLDeclaration.__super__.constructor.call(this, parent);
-      if (isObject(version)) {
-        ref = version, version = ref.version, encoding = ref.encoding, standalone = ref.standalone;
-      }
-      if (!version) {
-        version = '1.0';
-      }
-      this.type = NodeType.Declaration;
-      this.version = this.stringify.xmlVersion(version);
-      if (encoding != null) {
-        this.encoding = this.stringify.xmlEncoding(encoding);
-      }
-      if (standalone != null) {
-        this.standalone = this.stringify.xmlStandalone(standalone);
-      }
-    }
-
-    XMLDeclaration.prototype.toString = function(options) {
-      return this.options.writer.declaration(this, this.options.writer.filterOptions(options));
-    };
-
-    return XMLDeclaration;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 1801:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLDTDAttList, XMLDTDElement, XMLDTDEntity, XMLDTDNotation, XMLDocType, XMLNamedNodeMap, XMLNode, isObject,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  isObject = __nccwpck_require__(8229).isObject;
-
-  XMLNode = __nccwpck_require__(7608);
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLDTDAttList = __nccwpck_require__(1015);
-
-  XMLDTDEntity = __nccwpck_require__(53);
-
-  XMLDTDElement = __nccwpck_require__(2421);
-
-  XMLDTDNotation = __nccwpck_require__(2837);
-
-  XMLNamedNodeMap = __nccwpck_require__(4361);
-
-  module.exports = XMLDocType = (function(superClass) {
-    extend(XMLDocType, superClass);
-
-    function XMLDocType(parent, pubID, sysID) {
-      var child, i, len, ref, ref1, ref2;
-      XMLDocType.__super__.constructor.call(this, parent);
-      this.type = NodeType.DocType;
-      if (parent.children) {
-        ref = parent.children;
-        for (i = 0, len = ref.length; i < len; i++) {
-          child = ref[i];
-          if (child.type === NodeType.Element) {
-            this.name = child.name;
-            break;
-          }
-        }
-      }
-      this.documentObject = parent;
-      if (isObject(pubID)) {
-        ref1 = pubID, pubID = ref1.pubID, sysID = ref1.sysID;
-      }
-      if (sysID == null) {
-        ref2 = [pubID, sysID], sysID = ref2[0], pubID = ref2[1];
-      }
-      if (pubID != null) {
-        this.pubID = this.stringify.dtdPubID(pubID);
-      }
-      if (sysID != null) {
-        this.sysID = this.stringify.dtdSysID(sysID);
-      }
-    }
-
-    Object.defineProperty(XMLDocType.prototype, 'entities', {
-      get: function() {
-        var child, i, len, nodes, ref;
-        nodes = {};
-        ref = this.children;
-        for (i = 0, len = ref.length; i < len; i++) {
-          child = ref[i];
-          if ((child.type === NodeType.EntityDeclaration) && !child.pe) {
-            nodes[child.name] = child;
-          }
-        }
-        return new XMLNamedNodeMap(nodes);
-      }
-    });
-
-    Object.defineProperty(XMLDocType.prototype, 'notations', {
-      get: function() {
-        var child, i, len, nodes, ref;
-        nodes = {};
-        ref = this.children;
-        for (i = 0, len = ref.length; i < len; i++) {
-          child = ref[i];
-          if (child.type === NodeType.NotationDeclaration) {
-            nodes[child.name] = child;
-          }
-        }
-        return new XMLNamedNodeMap(nodes);
-      }
-    });
-
-    Object.defineProperty(XMLDocType.prototype, 'publicId', {
-      get: function() {
-        return this.pubID;
-      }
-    });
-
-    Object.defineProperty(XMLDocType.prototype, 'systemId', {
-      get: function() {
-        return this.sysID;
-      }
-    });
-
-    Object.defineProperty(XMLDocType.prototype, 'internalSubset', {
-      get: function() {
-        throw new Error("This DOM method is not implemented." + this.debugInfo());
-      }
-    });
-
-    XMLDocType.prototype.element = function(name, value) {
-      var child;
-      child = new XMLDTDElement(this, name, value);
-      this.children.push(child);
-      return this;
-    };
-
-    XMLDocType.prototype.attList = function(elementName, attributeName, attributeType, defaultValueType, defaultValue) {
-      var child;
-      child = new XMLDTDAttList(this, elementName, attributeName, attributeType, defaultValueType, defaultValue);
-      this.children.push(child);
-      return this;
-    };
-
-    XMLDocType.prototype.entity = function(name, value) {
-      var child;
-      child = new XMLDTDEntity(this, false, name, value);
-      this.children.push(child);
-      return this;
-    };
-
-    XMLDocType.prototype.pEntity = function(name, value) {
-      var child;
-      child = new XMLDTDEntity(this, true, name, value);
-      this.children.push(child);
-      return this;
-    };
-
-    XMLDocType.prototype.notation = function(name, value) {
-      var child;
-      child = new XMLDTDNotation(this, name, value);
-      this.children.push(child);
-      return this;
-    };
-
-    XMLDocType.prototype.toString = function(options) {
-      return this.options.writer.docType(this, this.options.writer.filterOptions(options));
-    };
-
-    XMLDocType.prototype.ele = function(name, value) {
-      return this.element(name, value);
-    };
-
-    XMLDocType.prototype.att = function(elementName, attributeName, attributeType, defaultValueType, defaultValue) {
-      return this.attList(elementName, attributeName, attributeType, defaultValueType, defaultValue);
-    };
-
-    XMLDocType.prototype.ent = function(name, value) {
-      return this.entity(name, value);
-    };
-
-    XMLDocType.prototype.pent = function(name, value) {
-      return this.pEntity(name, value);
-    };
-
-    XMLDocType.prototype.not = function(name, value) {
-      return this.notation(name, value);
-    };
-
-    XMLDocType.prototype.up = function() {
-      return this.root() || this.documentObject;
-    };
-
-    XMLDocType.prototype.isEqualNode = function(node) {
-      if (!XMLDocType.__super__.isEqualNode.apply(this, arguments).isEqualNode(node)) {
-        return false;
-      }
-      if (node.name !== this.name) {
-        return false;
-      }
-      if (node.publicId !== this.publicId) {
-        return false;
-      }
-      if (node.systemId !== this.systemId) {
-        return false;
-      }
-      return true;
-    };
-
-    return XMLDocType;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 3730:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLDOMConfiguration, XMLDOMImplementation, XMLDocument, XMLNode, XMLStringWriter, XMLStringifier, isPlainObject,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  isPlainObject = __nccwpck_require__(8229).isPlainObject;
-
-  XMLDOMImplementation = __nccwpck_require__(8310);
-
-  XMLDOMConfiguration = __nccwpck_require__(7465);
-
-  XMLNode = __nccwpck_require__(7608);
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLStringifier = __nccwpck_require__(8594);
-
-  XMLStringWriter = __nccwpck_require__(5913);
-
-  module.exports = XMLDocument = (function(superClass) {
-    extend(XMLDocument, superClass);
-
-    function XMLDocument(options) {
-      XMLDocument.__super__.constructor.call(this, null);
-      this.name = "#document";
-      this.type = NodeType.Document;
-      this.documentURI = null;
-      this.domConfig = new XMLDOMConfiguration();
-      options || (options = {});
-      if (!options.writer) {
-        options.writer = new XMLStringWriter();
-      }
-      this.options = options;
-      this.stringify = new XMLStringifier(options);
-    }
-
-    Object.defineProperty(XMLDocument.prototype, 'implementation', {
-      value: new XMLDOMImplementation()
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'doctype', {
-      get: function() {
-        var child, i, len, ref;
-        ref = this.children;
-        for (i = 0, len = ref.length; i < len; i++) {
-          child = ref[i];
-          if (child.type === NodeType.DocType) {
-            return child;
-          }
-        }
-        return null;
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'documentElement', {
-      get: function() {
-        return this.rootObject || null;
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'inputEncoding', {
-      get: function() {
-        return null;
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'strictErrorChecking', {
-      get: function() {
-        return false;
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'xmlEncoding', {
-      get: function() {
-        if (this.children.length !== 0 && this.children[0].type === NodeType.Declaration) {
-          return this.children[0].encoding;
-        } else {
-          return null;
-        }
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'xmlStandalone', {
-      get: function() {
-        if (this.children.length !== 0 && this.children[0].type === NodeType.Declaration) {
-          return this.children[0].standalone === 'yes';
-        } else {
-          return false;
-        }
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'xmlVersion', {
-      get: function() {
-        if (this.children.length !== 0 && this.children[0].type === NodeType.Declaration) {
-          return this.children[0].version;
-        } else {
-          return "1.0";
-        }
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'URL', {
-      get: function() {
-        return this.documentURI;
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'origin', {
-      get: function() {
-        return null;
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'compatMode', {
-      get: function() {
-        return null;
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'characterSet', {
-      get: function() {
-        return null;
-      }
-    });
-
-    Object.defineProperty(XMLDocument.prototype, 'contentType', {
-      get: function() {
-        return null;
-      }
-    });
-
-    XMLDocument.prototype.end = function(writer) {
-      var writerOptions;
-      writerOptions = {};
-      if (!writer) {
-        writer = this.options.writer;
-      } else if (isPlainObject(writer)) {
-        writerOptions = writer;
-        writer = this.options.writer;
-      }
-      return writer.document(this, writer.filterOptions(writerOptions));
-    };
-
-    XMLDocument.prototype.toString = function(options) {
-      return this.options.writer.document(this, this.options.writer.filterOptions(options));
-    };
-
-    XMLDocument.prototype.createElement = function(tagName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createDocumentFragment = function() {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createTextNode = function(data) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createComment = function(data) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createCDATASection = function(data) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createProcessingInstruction = function(target, data) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createAttribute = function(name) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createEntityReference = function(name) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.getElementsByTagName = function(tagname) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.importNode = function(importedNode, deep) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createElementNS = function(namespaceURI, qualifiedName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createAttributeNS = function(namespaceURI, qualifiedName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.getElementsByTagNameNS = function(namespaceURI, localName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.getElementById = function(elementId) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.adoptNode = function(source) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.normalizeDocument = function() {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.renameNode = function(node, namespaceURI, qualifiedName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.getElementsByClassName = function(classNames) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createEvent = function(eventInterface) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createRange = function() {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createNodeIterator = function(root, whatToShow, filter) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLDocument.prototype.createTreeWalker = function(root, whatToShow, filter) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    return XMLDocument;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 7356:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, WriterState, XMLAttribute, XMLCData, XMLComment, XMLDTDAttList, XMLDTDElement, XMLDTDEntity, XMLDTDNotation, XMLDeclaration, XMLDocType, XMLDocument, XMLDocumentCB, XMLElement, XMLProcessingInstruction, XMLRaw, XMLStringWriter, XMLStringifier, XMLText, getValue, isFunction, isObject, isPlainObject, ref,
-    hasProp = {}.hasOwnProperty;
-
-  ref = __nccwpck_require__(8229), isObject = ref.isObject, isFunction = ref.isFunction, isPlainObject = ref.isPlainObject, getValue = ref.getValue;
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLDocument = __nccwpck_require__(3730);
-
-  XMLElement = __nccwpck_require__(9437);
-
-  XMLCData = __nccwpck_require__(333);
-
-  XMLComment = __nccwpck_require__(4407);
-
-  XMLRaw = __nccwpck_require__(6329);
-
-  XMLText = __nccwpck_require__(1318);
-
-  XMLProcessingInstruction = __nccwpck_require__(6939);
-
-  XMLDeclaration = __nccwpck_require__(6364);
-
-  XMLDocType = __nccwpck_require__(1801);
-
-  XMLDTDAttList = __nccwpck_require__(1015);
-
-  XMLDTDEntity = __nccwpck_require__(53);
-
-  XMLDTDElement = __nccwpck_require__(2421);
-
-  XMLDTDNotation = __nccwpck_require__(2837);
-
-  XMLAttribute = __nccwpck_require__(8376);
-
-  XMLStringifier = __nccwpck_require__(8594);
-
-  XMLStringWriter = __nccwpck_require__(5913);
-
-  WriterState = __nccwpck_require__(9766);
-
-  module.exports = XMLDocumentCB = (function() {
-    function XMLDocumentCB(options, onData, onEnd) {
-      var writerOptions;
-      this.name = "?xml";
-      this.type = NodeType.Document;
-      options || (options = {});
-      writerOptions = {};
-      if (!options.writer) {
-        options.writer = new XMLStringWriter();
-      } else if (isPlainObject(options.writer)) {
-        writerOptions = options.writer;
-        options.writer = new XMLStringWriter();
-      }
-      this.options = options;
-      this.writer = options.writer;
-      this.writerOptions = this.writer.filterOptions(writerOptions);
-      this.stringify = new XMLStringifier(options);
-      this.onDataCallback = onData || function() {};
-      this.onEndCallback = onEnd || function() {};
-      this.currentNode = null;
-      this.currentLevel = -1;
-      this.openTags = {};
-      this.documentStarted = false;
-      this.documentCompleted = false;
-      this.root = null;
-    }
-
-    XMLDocumentCB.prototype.createChildNode = function(node) {
-      var att, attName, attributes, child, i, len, ref1, ref2;
-      switch (node.type) {
-        case NodeType.CData:
-          this.cdata(node.value);
-          break;
-        case NodeType.Comment:
-          this.comment(node.value);
-          break;
-        case NodeType.Element:
-          attributes = {};
-          ref1 = node.attribs;
-          for (attName in ref1) {
-            if (!hasProp.call(ref1, attName)) continue;
-            att = ref1[attName];
-            attributes[attName] = att.value;
-          }
-          this.node(node.name, attributes);
-          break;
-        case NodeType.Dummy:
-          this.dummy();
-          break;
-        case NodeType.Raw:
-          this.raw(node.value);
-          break;
-        case NodeType.Text:
-          this.text(node.value);
-          break;
-        case NodeType.ProcessingInstruction:
-          this.instruction(node.target, node.value);
-          break;
-        default:
-          throw new Error("This XML node type is not supported in a JS object: " + node.constructor.name);
-      }
-      ref2 = node.children;
-      for (i = 0, len = ref2.length; i < len; i++) {
-        child = ref2[i];
-        this.createChildNode(child);
-        if (child.type === NodeType.Element) {
-          this.up();
-        }
-      }
-      return this;
-    };
-
-    XMLDocumentCB.prototype.dummy = function() {
-      return this;
-    };
-
-    XMLDocumentCB.prototype.node = function(name, attributes, text) {
-      var ref1;
-      if (name == null) {
-        throw new Error("Missing node name.");
-      }
-      if (this.root && this.currentLevel === -1) {
-        throw new Error("Document can only have one root node. " + this.debugInfo(name));
-      }
-      this.openCurrent();
-      name = getValue(name);
-      if (attributes == null) {
-        attributes = {};
-      }
-      attributes = getValue(attributes);
-      if (!isObject(attributes)) {
-        ref1 = [attributes, text], text = ref1[0], attributes = ref1[1];
-      }
-      this.currentNode = new XMLElement(this, name, attributes);
-      this.currentNode.children = false;
-      this.currentLevel++;
-      this.openTags[this.currentLevel] = this.currentNode;
-      if (text != null) {
-        this.text(text);
-      }
-      return this;
-    };
-
-    XMLDocumentCB.prototype.element = function(name, attributes, text) {
-      var child, i, len, oldValidationFlag, ref1, root;
-      if (this.currentNode && this.currentNode.type === NodeType.DocType) {
-        this.dtdElement.apply(this, arguments);
-      } else {
-        if (Array.isArray(name) || isObject(name) || isFunction(name)) {
-          oldValidationFlag = this.options.noValidation;
-          this.options.noValidation = true;
-          root = new XMLDocument(this.options).element('TEMP_ROOT');
-          root.element(name);
-          this.options.noValidation = oldValidationFlag;
-          ref1 = root.children;
-          for (i = 0, len = ref1.length; i < len; i++) {
-            child = ref1[i];
-            this.createChildNode(child);
-            if (child.type === NodeType.Element) {
-              this.up();
-            }
-          }
-        } else {
-          this.node(name, attributes, text);
-        }
-      }
-      return this;
-    };
-
-    XMLDocumentCB.prototype.attribute = function(name, value) {
-      var attName, attValue;
-      if (!this.currentNode || this.currentNode.children) {
-        throw new Error("att() can only be used immediately after an ele() call in callback mode. " + this.debugInfo(name));
-      }
-      if (name != null) {
-        name = getValue(name);
-      }
-      if (isObject(name)) {
-        for (attName in name) {
-          if (!hasProp.call(name, attName)) continue;
-          attValue = name[attName];
-          this.attribute(attName, attValue);
-        }
-      } else {
-        if (isFunction(value)) {
-          value = value.apply();
-        }
-        if (this.options.keepNullAttributes && (value == null)) {
-          this.currentNode.attribs[name] = new XMLAttribute(this, name, "");
-        } else if (value != null) {
-          this.currentNode.attribs[name] = new XMLAttribute(this, name, value);
-        }
-      }
-      return this;
-    };
-
-    XMLDocumentCB.prototype.text = function(value) {
-      var node;
-      this.openCurrent();
-      node = new XMLText(this, value);
-      this.onData(this.writer.text(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.cdata = function(value) {
-      var node;
-      this.openCurrent();
-      node = new XMLCData(this, value);
-      this.onData(this.writer.cdata(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.comment = function(value) {
-      var node;
-      this.openCurrent();
-      node = new XMLComment(this, value);
-      this.onData(this.writer.comment(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.raw = function(value) {
-      var node;
-      this.openCurrent();
-      node = new XMLRaw(this, value);
-      this.onData(this.writer.raw(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.instruction = function(target, value) {
-      var i, insTarget, insValue, len, node;
-      this.openCurrent();
-      if (target != null) {
-        target = getValue(target);
-      }
-      if (value != null) {
-        value = getValue(value);
-      }
-      if (Array.isArray(target)) {
-        for (i = 0, len = target.length; i < len; i++) {
-          insTarget = target[i];
-          this.instruction(insTarget);
-        }
-      } else if (isObject(target)) {
-        for (insTarget in target) {
-          if (!hasProp.call(target, insTarget)) continue;
-          insValue = target[insTarget];
-          this.instruction(insTarget, insValue);
-        }
-      } else {
-        if (isFunction(value)) {
-          value = value.apply();
-        }
-        node = new XMLProcessingInstruction(this, target, value);
-        this.onData(this.writer.processingInstruction(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      }
-      return this;
-    };
-
-    XMLDocumentCB.prototype.declaration = function(version, encoding, standalone) {
-      var node;
-      this.openCurrent();
-      if (this.documentStarted) {
-        throw new Error("declaration() must be the first node.");
-      }
-      node = new XMLDeclaration(this, version, encoding, standalone);
-      this.onData(this.writer.declaration(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.doctype = function(root, pubID, sysID) {
-      this.openCurrent();
-      if (root == null) {
-        throw new Error("Missing root node name.");
-      }
-      if (this.root) {
-        throw new Error("dtd() must come before the root node.");
-      }
-      this.currentNode = new XMLDocType(this, pubID, sysID);
-      this.currentNode.rootNodeName = root;
-      this.currentNode.children = false;
-      this.currentLevel++;
-      this.openTags[this.currentLevel] = this.currentNode;
-      return this;
-    };
-
-    XMLDocumentCB.prototype.dtdElement = function(name, value) {
-      var node;
-      this.openCurrent();
-      node = new XMLDTDElement(this, name, value);
-      this.onData(this.writer.dtdElement(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.attList = function(elementName, attributeName, attributeType, defaultValueType, defaultValue) {
-      var node;
-      this.openCurrent();
-      node = new XMLDTDAttList(this, elementName, attributeName, attributeType, defaultValueType, defaultValue);
-      this.onData(this.writer.dtdAttList(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.entity = function(name, value) {
-      var node;
-      this.openCurrent();
-      node = new XMLDTDEntity(this, false, name, value);
-      this.onData(this.writer.dtdEntity(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.pEntity = function(name, value) {
-      var node;
-      this.openCurrent();
-      node = new XMLDTDEntity(this, true, name, value);
-      this.onData(this.writer.dtdEntity(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.notation = function(name, value) {
-      var node;
-      this.openCurrent();
-      node = new XMLDTDNotation(this, name, value);
-      this.onData(this.writer.dtdNotation(node, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
-      return this;
-    };
-
-    XMLDocumentCB.prototype.up = function() {
-      if (this.currentLevel < 0) {
-        throw new Error("The document node has no parent.");
-      }
-      if (this.currentNode) {
-        if (this.currentNode.children) {
-          this.closeNode(this.currentNode);
-        } else {
-          this.openNode(this.currentNode);
-        }
-        this.currentNode = null;
-      } else {
-        this.closeNode(this.openTags[this.currentLevel]);
-      }
-      delete this.openTags[this.currentLevel];
-      this.currentLevel--;
-      return this;
-    };
-
-    XMLDocumentCB.prototype.end = function() {
-      while (this.currentLevel >= 0) {
-        this.up();
-      }
-      return this.onEnd();
-    };
-
-    XMLDocumentCB.prototype.openCurrent = function() {
-      if (this.currentNode) {
-        this.currentNode.children = true;
-        return this.openNode(this.currentNode);
-      }
-    };
-
-    XMLDocumentCB.prototype.openNode = function(node) {
-      var att, chunk, name, ref1;
-      if (!node.isOpen) {
-        if (!this.root && this.currentLevel === 0 && node.type === NodeType.Element) {
-          this.root = node;
-        }
-        chunk = '';
-        if (node.type === NodeType.Element) {
-          this.writerOptions.state = WriterState.OpenTag;
-          chunk = this.writer.indent(node, this.writerOptions, this.currentLevel) + '<' + node.name;
-          ref1 = node.attribs;
-          for (name in ref1) {
-            if (!hasProp.call(ref1, name)) continue;
-            att = ref1[name];
-            chunk += this.writer.attribute(att, this.writerOptions, this.currentLevel);
-          }
-          chunk += (node.children ? '>' : '/>') + this.writer.endline(node, this.writerOptions, this.currentLevel);
-          this.writerOptions.state = WriterState.InsideTag;
-        } else {
-          this.writerOptions.state = WriterState.OpenTag;
-          chunk = this.writer.indent(node, this.writerOptions, this.currentLevel) + '<!DOCTYPE ' + node.rootNodeName;
-          if (node.pubID && node.sysID) {
-            chunk += ' PUBLIC "' + node.pubID + '" "' + node.sysID + '"';
-          } else if (node.sysID) {
-            chunk += ' SYSTEM "' + node.sysID + '"';
-          }
-          if (node.children) {
-            chunk += ' [';
-            this.writerOptions.state = WriterState.InsideTag;
-          } else {
-            this.writerOptions.state = WriterState.CloseTag;
-            chunk += '>';
-          }
-          chunk += this.writer.endline(node, this.writerOptions, this.currentLevel);
-        }
-        this.onData(chunk, this.currentLevel);
-        return node.isOpen = true;
-      }
-    };
-
-    XMLDocumentCB.prototype.closeNode = function(node) {
-      var chunk;
-      if (!node.isClosed) {
-        chunk = '';
-        this.writerOptions.state = WriterState.CloseTag;
-        if (node.type === NodeType.Element) {
-          chunk = this.writer.indent(node, this.writerOptions, this.currentLevel) + '</' + node.name + '>' + this.writer.endline(node, this.writerOptions, this.currentLevel);
-        } else {
-          chunk = this.writer.indent(node, this.writerOptions, this.currentLevel) + ']>' + this.writer.endline(node, this.writerOptions, this.currentLevel);
-        }
-        this.writerOptions.state = WriterState.None;
-        this.onData(chunk, this.currentLevel);
-        return node.isClosed = true;
-      }
-    };
-
-    XMLDocumentCB.prototype.onData = function(chunk, level) {
-      this.documentStarted = true;
-      return this.onDataCallback(chunk, level + 1);
-    };
-
-    XMLDocumentCB.prototype.onEnd = function() {
-      this.documentCompleted = true;
-      return this.onEndCallback();
-    };
-
-    XMLDocumentCB.prototype.debugInfo = function(name) {
-      if (name == null) {
-        return "";
-      } else {
-        return "node: <" + name + ">";
-      }
-    };
-
-    XMLDocumentCB.prototype.ele = function() {
-      return this.element.apply(this, arguments);
-    };
-
-    XMLDocumentCB.prototype.nod = function(name, attributes, text) {
-      return this.node(name, attributes, text);
-    };
-
-    XMLDocumentCB.prototype.txt = function(value) {
-      return this.text(value);
-    };
-
-    XMLDocumentCB.prototype.dat = function(value) {
-      return this.cdata(value);
-    };
-
-    XMLDocumentCB.prototype.com = function(value) {
-      return this.comment(value);
-    };
-
-    XMLDocumentCB.prototype.ins = function(target, value) {
-      return this.instruction(target, value);
-    };
-
-    XMLDocumentCB.prototype.dec = function(version, encoding, standalone) {
-      return this.declaration(version, encoding, standalone);
-    };
-
-    XMLDocumentCB.prototype.dtd = function(root, pubID, sysID) {
-      return this.doctype(root, pubID, sysID);
-    };
-
-    XMLDocumentCB.prototype.e = function(name, attributes, text) {
-      return this.element(name, attributes, text);
-    };
-
-    XMLDocumentCB.prototype.n = function(name, attributes, text) {
-      return this.node(name, attributes, text);
-    };
-
-    XMLDocumentCB.prototype.t = function(value) {
-      return this.text(value);
-    };
-
-    XMLDocumentCB.prototype.d = function(value) {
-      return this.cdata(value);
-    };
-
-    XMLDocumentCB.prototype.c = function(value) {
-      return this.comment(value);
-    };
-
-    XMLDocumentCB.prototype.r = function(value) {
-      return this.raw(value);
-    };
-
-    XMLDocumentCB.prototype.i = function(target, value) {
-      return this.instruction(target, value);
-    };
-
-    XMLDocumentCB.prototype.att = function() {
-      if (this.currentNode && this.currentNode.type === NodeType.DocType) {
-        return this.attList.apply(this, arguments);
-      } else {
-        return this.attribute.apply(this, arguments);
-      }
-    };
-
-    XMLDocumentCB.prototype.a = function() {
-      if (this.currentNode && this.currentNode.type === NodeType.DocType) {
-        return this.attList.apply(this, arguments);
-      } else {
-        return this.attribute.apply(this, arguments);
-      }
-    };
-
-    XMLDocumentCB.prototype.ent = function(name, value) {
-      return this.entity(name, value);
-    };
-
-    XMLDocumentCB.prototype.pent = function(name, value) {
-      return this.pEntity(name, value);
-    };
-
-    XMLDocumentCB.prototype.not = function(name, value) {
-      return this.notation(name, value);
-    };
-
-    return XMLDocumentCB;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 3590:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLDummy, XMLNode,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  XMLNode = __nccwpck_require__(7608);
-
-  NodeType = __nccwpck_require__(9267);
-
-  module.exports = XMLDummy = (function(superClass) {
-    extend(XMLDummy, superClass);
-
-    function XMLDummy(parent) {
-      XMLDummy.__super__.constructor.call(this, parent);
-      this.type = NodeType.Dummy;
-    }
-
-    XMLDummy.prototype.clone = function() {
-      return Object.create(this);
-    };
-
-    XMLDummy.prototype.toString = function(options) {
-      return '';
-    };
-
-    return XMLDummy;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 9437:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLAttribute, XMLElement, XMLNamedNodeMap, XMLNode, getValue, isFunction, isObject, ref,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  ref = __nccwpck_require__(8229), isObject = ref.isObject, isFunction = ref.isFunction, getValue = ref.getValue;
-
-  XMLNode = __nccwpck_require__(7608);
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLAttribute = __nccwpck_require__(8376);
-
-  XMLNamedNodeMap = __nccwpck_require__(4361);
-
-  module.exports = XMLElement = (function(superClass) {
-    extend(XMLElement, superClass);
-
-    function XMLElement(parent, name, attributes) {
-      var child, j, len, ref1;
-      XMLElement.__super__.constructor.call(this, parent);
-      if (name == null) {
-        throw new Error("Missing element name. " + this.debugInfo());
-      }
-      this.name = this.stringify.name(name);
-      this.type = NodeType.Element;
-      this.attribs = {};
-      this.schemaTypeInfo = null;
-      if (attributes != null) {
-        this.attribute(attributes);
-      }
-      if (parent.type === NodeType.Document) {
-        this.isRoot = true;
-        this.documentObject = parent;
-        parent.rootObject = this;
-        if (parent.children) {
-          ref1 = parent.children;
-          for (j = 0, len = ref1.length; j < len; j++) {
-            child = ref1[j];
-            if (child.type === NodeType.DocType) {
-              child.name = this.name;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    Object.defineProperty(XMLElement.prototype, 'tagName', {
-      get: function() {
-        return this.name;
-      }
-    });
-
-    Object.defineProperty(XMLElement.prototype, 'namespaceURI', {
-      get: function() {
-        return '';
-      }
-    });
-
-    Object.defineProperty(XMLElement.prototype, 'prefix', {
-      get: function() {
-        return '';
-      }
-    });
-
-    Object.defineProperty(XMLElement.prototype, 'localName', {
-      get: function() {
-        return this.name;
-      }
-    });
-
-    Object.defineProperty(XMLElement.prototype, 'id', {
-      get: function() {
-        throw new Error("This DOM method is not implemented." + this.debugInfo());
-      }
-    });
-
-    Object.defineProperty(XMLElement.prototype, 'className', {
-      get: function() {
-        throw new Error("This DOM method is not implemented." + this.debugInfo());
-      }
-    });
-
-    Object.defineProperty(XMLElement.prototype, 'classList', {
-      get: function() {
-        throw new Error("This DOM method is not implemented." + this.debugInfo());
-      }
-    });
-
-    Object.defineProperty(XMLElement.prototype, 'attributes', {
-      get: function() {
-        if (!this.attributeMap || !this.attributeMap.nodes) {
-          this.attributeMap = new XMLNamedNodeMap(this.attribs);
-        }
-        return this.attributeMap;
-      }
-    });
-
-    XMLElement.prototype.clone = function() {
-      var att, attName, clonedSelf, ref1;
-      clonedSelf = Object.create(this);
-      if (clonedSelf.isRoot) {
-        clonedSelf.documentObject = null;
-      }
-      clonedSelf.attribs = {};
-      ref1 = this.attribs;
-      for (attName in ref1) {
-        if (!hasProp.call(ref1, attName)) continue;
-        att = ref1[attName];
-        clonedSelf.attribs[attName] = att.clone();
-      }
-      clonedSelf.children = [];
-      this.children.forEach(function(child) {
-        var clonedChild;
-        clonedChild = child.clone();
-        clonedChild.parent = clonedSelf;
-        return clonedSelf.children.push(clonedChild);
-      });
-      return clonedSelf;
-    };
-
-    XMLElement.prototype.attribute = function(name, value) {
-      var attName, attValue;
-      if (name != null) {
-        name = getValue(name);
-      }
-      if (isObject(name)) {
-        for (attName in name) {
-          if (!hasProp.call(name, attName)) continue;
-          attValue = name[attName];
-          this.attribute(attName, attValue);
-        }
-      } else {
-        if (isFunction(value)) {
-          value = value.apply();
-        }
-        if (this.options.keepNullAttributes && (value == null)) {
-          this.attribs[name] = new XMLAttribute(this, name, "");
-        } else if (value != null) {
-          this.attribs[name] = new XMLAttribute(this, name, value);
-        }
-      }
-      return this;
-    };
-
-    XMLElement.prototype.removeAttribute = function(name) {
-      var attName, j, len;
-      if (name == null) {
-        throw new Error("Missing attribute name. " + this.debugInfo());
-      }
-      name = getValue(name);
-      if (Array.isArray(name)) {
-        for (j = 0, len = name.length; j < len; j++) {
-          attName = name[j];
-          delete this.attribs[attName];
-        }
-      } else {
-        delete this.attribs[name];
-      }
-      return this;
-    };
-
-    XMLElement.prototype.toString = function(options) {
-      return this.options.writer.element(this, this.options.writer.filterOptions(options));
-    };
-
-    XMLElement.prototype.att = function(name, value) {
-      return this.attribute(name, value);
-    };
-
-    XMLElement.prototype.a = function(name, value) {
-      return this.attribute(name, value);
-    };
-
-    XMLElement.prototype.getAttribute = function(name) {
-      if (this.attribs.hasOwnProperty(name)) {
-        return this.attribs[name].value;
-      } else {
-        return null;
-      }
-    };
-
-    XMLElement.prototype.setAttribute = function(name, value) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.getAttributeNode = function(name) {
-      if (this.attribs.hasOwnProperty(name)) {
-        return this.attribs[name];
-      } else {
-        return null;
-      }
-    };
-
-    XMLElement.prototype.setAttributeNode = function(newAttr) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.removeAttributeNode = function(oldAttr) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.getElementsByTagName = function(name) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.getAttributeNS = function(namespaceURI, localName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.setAttributeNS = function(namespaceURI, qualifiedName, value) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.removeAttributeNS = function(namespaceURI, localName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.getAttributeNodeNS = function(namespaceURI, localName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.setAttributeNodeNS = function(newAttr) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.getElementsByTagNameNS = function(namespaceURI, localName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.hasAttribute = function(name) {
-      return this.attribs.hasOwnProperty(name);
-    };
-
-    XMLElement.prototype.hasAttributeNS = function(namespaceURI, localName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.setIdAttribute = function(name, isId) {
-      if (this.attribs.hasOwnProperty(name)) {
-        return this.attribs[name].isId;
-      } else {
-        return isId;
-      }
-    };
-
-    XMLElement.prototype.setIdAttributeNS = function(namespaceURI, localName, isId) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.setIdAttributeNode = function(idAttr, isId) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.getElementsByTagName = function(tagname) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.getElementsByTagNameNS = function(namespaceURI, localName) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.getElementsByClassName = function(classNames) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLElement.prototype.isEqualNode = function(node) {
-      var i, j, ref1;
-      if (!XMLElement.__super__.isEqualNode.apply(this, arguments).isEqualNode(node)) {
-        return false;
-      }
-      if (node.namespaceURI !== this.namespaceURI) {
-        return false;
-      }
-      if (node.prefix !== this.prefix) {
-        return false;
-      }
-      if (node.localName !== this.localName) {
-        return false;
-      }
-      if (node.attribs.length !== this.attribs.length) {
-        return false;
-      }
-      for (i = j = 0, ref1 = this.attribs.length - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; i = 0 <= ref1 ? ++j : --j) {
-        if (!this.attribs[i].isEqualNode(node.attribs[i])) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    return XMLElement;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 4361:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var XMLNamedNodeMap;
-
-  module.exports = XMLNamedNodeMap = (function() {
-    function XMLNamedNodeMap(nodes) {
-      this.nodes = nodes;
-    }
-
-    Object.defineProperty(XMLNamedNodeMap.prototype, 'length', {
-      get: function() {
-        return Object.keys(this.nodes).length || 0;
-      }
-    });
-
-    XMLNamedNodeMap.prototype.clone = function() {
-      return this.nodes = null;
-    };
-
-    XMLNamedNodeMap.prototype.getNamedItem = function(name) {
-      return this.nodes[name];
-    };
-
-    XMLNamedNodeMap.prototype.setNamedItem = function(node) {
-      var oldNode;
-      oldNode = this.nodes[node.nodeName];
-      this.nodes[node.nodeName] = node;
-      return oldNode || null;
-    };
-
-    XMLNamedNodeMap.prototype.removeNamedItem = function(name) {
-      var oldNode;
-      oldNode = this.nodes[name];
-      delete this.nodes[name];
-      return oldNode || null;
-    };
-
-    XMLNamedNodeMap.prototype.item = function(index) {
-      return this.nodes[Object.keys(this.nodes)[index]] || null;
-    };
-
-    XMLNamedNodeMap.prototype.getNamedItemNS = function(namespaceURI, localName) {
-      throw new Error("This DOM method is not implemented.");
-    };
-
-    XMLNamedNodeMap.prototype.setNamedItemNS = function(node) {
-      throw new Error("This DOM method is not implemented.");
-    };
-
-    XMLNamedNodeMap.prototype.removeNamedItemNS = function(namespaceURI, localName) {
-      throw new Error("This DOM method is not implemented.");
-    };
-
-    return XMLNamedNodeMap;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 7608:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var DocumentPosition, NodeType, XMLCData, XMLComment, XMLDeclaration, XMLDocType, XMLDummy, XMLElement, XMLNamedNodeMap, XMLNode, XMLNodeList, XMLProcessingInstruction, XMLRaw, XMLText, getValue, isEmpty, isFunction, isObject, ref1,
-    hasProp = {}.hasOwnProperty;
-
-  ref1 = __nccwpck_require__(8229), isObject = ref1.isObject, isFunction = ref1.isFunction, isEmpty = ref1.isEmpty, getValue = ref1.getValue;
-
-  XMLElement = null;
-
-  XMLCData = null;
-
-  XMLComment = null;
-
-  XMLDeclaration = null;
-
-  XMLDocType = null;
-
-  XMLRaw = null;
-
-  XMLText = null;
-
-  XMLProcessingInstruction = null;
-
-  XMLDummy = null;
-
-  NodeType = null;
-
-  XMLNodeList = null;
-
-  XMLNamedNodeMap = null;
-
-  DocumentPosition = null;
-
-  module.exports = XMLNode = (function() {
-    function XMLNode(parent1) {
-      this.parent = parent1;
-      if (this.parent) {
-        this.options = this.parent.options;
-        this.stringify = this.parent.stringify;
-      }
-      this.value = null;
-      this.children = [];
-      this.baseURI = null;
-      if (!XMLElement) {
-        XMLElement = __nccwpck_require__(9437);
-        XMLCData = __nccwpck_require__(333);
-        XMLComment = __nccwpck_require__(4407);
-        XMLDeclaration = __nccwpck_require__(6364);
-        XMLDocType = __nccwpck_require__(1801);
-        XMLRaw = __nccwpck_require__(6329);
-        XMLText = __nccwpck_require__(1318);
-        XMLProcessingInstruction = __nccwpck_require__(6939);
-        XMLDummy = __nccwpck_require__(3590);
-        NodeType = __nccwpck_require__(9267);
-        XMLNodeList = __nccwpck_require__(6768);
-        XMLNamedNodeMap = __nccwpck_require__(4361);
-        DocumentPosition = __nccwpck_require__(2839);
-      }
-    }
-
-    Object.defineProperty(XMLNode.prototype, 'nodeName', {
-      get: function() {
-        return this.name;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'nodeType', {
-      get: function() {
-        return this.type;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'nodeValue', {
-      get: function() {
-        return this.value;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'parentNode', {
-      get: function() {
-        return this.parent;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'childNodes', {
-      get: function() {
-        if (!this.childNodeList || !this.childNodeList.nodes) {
-          this.childNodeList = new XMLNodeList(this.children);
-        }
-        return this.childNodeList;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'firstChild', {
-      get: function() {
-        return this.children[0] || null;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'lastChild', {
-      get: function() {
-        return this.children[this.children.length - 1] || null;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'previousSibling', {
-      get: function() {
-        var i;
-        i = this.parent.children.indexOf(this);
-        return this.parent.children[i - 1] || null;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'nextSibling', {
-      get: function() {
-        var i;
-        i = this.parent.children.indexOf(this);
-        return this.parent.children[i + 1] || null;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'ownerDocument', {
-      get: function() {
-        return this.document() || null;
-      }
-    });
-
-    Object.defineProperty(XMLNode.prototype, 'textContent', {
-      get: function() {
-        var child, j, len, ref2, str;
-        if (this.nodeType === NodeType.Element || this.nodeType === NodeType.DocumentFragment) {
-          str = '';
-          ref2 = this.children;
-          for (j = 0, len = ref2.length; j < len; j++) {
-            child = ref2[j];
-            if (child.textContent) {
-              str += child.textContent;
-            }
-          }
-          return str;
-        } else {
-          return null;
-        }
-      },
-      set: function(value) {
-        throw new Error("This DOM method is not implemented." + this.debugInfo());
-      }
-    });
-
-    XMLNode.prototype.setParent = function(parent) {
-      var child, j, len, ref2, results;
-      this.parent = parent;
-      if (parent) {
-        this.options = parent.options;
-        this.stringify = parent.stringify;
-      }
-      ref2 = this.children;
-      results = [];
-      for (j = 0, len = ref2.length; j < len; j++) {
-        child = ref2[j];
-        results.push(child.setParent(this));
-      }
-      return results;
-    };
-
-    XMLNode.prototype.element = function(name, attributes, text) {
-      var childNode, item, j, k, key, lastChild, len, len1, ref2, ref3, val;
-      lastChild = null;
-      if (attributes === null && (text == null)) {
-        ref2 = [{}, null], attributes = ref2[0], text = ref2[1];
-      }
-      if (attributes == null) {
-        attributes = {};
-      }
-      attributes = getValue(attributes);
-      if (!isObject(attributes)) {
-        ref3 = [attributes, text], text = ref3[0], attributes = ref3[1];
-      }
-      if (name != null) {
-        name = getValue(name);
-      }
-      if (Array.isArray(name)) {
-        for (j = 0, len = name.length; j < len; j++) {
-          item = name[j];
-          lastChild = this.element(item);
-        }
-      } else if (isFunction(name)) {
-        lastChild = this.element(name.apply());
-      } else if (isObject(name)) {
-        for (key in name) {
-          if (!hasProp.call(name, key)) continue;
-          val = name[key];
-          if (isFunction(val)) {
-            val = val.apply();
-          }
-          if (!this.options.ignoreDecorators && this.stringify.convertAttKey && key.indexOf(this.stringify.convertAttKey) === 0) {
-            lastChild = this.attribute(key.substr(this.stringify.convertAttKey.length), val);
-          } else if (!this.options.separateArrayItems && Array.isArray(val) && isEmpty(val)) {
-            lastChild = this.dummy();
-          } else if (isObject(val) && isEmpty(val)) {
-            lastChild = this.element(key);
-          } else if (!this.options.keepNullNodes && (val == null)) {
-            lastChild = this.dummy();
-          } else if (!this.options.separateArrayItems && Array.isArray(val)) {
-            for (k = 0, len1 = val.length; k < len1; k++) {
-              item = val[k];
-              childNode = {};
-              childNode[key] = item;
-              lastChild = this.element(childNode);
-            }
-          } else if (isObject(val)) {
-            if (!this.options.ignoreDecorators && this.stringify.convertTextKey && key.indexOf(this.stringify.convertTextKey) === 0) {
-              lastChild = this.element(val);
-            } else {
-              lastChild = this.element(key);
-              lastChild.element(val);
-            }
-          } else {
-            lastChild = this.element(key, val);
-          }
-        }
-      } else if (!this.options.keepNullNodes && text === null) {
-        lastChild = this.dummy();
-      } else {
-        if (!this.options.ignoreDecorators && this.stringify.convertTextKey && name.indexOf(this.stringify.convertTextKey) === 0) {
-          lastChild = this.text(text);
-        } else if (!this.options.ignoreDecorators && this.stringify.convertCDataKey && name.indexOf(this.stringify.convertCDataKey) === 0) {
-          lastChild = this.cdata(text);
-        } else if (!this.options.ignoreDecorators && this.stringify.convertCommentKey && name.indexOf(this.stringify.convertCommentKey) === 0) {
-          lastChild = this.comment(text);
-        } else if (!this.options.ignoreDecorators && this.stringify.convertRawKey && name.indexOf(this.stringify.convertRawKey) === 0) {
-          lastChild = this.raw(text);
-        } else if (!this.options.ignoreDecorators && this.stringify.convertPIKey && name.indexOf(this.stringify.convertPIKey) === 0) {
-          lastChild = this.instruction(name.substr(this.stringify.convertPIKey.length), text);
-        } else {
-          lastChild = this.node(name, attributes, text);
-        }
-      }
-      if (lastChild == null) {
-        throw new Error("Could not create any elements with: " + name + ". " + this.debugInfo());
-      }
-      return lastChild;
-    };
-
-    XMLNode.prototype.insertBefore = function(name, attributes, text) {
-      var child, i, newChild, refChild, removed;
-      if (name != null ? name.type : void 0) {
-        newChild = name;
-        refChild = attributes;
-        newChild.setParent(this);
-        if (refChild) {
-          i = children.indexOf(refChild);
-          removed = children.splice(i);
-          children.push(newChild);
-          Array.prototype.push.apply(children, removed);
-        } else {
-          children.push(newChild);
-        }
-        return newChild;
-      } else {
-        if (this.isRoot) {
-          throw new Error("Cannot insert elements at root level. " + this.debugInfo(name));
-        }
-        i = this.parent.children.indexOf(this);
-        removed = this.parent.children.splice(i);
-        child = this.parent.element(name, attributes, text);
-        Array.prototype.push.apply(this.parent.children, removed);
-        return child;
-      }
-    };
-
-    XMLNode.prototype.insertAfter = function(name, attributes, text) {
-      var child, i, removed;
-      if (this.isRoot) {
-        throw new Error("Cannot insert elements at root level. " + this.debugInfo(name));
-      }
-      i = this.parent.children.indexOf(this);
-      removed = this.parent.children.splice(i + 1);
-      child = this.parent.element(name, attributes, text);
-      Array.prototype.push.apply(this.parent.children, removed);
-      return child;
-    };
-
-    XMLNode.prototype.remove = function() {
-      var i, ref2;
-      if (this.isRoot) {
-        throw new Error("Cannot remove the root element. " + this.debugInfo());
-      }
-      i = this.parent.children.indexOf(this);
-      [].splice.apply(this.parent.children, [i, i - i + 1].concat(ref2 = [])), ref2;
-      return this.parent;
-    };
-
-    XMLNode.prototype.node = function(name, attributes, text) {
-      var child, ref2;
-      if (name != null) {
-        name = getValue(name);
-      }
-      attributes || (attributes = {});
-      attributes = getValue(attributes);
-      if (!isObject(attributes)) {
-        ref2 = [attributes, text], text = ref2[0], attributes = ref2[1];
-      }
-      child = new XMLElement(this, name, attributes);
-      if (text != null) {
-        child.text(text);
-      }
-      this.children.push(child);
-      return child;
-    };
-
-    XMLNode.prototype.text = function(value) {
-      var child;
-      if (isObject(value)) {
-        this.element(value);
-      }
-      child = new XMLText(this, value);
-      this.children.push(child);
-      return this;
-    };
-
-    XMLNode.prototype.cdata = function(value) {
-      var child;
-      child = new XMLCData(this, value);
-      this.children.push(child);
-      return this;
-    };
-
-    XMLNode.prototype.comment = function(value) {
-      var child;
-      child = new XMLComment(this, value);
-      this.children.push(child);
-      return this;
-    };
-
-    XMLNode.prototype.commentBefore = function(value) {
-      var child, i, removed;
-      i = this.parent.children.indexOf(this);
-      removed = this.parent.children.splice(i);
-      child = this.parent.comment(value);
-      Array.prototype.push.apply(this.parent.children, removed);
-      return this;
-    };
-
-    XMLNode.prototype.commentAfter = function(value) {
-      var child, i, removed;
-      i = this.parent.children.indexOf(this);
-      removed = this.parent.children.splice(i + 1);
-      child = this.parent.comment(value);
-      Array.prototype.push.apply(this.parent.children, removed);
-      return this;
-    };
-
-    XMLNode.prototype.raw = function(value) {
-      var child;
-      child = new XMLRaw(this, value);
-      this.children.push(child);
-      return this;
-    };
-
-    XMLNode.prototype.dummy = function() {
-      var child;
-      child = new XMLDummy(this);
-      return child;
-    };
-
-    XMLNode.prototype.instruction = function(target, value) {
-      var insTarget, insValue, instruction, j, len;
-      if (target != null) {
-        target = getValue(target);
-      }
-      if (value != null) {
-        value = getValue(value);
-      }
-      if (Array.isArray(target)) {
-        for (j = 0, len = target.length; j < len; j++) {
-          insTarget = target[j];
-          this.instruction(insTarget);
-        }
-      } else if (isObject(target)) {
-        for (insTarget in target) {
-          if (!hasProp.call(target, insTarget)) continue;
-          insValue = target[insTarget];
-          this.instruction(insTarget, insValue);
-        }
-      } else {
-        if (isFunction(value)) {
-          value = value.apply();
-        }
-        instruction = new XMLProcessingInstruction(this, target, value);
-        this.children.push(instruction);
-      }
-      return this;
-    };
-
-    XMLNode.prototype.instructionBefore = function(target, value) {
-      var child, i, removed;
-      i = this.parent.children.indexOf(this);
-      removed = this.parent.children.splice(i);
-      child = this.parent.instruction(target, value);
-      Array.prototype.push.apply(this.parent.children, removed);
-      return this;
-    };
-
-    XMLNode.prototype.instructionAfter = function(target, value) {
-      var child, i, removed;
-      i = this.parent.children.indexOf(this);
-      removed = this.parent.children.splice(i + 1);
-      child = this.parent.instruction(target, value);
-      Array.prototype.push.apply(this.parent.children, removed);
-      return this;
-    };
-
-    XMLNode.prototype.declaration = function(version, encoding, standalone) {
-      var doc, xmldec;
-      doc = this.document();
-      xmldec = new XMLDeclaration(doc, version, encoding, standalone);
-      if (doc.children.length === 0) {
-        doc.children.unshift(xmldec);
-      } else if (doc.children[0].type === NodeType.Declaration) {
-        doc.children[0] = xmldec;
-      } else {
-        doc.children.unshift(xmldec);
-      }
-      return doc.root() || doc;
-    };
-
-    XMLNode.prototype.dtd = function(pubID, sysID) {
-      var child, doc, doctype, i, j, k, len, len1, ref2, ref3;
-      doc = this.document();
-      doctype = new XMLDocType(doc, pubID, sysID);
-      ref2 = doc.children;
-      for (i = j = 0, len = ref2.length; j < len; i = ++j) {
-        child = ref2[i];
-        if (child.type === NodeType.DocType) {
-          doc.children[i] = doctype;
-          return doctype;
-        }
-      }
-      ref3 = doc.children;
-      for (i = k = 0, len1 = ref3.length; k < len1; i = ++k) {
-        child = ref3[i];
-        if (child.isRoot) {
-          doc.children.splice(i, 0, doctype);
-          return doctype;
-        }
-      }
-      doc.children.push(doctype);
-      return doctype;
-    };
-
-    XMLNode.prototype.up = function() {
-      if (this.isRoot) {
-        throw new Error("The root node has no parent. Use doc() if you need to get the document object.");
-      }
-      return this.parent;
-    };
-
-    XMLNode.prototype.root = function() {
-      var node;
-      node = this;
-      while (node) {
-        if (node.type === NodeType.Document) {
-          return node.rootObject;
-        } else if (node.isRoot) {
-          return node;
-        } else {
-          node = node.parent;
-        }
-      }
-    };
-
-    XMLNode.prototype.document = function() {
-      var node;
-      node = this;
-      while (node) {
-        if (node.type === NodeType.Document) {
-          return node;
-        } else {
-          node = node.parent;
-        }
-      }
-    };
-
-    XMLNode.prototype.end = function(options) {
-      return this.document().end(options);
-    };
-
-    XMLNode.prototype.prev = function() {
-      var i;
-      i = this.parent.children.indexOf(this);
-      if (i < 1) {
-        throw new Error("Already at the first node. " + this.debugInfo());
-      }
-      return this.parent.children[i - 1];
-    };
-
-    XMLNode.prototype.next = function() {
-      var i;
-      i = this.parent.children.indexOf(this);
-      if (i === -1 || i === this.parent.children.length - 1) {
-        throw new Error("Already at the last node. " + this.debugInfo());
-      }
-      return this.parent.children[i + 1];
-    };
-
-    XMLNode.prototype.importDocument = function(doc) {
-      var clonedRoot;
-      clonedRoot = doc.root().clone();
-      clonedRoot.parent = this;
-      clonedRoot.isRoot = false;
-      this.children.push(clonedRoot);
-      return this;
-    };
-
-    XMLNode.prototype.debugInfo = function(name) {
-      var ref2, ref3;
-      name = name || this.name;
-      if ((name == null) && !((ref2 = this.parent) != null ? ref2.name : void 0)) {
-        return "";
-      } else if (name == null) {
-        return "parent: <" + this.parent.name + ">";
-      } else if (!((ref3 = this.parent) != null ? ref3.name : void 0)) {
-        return "node: <" + name + ">";
-      } else {
-        return "node: <" + name + ">, parent: <" + this.parent.name + ">";
-      }
-    };
-
-    XMLNode.prototype.ele = function(name, attributes, text) {
-      return this.element(name, attributes, text);
-    };
-
-    XMLNode.prototype.nod = function(name, attributes, text) {
-      return this.node(name, attributes, text);
-    };
-
-    XMLNode.prototype.txt = function(value) {
-      return this.text(value);
-    };
-
-    XMLNode.prototype.dat = function(value) {
-      return this.cdata(value);
-    };
-
-    XMLNode.prototype.com = function(value) {
-      return this.comment(value);
-    };
-
-    XMLNode.prototype.ins = function(target, value) {
-      return this.instruction(target, value);
-    };
-
-    XMLNode.prototype.doc = function() {
-      return this.document();
-    };
-
-    XMLNode.prototype.dec = function(version, encoding, standalone) {
-      return this.declaration(version, encoding, standalone);
-    };
-
-    XMLNode.prototype.e = function(name, attributes, text) {
-      return this.element(name, attributes, text);
-    };
-
-    XMLNode.prototype.n = function(name, attributes, text) {
-      return this.node(name, attributes, text);
-    };
-
-    XMLNode.prototype.t = function(value) {
-      return this.text(value);
-    };
-
-    XMLNode.prototype.d = function(value) {
-      return this.cdata(value);
-    };
-
-    XMLNode.prototype.c = function(value) {
-      return this.comment(value);
-    };
-
-    XMLNode.prototype.r = function(value) {
-      return this.raw(value);
-    };
-
-    XMLNode.prototype.i = function(target, value) {
-      return this.instruction(target, value);
-    };
-
-    XMLNode.prototype.u = function() {
-      return this.up();
-    };
-
-    XMLNode.prototype.importXMLBuilder = function(doc) {
-      return this.importDocument(doc);
-    };
-
-    XMLNode.prototype.replaceChild = function(newChild, oldChild) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.removeChild = function(oldChild) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.appendChild = function(newChild) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.hasChildNodes = function() {
-      return this.children.length !== 0;
-    };
-
-    XMLNode.prototype.cloneNode = function(deep) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.normalize = function() {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.isSupported = function(feature, version) {
-      return true;
-    };
-
-    XMLNode.prototype.hasAttributes = function() {
-      return this.attribs.length !== 0;
-    };
-
-    XMLNode.prototype.compareDocumentPosition = function(other) {
-      var ref, res;
-      ref = this;
-      if (ref === other) {
-        return 0;
-      } else if (this.document() !== other.document()) {
-        res = DocumentPosition.Disconnected | DocumentPosition.ImplementationSpecific;
-        if (Math.random() < 0.5) {
-          res |= DocumentPosition.Preceding;
-        } else {
-          res |= DocumentPosition.Following;
-        }
-        return res;
-      } else if (ref.isAncestor(other)) {
-        return DocumentPosition.Contains | DocumentPosition.Preceding;
-      } else if (ref.isDescendant(other)) {
-        return DocumentPosition.Contains | DocumentPosition.Following;
-      } else if (ref.isPreceding(other)) {
-        return DocumentPosition.Preceding;
-      } else {
-        return DocumentPosition.Following;
-      }
-    };
-
-    XMLNode.prototype.isSameNode = function(other) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.lookupPrefix = function(namespaceURI) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.isDefaultNamespace = function(namespaceURI) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.lookupNamespaceURI = function(prefix) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.isEqualNode = function(node) {
-      var i, j, ref2;
-      if (node.nodeType !== this.nodeType) {
-        return false;
-      }
-      if (node.children.length !== this.children.length) {
-        return false;
-      }
-      for (i = j = 0, ref2 = this.children.length - 1; 0 <= ref2 ? j <= ref2 : j >= ref2; i = 0 <= ref2 ? ++j : --j) {
-        if (!this.children[i].isEqualNode(node.children[i])) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    XMLNode.prototype.getFeature = function(feature, version) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.setUserData = function(key, data, handler) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.getUserData = function(key) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLNode.prototype.contains = function(other) {
-      if (!other) {
-        return false;
-      }
-      return other === this || this.isDescendant(other);
-    };
-
-    XMLNode.prototype.isDescendant = function(node) {
-      var child, isDescendantChild, j, len, ref2;
-      ref2 = this.children;
-      for (j = 0, len = ref2.length; j < len; j++) {
-        child = ref2[j];
-        if (node === child) {
-          return true;
-        }
-        isDescendantChild = child.isDescendant(node);
-        if (isDescendantChild) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    XMLNode.prototype.isAncestor = function(node) {
-      return node.isDescendant(this);
-    };
-
-    XMLNode.prototype.isPreceding = function(node) {
-      var nodePos, thisPos;
-      nodePos = this.treePosition(node);
-      thisPos = this.treePosition(this);
-      if (nodePos === -1 || thisPos === -1) {
-        return false;
-      } else {
-        return nodePos < thisPos;
-      }
-    };
-
-    XMLNode.prototype.isFollowing = function(node) {
-      var nodePos, thisPos;
-      nodePos = this.treePosition(node);
-      thisPos = this.treePosition(this);
-      if (nodePos === -1 || thisPos === -1) {
-        return false;
-      } else {
-        return nodePos > thisPos;
-      }
-    };
-
-    XMLNode.prototype.treePosition = function(node) {
-      var found, pos;
-      pos = 0;
-      found = false;
-      this.foreachTreeNode(this.document(), function(childNode) {
-        pos++;
-        if (!found && childNode === node) {
-          return found = true;
-        }
-      });
-      if (found) {
-        return pos;
-      } else {
-        return -1;
-      }
-    };
-
-    XMLNode.prototype.foreachTreeNode = function(node, func) {
-      var child, j, len, ref2, res;
-      node || (node = this.document());
-      ref2 = node.children;
-      for (j = 0, len = ref2.length; j < len; j++) {
-        child = ref2[j];
-        if (res = func(child)) {
-          return res;
-        } else {
-          res = this.foreachTreeNode(child, func);
-          if (res) {
-            return res;
-          }
-        }
-      }
-    };
-
-    return XMLNode;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 6768:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var XMLNodeList;
-
-  module.exports = XMLNodeList = (function() {
-    function XMLNodeList(nodes) {
-      this.nodes = nodes;
-    }
-
-    Object.defineProperty(XMLNodeList.prototype, 'length', {
-      get: function() {
-        return this.nodes.length || 0;
-      }
-    });
-
-    XMLNodeList.prototype.clone = function() {
-      return this.nodes = null;
-    };
-
-    XMLNodeList.prototype.item = function(index) {
-      return this.nodes[index] || null;
-    };
-
-    return XMLNodeList;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 6939:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLCharacterData, XMLProcessingInstruction,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLCharacterData = __nccwpck_require__(7709);
-
-  module.exports = XMLProcessingInstruction = (function(superClass) {
-    extend(XMLProcessingInstruction, superClass);
-
-    function XMLProcessingInstruction(parent, target, value) {
-      XMLProcessingInstruction.__super__.constructor.call(this, parent);
-      if (target == null) {
-        throw new Error("Missing instruction target. " + this.debugInfo());
-      }
-      this.type = NodeType.ProcessingInstruction;
-      this.target = this.stringify.insTarget(target);
-      this.name = this.target;
-      if (value) {
-        this.value = this.stringify.insValue(value);
-      }
-    }
-
-    XMLProcessingInstruction.prototype.clone = function() {
-      return Object.create(this);
-    };
-
-    XMLProcessingInstruction.prototype.toString = function(options) {
-      return this.options.writer.processingInstruction(this, this.options.writer.filterOptions(options));
-    };
-
-    XMLProcessingInstruction.prototype.isEqualNode = function(node) {
-      if (!XMLProcessingInstruction.__super__.isEqualNode.apply(this, arguments).isEqualNode(node)) {
-        return false;
-      }
-      if (node.target !== this.target) {
-        return false;
-      }
-      return true;
-    };
-
-    return XMLProcessingInstruction;
-
-  })(XMLCharacterData);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 6329:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLNode, XMLRaw,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLNode = __nccwpck_require__(7608);
-
-  module.exports = XMLRaw = (function(superClass) {
-    extend(XMLRaw, superClass);
-
-    function XMLRaw(parent, text) {
-      XMLRaw.__super__.constructor.call(this, parent);
-      if (text == null) {
-        throw new Error("Missing raw text. " + this.debugInfo());
-      }
-      this.type = NodeType.Raw;
-      this.value = this.stringify.raw(text);
-    }
-
-    XMLRaw.prototype.clone = function() {
-      return Object.create(this);
-    };
-
-    XMLRaw.prototype.toString = function(options) {
-      return this.options.writer.raw(this, this.options.writer.filterOptions(options));
-    };
-
-    return XMLRaw;
-
-  })(XMLNode);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 8601:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, WriterState, XMLStreamWriter, XMLWriterBase,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLWriterBase = __nccwpck_require__(6752);
-
-  WriterState = __nccwpck_require__(9766);
-
-  module.exports = XMLStreamWriter = (function(superClass) {
-    extend(XMLStreamWriter, superClass);
-
-    function XMLStreamWriter(stream, options) {
-      this.stream = stream;
-      XMLStreamWriter.__super__.constructor.call(this, options);
-    }
-
-    XMLStreamWriter.prototype.endline = function(node, options, level) {
-      if (node.isLastRootNode && options.state === WriterState.CloseTag) {
-        return '';
-      } else {
-        return XMLStreamWriter.__super__.endline.call(this, node, options, level);
-      }
-    };
-
-    XMLStreamWriter.prototype.document = function(doc, options) {
-      var child, i, j, k, len, len1, ref, ref1, results;
-      ref = doc.children;
-      for (i = j = 0, len = ref.length; j < len; i = ++j) {
-        child = ref[i];
-        child.isLastRootNode = i === doc.children.length - 1;
-      }
-      options = this.filterOptions(options);
-      ref1 = doc.children;
-      results = [];
-      for (k = 0, len1 = ref1.length; k < len1; k++) {
-        child = ref1[k];
-        results.push(this.writeChildNode(child, options, 0));
-      }
-      return results;
-    };
-
-    XMLStreamWriter.prototype.attribute = function(att, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.attribute.call(this, att, options, level));
-    };
-
-    XMLStreamWriter.prototype.cdata = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.cdata.call(this, node, options, level));
-    };
-
-    XMLStreamWriter.prototype.comment = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.comment.call(this, node, options, level));
-    };
-
-    XMLStreamWriter.prototype.declaration = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.declaration.call(this, node, options, level));
-    };
-
-    XMLStreamWriter.prototype.docType = function(node, options, level) {
-      var child, j, len, ref;
-      level || (level = 0);
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      this.stream.write(this.indent(node, options, level));
-      this.stream.write('<!DOCTYPE ' + node.root().name);
-      if (node.pubID && node.sysID) {
-        this.stream.write(' PUBLIC "' + node.pubID + '" "' + node.sysID + '"');
-      } else if (node.sysID) {
-        this.stream.write(' SYSTEM "' + node.sysID + '"');
-      }
-      if (node.children.length > 0) {
-        this.stream.write(' [');
-        this.stream.write(this.endline(node, options, level));
-        options.state = WriterState.InsideTag;
-        ref = node.children;
-        for (j = 0, len = ref.length; j < len; j++) {
-          child = ref[j];
-          this.writeChildNode(child, options, level + 1);
-        }
-        options.state = WriterState.CloseTag;
-        this.stream.write(']');
-      }
-      options.state = WriterState.CloseTag;
-      this.stream.write(options.spaceBeforeSlash + '>');
-      this.stream.write(this.endline(node, options, level));
-      options.state = WriterState.None;
-      return this.closeNode(node, options, level);
-    };
-
-    XMLStreamWriter.prototype.element = function(node, options, level) {
-      var att, child, childNodeCount, firstChildNode, j, len, name, prettySuppressed, ref, ref1;
-      level || (level = 0);
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      this.stream.write(this.indent(node, options, level) + '<' + node.name);
-      ref = node.attribs;
-      for (name in ref) {
-        if (!hasProp.call(ref, name)) continue;
-        att = ref[name];
-        this.attribute(att, options, level);
-      }
-      childNodeCount = node.children.length;
-      firstChildNode = childNodeCount === 0 ? null : node.children[0];
-      if (childNodeCount === 0 || node.children.every(function(e) {
-        return (e.type === NodeType.Text || e.type === NodeType.Raw) && e.value === '';
-      })) {
-        if (options.allowEmpty) {
-          this.stream.write('>');
-          options.state = WriterState.CloseTag;
-          this.stream.write('</' + node.name + '>');
-        } else {
-          options.state = WriterState.CloseTag;
-          this.stream.write(options.spaceBeforeSlash + '/>');
-        }
-      } else if (options.pretty && childNodeCount === 1 && (firstChildNode.type === NodeType.Text || firstChildNode.type === NodeType.Raw) && (firstChildNode.value != null)) {
-        this.stream.write('>');
-        options.state = WriterState.InsideTag;
-        options.suppressPrettyCount++;
-        prettySuppressed = true;
-        this.writeChildNode(firstChildNode, options, level + 1);
-        options.suppressPrettyCount--;
-        prettySuppressed = false;
-        options.state = WriterState.CloseTag;
-        this.stream.write('</' + node.name + '>');
-      } else {
-        this.stream.write('>' + this.endline(node, options, level));
-        options.state = WriterState.InsideTag;
-        ref1 = node.children;
-        for (j = 0, len = ref1.length; j < len; j++) {
-          child = ref1[j];
-          this.writeChildNode(child, options, level + 1);
-        }
-        options.state = WriterState.CloseTag;
-        this.stream.write(this.indent(node, options, level) + '</' + node.name + '>');
-      }
-      this.stream.write(this.endline(node, options, level));
-      options.state = WriterState.None;
-      return this.closeNode(node, options, level);
-    };
-
-    XMLStreamWriter.prototype.processingInstruction = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.processingInstruction.call(this, node, options, level));
-    };
-
-    XMLStreamWriter.prototype.raw = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.raw.call(this, node, options, level));
-    };
-
-    XMLStreamWriter.prototype.text = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.text.call(this, node, options, level));
-    };
-
-    XMLStreamWriter.prototype.dtdAttList = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.dtdAttList.call(this, node, options, level));
-    };
-
-    XMLStreamWriter.prototype.dtdElement = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.dtdElement.call(this, node, options, level));
-    };
-
-    XMLStreamWriter.prototype.dtdEntity = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.dtdEntity.call(this, node, options, level));
-    };
-
-    XMLStreamWriter.prototype.dtdNotation = function(node, options, level) {
-      return this.stream.write(XMLStreamWriter.__super__.dtdNotation.call(this, node, options, level));
-    };
-
-    return XMLStreamWriter;
-
-  })(XMLWriterBase);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 5913:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var XMLStringWriter, XMLWriterBase,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  XMLWriterBase = __nccwpck_require__(6752);
-
-  module.exports = XMLStringWriter = (function(superClass) {
-    extend(XMLStringWriter, superClass);
-
-    function XMLStringWriter(options) {
-      XMLStringWriter.__super__.constructor.call(this, options);
-    }
-
-    XMLStringWriter.prototype.document = function(doc, options) {
-      var child, i, len, r, ref;
-      options = this.filterOptions(options);
-      r = '';
-      ref = doc.children;
-      for (i = 0, len = ref.length; i < len; i++) {
-        child = ref[i];
-        r += this.writeChildNode(child, options, 0);
-      }
-      if (options.pretty && r.slice(-options.newline.length) === options.newline) {
-        r = r.slice(0, -options.newline.length);
-      }
-      return r;
-    };
-
-    return XMLStringWriter;
-
-  })(XMLWriterBase);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 8594:
-/***/ (function(module) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var XMLStringifier,
-    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    hasProp = {}.hasOwnProperty;
-
-  module.exports = XMLStringifier = (function() {
-    function XMLStringifier(options) {
-      this.assertLegalName = bind(this.assertLegalName, this);
-      this.assertLegalChar = bind(this.assertLegalChar, this);
-      var key, ref, value;
-      options || (options = {});
-      this.options = options;
-      if (!this.options.version) {
-        this.options.version = '1.0';
-      }
-      ref = options.stringify || {};
-      for (key in ref) {
-        if (!hasProp.call(ref, key)) continue;
-        value = ref[key];
-        this[key] = value;
-      }
-    }
-
-    XMLStringifier.prototype.name = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalName('' + val || '');
-    };
-
-    XMLStringifier.prototype.text = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar(this.textEscape('' + val || ''));
-    };
-
-    XMLStringifier.prototype.cdata = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      val = '' + val || '';
-      val = val.replace(']]>', ']]]]><![CDATA[>');
-      return this.assertLegalChar(val);
-    };
-
-    XMLStringifier.prototype.comment = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      val = '' + val || '';
-      if (val.match(/--/)) {
-        throw new Error("Comment text cannot contain double-hypen: " + val);
-      }
-      return this.assertLegalChar(val);
-    };
-
-    XMLStringifier.prototype.raw = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return '' + val || '';
-    };
-
-    XMLStringifier.prototype.attValue = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar(this.attEscape(val = '' + val || ''));
-    };
-
-    XMLStringifier.prototype.insTarget = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar('' + val || '');
-    };
-
-    XMLStringifier.prototype.insValue = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      val = '' + val || '';
-      if (val.match(/\?>/)) {
-        throw new Error("Invalid processing instruction value: " + val);
-      }
-      return this.assertLegalChar(val);
-    };
-
-    XMLStringifier.prototype.xmlVersion = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      val = '' + val || '';
-      if (!val.match(/1\.[0-9]+/)) {
-        throw new Error("Invalid version number: " + val);
-      }
-      return val;
-    };
-
-    XMLStringifier.prototype.xmlEncoding = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      val = '' + val || '';
-      if (!val.match(/^[A-Za-z](?:[A-Za-z0-9._-])*$/)) {
-        throw new Error("Invalid encoding: " + val);
-      }
-      return this.assertLegalChar(val);
-    };
-
-    XMLStringifier.prototype.xmlStandalone = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      if (val) {
-        return "yes";
-      } else {
-        return "no";
-      }
-    };
-
-    XMLStringifier.prototype.dtdPubID = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar('' + val || '');
-    };
-
-    XMLStringifier.prototype.dtdSysID = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar('' + val || '');
-    };
-
-    XMLStringifier.prototype.dtdElementValue = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar('' + val || '');
-    };
-
-    XMLStringifier.prototype.dtdAttType = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar('' + val || '');
-    };
-
-    XMLStringifier.prototype.dtdAttDefault = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar('' + val || '');
-    };
-
-    XMLStringifier.prototype.dtdEntityValue = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar('' + val || '');
-    };
-
-    XMLStringifier.prototype.dtdNData = function(val) {
-      if (this.options.noValidation) {
-        return val;
-      }
-      return this.assertLegalChar('' + val || '');
-    };
-
-    XMLStringifier.prototype.convertAttKey = '@';
-
-    XMLStringifier.prototype.convertPIKey = '?';
-
-    XMLStringifier.prototype.convertTextKey = '#text';
-
-    XMLStringifier.prototype.convertCDataKey = '#cdata';
-
-    XMLStringifier.prototype.convertCommentKey = '#comment';
-
-    XMLStringifier.prototype.convertRawKey = '#raw';
-
-    XMLStringifier.prototype.assertLegalChar = function(str) {
-      var regex, res;
-      if (this.options.noValidation) {
-        return str;
-      }
-      regex = '';
-      if (this.options.version === '1.0') {
-        regex = /[\0-\x08\x0B\f\x0E-\x1F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/;
-        if (res = str.match(regex)) {
-          throw new Error("Invalid character in string: " + str + " at index " + res.index);
-        }
-      } else if (this.options.version === '1.1') {
-        regex = /[\0\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/;
-        if (res = str.match(regex)) {
-          throw new Error("Invalid character in string: " + str + " at index " + res.index);
-        }
-      }
-      return str;
-    };
-
-    XMLStringifier.prototype.assertLegalName = function(str) {
-      var regex;
-      if (this.options.noValidation) {
-        return str;
-      }
-      this.assertLegalChar(str);
-      regex = /^([:A-Z_a-z\xC0-\xD6\xD8-\xF6\xF8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]|[\uD800-\uDB7F][\uDC00-\uDFFF])([\x2D\.0-:A-Z_a-z\xB7\xC0-\xD6\xD8-\xF6\xF8-\u037D\u037F-\u1FFF\u200C\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]|[\uD800-\uDB7F][\uDC00-\uDFFF])*$/;
-      if (!str.match(regex)) {
-        throw new Error("Invalid character in name");
-      }
-      return str;
-    };
-
-    XMLStringifier.prototype.textEscape = function(str) {
-      var ampregex;
-      if (this.options.noValidation) {
-        return str;
-      }
-      ampregex = this.options.noDoubleEncoding ? /(?!&\S+;)&/g : /&/g;
-      return str.replace(ampregex, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\r/g, '&#xD;');
-    };
-
-    XMLStringifier.prototype.attEscape = function(str) {
-      var ampregex;
-      if (this.options.noValidation) {
-        return str;
-      }
-      ampregex = this.options.noDoubleEncoding ? /(?!&\S+;)&/g : /&/g;
-      return str.replace(ampregex, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/\t/g, '&#x9;').replace(/\n/g, '&#xA;').replace(/\r/g, '&#xD;');
-    };
-
-    return XMLStringifier;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 1318:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, XMLCharacterData, XMLText,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLCharacterData = __nccwpck_require__(7709);
-
-  module.exports = XMLText = (function(superClass) {
-    extend(XMLText, superClass);
-
-    function XMLText(parent, text) {
-      XMLText.__super__.constructor.call(this, parent);
-      if (text == null) {
-        throw new Error("Missing element text. " + this.debugInfo());
-      }
-      this.name = "#text";
-      this.type = NodeType.Text;
-      this.value = this.stringify.text(text);
-    }
-
-    Object.defineProperty(XMLText.prototype, 'isElementContentWhitespace', {
-      get: function() {
-        throw new Error("This DOM method is not implemented." + this.debugInfo());
-      }
-    });
-
-    Object.defineProperty(XMLText.prototype, 'wholeText', {
-      get: function() {
-        var next, prev, str;
-        str = '';
-        prev = this.previousSibling;
-        while (prev) {
-          str = prev.data + str;
-          prev = prev.previousSibling;
-        }
-        str += this.data;
-        next = this.nextSibling;
-        while (next) {
-          str = str + next.data;
-          next = next.nextSibling;
-        }
-        return str;
-      }
-    });
-
-    XMLText.prototype.clone = function() {
-      return Object.create(this);
-    };
-
-    XMLText.prototype.toString = function(options) {
-      return this.options.writer.text(this, this.options.writer.filterOptions(options));
-    };
-
-    XMLText.prototype.splitText = function(offset) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    XMLText.prototype.replaceWholeText = function(content) {
-      throw new Error("This DOM method is not implemented." + this.debugInfo());
-    };
-
-    return XMLText;
-
-  })(XMLCharacterData);
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 6752:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, WriterState, XMLCData, XMLComment, XMLDTDAttList, XMLDTDElement, XMLDTDEntity, XMLDTDNotation, XMLDeclaration, XMLDocType, XMLDummy, XMLElement, XMLProcessingInstruction, XMLRaw, XMLText, XMLWriterBase, assign,
-    hasProp = {}.hasOwnProperty;
-
-  assign = __nccwpck_require__(8229).assign;
-
-  NodeType = __nccwpck_require__(9267);
-
-  XMLDeclaration = __nccwpck_require__(6364);
-
-  XMLDocType = __nccwpck_require__(1801);
-
-  XMLCData = __nccwpck_require__(333);
-
-  XMLComment = __nccwpck_require__(4407);
-
-  XMLElement = __nccwpck_require__(9437);
-
-  XMLRaw = __nccwpck_require__(6329);
-
-  XMLText = __nccwpck_require__(1318);
-
-  XMLProcessingInstruction = __nccwpck_require__(6939);
-
-  XMLDummy = __nccwpck_require__(3590);
-
-  XMLDTDAttList = __nccwpck_require__(1015);
-
-  XMLDTDElement = __nccwpck_require__(2421);
-
-  XMLDTDEntity = __nccwpck_require__(53);
-
-  XMLDTDNotation = __nccwpck_require__(2837);
-
-  WriterState = __nccwpck_require__(9766);
-
-  module.exports = XMLWriterBase = (function() {
-    function XMLWriterBase(options) {
-      var key, ref, value;
-      options || (options = {});
-      this.options = options;
-      ref = options.writer || {};
-      for (key in ref) {
-        if (!hasProp.call(ref, key)) continue;
-        value = ref[key];
-        this["_" + key] = this[key];
-        this[key] = value;
-      }
-    }
-
-    XMLWriterBase.prototype.filterOptions = function(options) {
-      var filteredOptions, ref, ref1, ref2, ref3, ref4, ref5, ref6;
-      options || (options = {});
-      options = assign({}, this.options, options);
-      filteredOptions = {
-        writer: this
-      };
-      filteredOptions.pretty = options.pretty || false;
-      filteredOptions.allowEmpty = options.allowEmpty || false;
-      filteredOptions.indent = (ref = options.indent) != null ? ref : '  ';
-      filteredOptions.newline = (ref1 = options.newline) != null ? ref1 : '\n';
-      filteredOptions.offset = (ref2 = options.offset) != null ? ref2 : 0;
-      filteredOptions.dontPrettyTextNodes = (ref3 = (ref4 = options.dontPrettyTextNodes) != null ? ref4 : options.dontprettytextnodes) != null ? ref3 : 0;
-      filteredOptions.spaceBeforeSlash = (ref5 = (ref6 = options.spaceBeforeSlash) != null ? ref6 : options.spacebeforeslash) != null ? ref5 : '';
-      if (filteredOptions.spaceBeforeSlash === true) {
-        filteredOptions.spaceBeforeSlash = ' ';
-      }
-      filteredOptions.suppressPrettyCount = 0;
-      filteredOptions.user = {};
-      filteredOptions.state = WriterState.None;
-      return filteredOptions;
-    };
-
-    XMLWriterBase.prototype.indent = function(node, options, level) {
-      var indentLevel;
-      if (!options.pretty || options.suppressPrettyCount) {
-        return '';
-      } else if (options.pretty) {
-        indentLevel = (level || 0) + options.offset + 1;
-        if (indentLevel > 0) {
-          return new Array(indentLevel).join(options.indent);
-        }
-      }
-      return '';
-    };
-
-    XMLWriterBase.prototype.endline = function(node, options, level) {
-      if (!options.pretty || options.suppressPrettyCount) {
-        return '';
-      } else {
-        return options.newline;
-      }
-    };
-
-    XMLWriterBase.prototype.attribute = function(att, options, level) {
-      var r;
-      this.openAttribute(att, options, level);
-      r = ' ' + att.name + '="' + att.value + '"';
-      this.closeAttribute(att, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.cdata = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level) + '<![CDATA[';
-      options.state = WriterState.InsideTag;
-      r += node.value;
-      options.state = WriterState.CloseTag;
-      r += ']]>' + this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.comment = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level) + '<!-- ';
-      options.state = WriterState.InsideTag;
-      r += node.value;
-      options.state = WriterState.CloseTag;
-      r += ' -->' + this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.declaration = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level) + '<?xml';
-      options.state = WriterState.InsideTag;
-      r += ' version="' + node.version + '"';
-      if (node.encoding != null) {
-        r += ' encoding="' + node.encoding + '"';
-      }
-      if (node.standalone != null) {
-        r += ' standalone="' + node.standalone + '"';
-      }
-      options.state = WriterState.CloseTag;
-      r += options.spaceBeforeSlash + '?>';
-      r += this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.docType = function(node, options, level) {
-      var child, i, len, r, ref;
-      level || (level = 0);
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level);
-      r += '<!DOCTYPE ' + node.root().name;
-      if (node.pubID && node.sysID) {
-        r += ' PUBLIC "' + node.pubID + '" "' + node.sysID + '"';
-      } else if (node.sysID) {
-        r += ' SYSTEM "' + node.sysID + '"';
-      }
-      if (node.children.length > 0) {
-        r += ' [';
-        r += this.endline(node, options, level);
-        options.state = WriterState.InsideTag;
-        ref = node.children;
-        for (i = 0, len = ref.length; i < len; i++) {
-          child = ref[i];
-          r += this.writeChildNode(child, options, level + 1);
-        }
-        options.state = WriterState.CloseTag;
-        r += ']';
-      }
-      options.state = WriterState.CloseTag;
-      r += options.spaceBeforeSlash + '>';
-      r += this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.element = function(node, options, level) {
-      var att, child, childNodeCount, firstChildNode, i, j, len, len1, name, prettySuppressed, r, ref, ref1, ref2;
-      level || (level = 0);
-      prettySuppressed = false;
-      r = '';
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r += this.indent(node, options, level) + '<' + node.name;
-      ref = node.attribs;
-      for (name in ref) {
-        if (!hasProp.call(ref, name)) continue;
-        att = ref[name];
-        r += this.attribute(att, options, level);
-      }
-      childNodeCount = node.children.length;
-      firstChildNode = childNodeCount === 0 ? null : node.children[0];
-      if (childNodeCount === 0 || node.children.every(function(e) {
-        return (e.type === NodeType.Text || e.type === NodeType.Raw) && e.value === '';
-      })) {
-        if (options.allowEmpty) {
-          r += '>';
-          options.state = WriterState.CloseTag;
-          r += '</' + node.name + '>' + this.endline(node, options, level);
-        } else {
-          options.state = WriterState.CloseTag;
-          r += options.spaceBeforeSlash + '/>' + this.endline(node, options, level);
-        }
-      } else if (options.pretty && childNodeCount === 1 && (firstChildNode.type === NodeType.Text || firstChildNode.type === NodeType.Raw) && (firstChildNode.value != null)) {
-        r += '>';
-        options.state = WriterState.InsideTag;
-        options.suppressPrettyCount++;
-        prettySuppressed = true;
-        r += this.writeChildNode(firstChildNode, options, level + 1);
-        options.suppressPrettyCount--;
-        prettySuppressed = false;
-        options.state = WriterState.CloseTag;
-        r += '</' + node.name + '>' + this.endline(node, options, level);
-      } else {
-        if (options.dontPrettyTextNodes) {
-          ref1 = node.children;
-          for (i = 0, len = ref1.length; i < len; i++) {
-            child = ref1[i];
-            if ((child.type === NodeType.Text || child.type === NodeType.Raw) && (child.value != null)) {
-              options.suppressPrettyCount++;
-              prettySuppressed = true;
-              break;
-            }
-          }
-        }
-        r += '>' + this.endline(node, options, level);
-        options.state = WriterState.InsideTag;
-        ref2 = node.children;
-        for (j = 0, len1 = ref2.length; j < len1; j++) {
-          child = ref2[j];
-          r += this.writeChildNode(child, options, level + 1);
-        }
-        options.state = WriterState.CloseTag;
-        r += this.indent(node, options, level) + '</' + node.name + '>';
-        if (prettySuppressed) {
-          options.suppressPrettyCount--;
-        }
-        r += this.endline(node, options, level);
-        options.state = WriterState.None;
-      }
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.writeChildNode = function(node, options, level) {
-      switch (node.type) {
-        case NodeType.CData:
-          return this.cdata(node, options, level);
-        case NodeType.Comment:
-          return this.comment(node, options, level);
-        case NodeType.Element:
-          return this.element(node, options, level);
-        case NodeType.Raw:
-          return this.raw(node, options, level);
-        case NodeType.Text:
-          return this.text(node, options, level);
-        case NodeType.ProcessingInstruction:
-          return this.processingInstruction(node, options, level);
-        case NodeType.Dummy:
-          return '';
-        case NodeType.Declaration:
-          return this.declaration(node, options, level);
-        case NodeType.DocType:
-          return this.docType(node, options, level);
-        case NodeType.AttributeDeclaration:
-          return this.dtdAttList(node, options, level);
-        case NodeType.ElementDeclaration:
-          return this.dtdElement(node, options, level);
-        case NodeType.EntityDeclaration:
-          return this.dtdEntity(node, options, level);
-        case NodeType.NotationDeclaration:
-          return this.dtdNotation(node, options, level);
-        default:
-          throw new Error("Unknown XML node type: " + node.constructor.name);
-      }
-    };
-
-    XMLWriterBase.prototype.processingInstruction = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level) + '<?';
-      options.state = WriterState.InsideTag;
-      r += node.target;
-      if (node.value) {
-        r += ' ' + node.value;
-      }
-      options.state = WriterState.CloseTag;
-      r += options.spaceBeforeSlash + '?>';
-      r += this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.raw = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level);
-      options.state = WriterState.InsideTag;
-      r += node.value;
-      options.state = WriterState.CloseTag;
-      r += this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.text = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level);
-      options.state = WriterState.InsideTag;
-      r += node.value;
-      options.state = WriterState.CloseTag;
-      r += this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.dtdAttList = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level) + '<!ATTLIST';
-      options.state = WriterState.InsideTag;
-      r += ' ' + node.elementName + ' ' + node.attributeName + ' ' + node.attributeType;
-      if (node.defaultValueType !== '#DEFAULT') {
-        r += ' ' + node.defaultValueType;
-      }
-      if (node.defaultValue) {
-        r += ' "' + node.defaultValue + '"';
-      }
-      options.state = WriterState.CloseTag;
-      r += options.spaceBeforeSlash + '>' + this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.dtdElement = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level) + '<!ELEMENT';
-      options.state = WriterState.InsideTag;
-      r += ' ' + node.name + ' ' + node.value;
-      options.state = WriterState.CloseTag;
-      r += options.spaceBeforeSlash + '>' + this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.dtdEntity = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level) + '<!ENTITY';
-      options.state = WriterState.InsideTag;
-      if (node.pe) {
-        r += ' %';
-      }
-      r += ' ' + node.name;
-      if (node.value) {
-        r += ' "' + node.value + '"';
-      } else {
-        if (node.pubID && node.sysID) {
-          r += ' PUBLIC "' + node.pubID + '" "' + node.sysID + '"';
-        } else if (node.sysID) {
-          r += ' SYSTEM "' + node.sysID + '"';
-        }
-        if (node.nData) {
-          r += ' NDATA ' + node.nData;
-        }
-      }
-      options.state = WriterState.CloseTag;
-      r += options.spaceBeforeSlash + '>' + this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.dtdNotation = function(node, options, level) {
-      var r;
-      this.openNode(node, options, level);
-      options.state = WriterState.OpenTag;
-      r = this.indent(node, options, level) + '<!NOTATION';
-      options.state = WriterState.InsideTag;
-      r += ' ' + node.name;
-      if (node.pubID && node.sysID) {
-        r += ' PUBLIC "' + node.pubID + '" "' + node.sysID + '"';
-      } else if (node.pubID) {
-        r += ' PUBLIC "' + node.pubID + '"';
-      } else if (node.sysID) {
-        r += ' SYSTEM "' + node.sysID + '"';
-      }
-      options.state = WriterState.CloseTag;
-      r += options.spaceBeforeSlash + '>' + this.endline(node, options, level);
-      options.state = WriterState.None;
-      this.closeNode(node, options, level);
-      return r;
-    };
-
-    XMLWriterBase.prototype.openNode = function(node, options, level) {};
-
-    XMLWriterBase.prototype.closeNode = function(node, options, level) {};
-
-    XMLWriterBase.prototype.openAttribute = function(att, options, level) {};
-
-    XMLWriterBase.prototype.closeAttribute = function(att, options, level) {};
-
-    return XMLWriterBase;
-
-  })();
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 2958:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-// Generated by CoffeeScript 1.12.7
-(function() {
-  var NodeType, WriterState, XMLDOMImplementation, XMLDocument, XMLDocumentCB, XMLStreamWriter, XMLStringWriter, assign, isFunction, ref;
-
-  ref = __nccwpck_require__(8229), assign = ref.assign, isFunction = ref.isFunction;
-
-  XMLDOMImplementation = __nccwpck_require__(8310);
-
-  XMLDocument = __nccwpck_require__(3730);
-
-  XMLDocumentCB = __nccwpck_require__(7356);
-
-  XMLStringWriter = __nccwpck_require__(5913);
-
-  XMLStreamWriter = __nccwpck_require__(8601);
-
-  NodeType = __nccwpck_require__(9267);
-
-  WriterState = __nccwpck_require__(9766);
-
-  module.exports.create = function(name, xmldec, doctype, options) {
-    var doc, root;
-    if (name == null) {
-      throw new Error("Root element needs a name.");
-    }
-    options = assign({}, xmldec, doctype, options);
-    doc = new XMLDocument(options);
-    root = doc.element(name);
-    if (!options.headless) {
-      doc.declaration(options);
-      if ((options.pubID != null) || (options.sysID != null)) {
-        doc.dtd(options);
-      }
-    }
-    return root;
-  };
-
-  module.exports.begin = function(options, onData, onEnd) {
-    var ref1;
-    if (isFunction(options)) {
-      ref1 = [options, onData], onData = ref1[0], onEnd = ref1[1];
-      options = {};
-    }
-    if (onData) {
-      return new XMLDocumentCB(options, onData, onEnd);
-    } else {
-      return new XMLDocument(options);
-    }
-  };
-
-  module.exports.stringWriter = function(options) {
-    return new XMLStringWriter(options);
-  };
-
-  module.exports.streamWriter = function(stream, options) {
-    return new XMLStreamWriter(stream, options);
-  };
-
-  module.exports.implementation = new XMLDOMImplementation();
-
-  module.exports.nodeType = NodeType;
-
-  module.exports.writerState = WriterState;
-
-}).call(this);
+    return ret
+  }
+}
 
 
 /***/ }),
@@ -18862,46 +8504,6 @@ module.exports.implForWrapper = function (wrapper) {
 
 module.exports = eval("require")("encoding");
 
-
-/***/ }),
-
-/***/ 132:
-/***/ ((module) => {
-
-module.exports = eval("require")("supports-color");
-
-
-/***/ }),
-
-/***/ 4589:
-/***/ ((module) => {
-
-"use strict";
-module.exports = JSON.parse('{"0":65533,"128":8364,"130":8218,"131":402,"132":8222,"133":8230,"134":8224,"135":8225,"136":710,"137":8240,"138":352,"139":8249,"140":338,"142":381,"145":8216,"146":8217,"147":8220,"148":8221,"149":8226,"150":8211,"151":8212,"152":732,"153":8482,"154":353,"155":8250,"156":339,"158":382,"159":376}');
-
-/***/ }),
-
-/***/ 4007:
-/***/ ((module) => {
-
-"use strict";
-module.exports = JSON.parse('{"Aacute":"Á","aacute":"á","Abreve":"Ă","abreve":"ă","ac":"∾","acd":"∿","acE":"∾̳","Acirc":"Â","acirc":"â","acute":"´","Acy":"А","acy":"а","AElig":"Æ","aelig":"æ","af":"⁡","Afr":"𝔄","afr":"𝔞","Agrave":"À","agrave":"à","alefsym":"ℵ","aleph":"ℵ","Alpha":"Α","alpha":"α","Amacr":"Ā","amacr":"ā","amalg":"⨿","amp":"&","AMP":"&","andand":"⩕","And":"⩓","and":"∧","andd":"⩜","andslope":"⩘","andv":"⩚","ang":"∠","ange":"⦤","angle":"∠","angmsdaa":"⦨","angmsdab":"⦩","angmsdac":"⦪","angmsdad":"⦫","angmsdae":"⦬","angmsdaf":"⦭","angmsdag":"⦮","angmsdah":"⦯","angmsd":"∡","angrt":"∟","angrtvb":"⊾","angrtvbd":"⦝","angsph":"∢","angst":"Å","angzarr":"⍼","Aogon":"Ą","aogon":"ą","Aopf":"𝔸","aopf":"𝕒","apacir":"⩯","ap":"≈","apE":"⩰","ape":"≊","apid":"≋","apos":"\'","ApplyFunction":"⁡","approx":"≈","approxeq":"≊","Aring":"Å","aring":"å","Ascr":"𝒜","ascr":"𝒶","Assign":"≔","ast":"*","asymp":"≈","asympeq":"≍","Atilde":"Ã","atilde":"ã","Auml":"Ä","auml":"ä","awconint":"∳","awint":"⨑","backcong":"≌","backepsilon":"϶","backprime":"‵","backsim":"∽","backsimeq":"⋍","Backslash":"∖","Barv":"⫧","barvee":"⊽","barwed":"⌅","Barwed":"⌆","barwedge":"⌅","bbrk":"⎵","bbrktbrk":"⎶","bcong":"≌","Bcy":"Б","bcy":"б","bdquo":"„","becaus":"∵","because":"∵","Because":"∵","bemptyv":"⦰","bepsi":"϶","bernou":"ℬ","Bernoullis":"ℬ","Beta":"Β","beta":"β","beth":"ℶ","between":"≬","Bfr":"𝔅","bfr":"𝔟","bigcap":"⋂","bigcirc":"◯","bigcup":"⋃","bigodot":"⨀","bigoplus":"⨁","bigotimes":"⨂","bigsqcup":"⨆","bigstar":"★","bigtriangledown":"▽","bigtriangleup":"△","biguplus":"⨄","bigvee":"⋁","bigwedge":"⋀","bkarow":"⤍","blacklozenge":"⧫","blacksquare":"▪","blacktriangle":"▴","blacktriangledown":"▾","blacktriangleleft":"◂","blacktriangleright":"▸","blank":"␣","blk12":"▒","blk14":"░","blk34":"▓","block":"█","bne":"=⃥","bnequiv":"≡⃥","bNot":"⫭","bnot":"⌐","Bopf":"𝔹","bopf":"𝕓","bot":"⊥","bottom":"⊥","bowtie":"⋈","boxbox":"⧉","boxdl":"┐","boxdL":"╕","boxDl":"╖","boxDL":"╗","boxdr":"┌","boxdR":"╒","boxDr":"╓","boxDR":"╔","boxh":"─","boxH":"═","boxhd":"┬","boxHd":"╤","boxhD":"╥","boxHD":"╦","boxhu":"┴","boxHu":"╧","boxhU":"╨","boxHU":"╩","boxminus":"⊟","boxplus":"⊞","boxtimes":"⊠","boxul":"┘","boxuL":"╛","boxUl":"╜","boxUL":"╝","boxur":"└","boxuR":"╘","boxUr":"╙","boxUR":"╚","boxv":"│","boxV":"║","boxvh":"┼","boxvH":"╪","boxVh":"╫","boxVH":"╬","boxvl":"┤","boxvL":"╡","boxVl":"╢","boxVL":"╣","boxvr":"├","boxvR":"╞","boxVr":"╟","boxVR":"╠","bprime":"‵","breve":"˘","Breve":"˘","brvbar":"¦","bscr":"𝒷","Bscr":"ℬ","bsemi":"⁏","bsim":"∽","bsime":"⋍","bsolb":"⧅","bsol":"\\\\","bsolhsub":"⟈","bull":"•","bullet":"•","bump":"≎","bumpE":"⪮","bumpe":"≏","Bumpeq":"≎","bumpeq":"≏","Cacute":"Ć","cacute":"ć","capand":"⩄","capbrcup":"⩉","capcap":"⩋","cap":"∩","Cap":"⋒","capcup":"⩇","capdot":"⩀","CapitalDifferentialD":"ⅅ","caps":"∩︀","caret":"⁁","caron":"ˇ","Cayleys":"ℭ","ccaps":"⩍","Ccaron":"Č","ccaron":"č","Ccedil":"Ç","ccedil":"ç","Ccirc":"Ĉ","ccirc":"ĉ","Cconint":"∰","ccups":"⩌","ccupssm":"⩐","Cdot":"Ċ","cdot":"ċ","cedil":"¸","Cedilla":"¸","cemptyv":"⦲","cent":"¢","centerdot":"·","CenterDot":"·","cfr":"𝔠","Cfr":"ℭ","CHcy":"Ч","chcy":"ч","check":"✓","checkmark":"✓","Chi":"Χ","chi":"χ","circ":"ˆ","circeq":"≗","circlearrowleft":"↺","circlearrowright":"↻","circledast":"⊛","circledcirc":"⊚","circleddash":"⊝","CircleDot":"⊙","circledR":"®","circledS":"Ⓢ","CircleMinus":"⊖","CirclePlus":"⊕","CircleTimes":"⊗","cir":"○","cirE":"⧃","cire":"≗","cirfnint":"⨐","cirmid":"⫯","cirscir":"⧂","ClockwiseContourIntegral":"∲","CloseCurlyDoubleQuote":"”","CloseCurlyQuote":"’","clubs":"♣","clubsuit":"♣","colon":":","Colon":"∷","Colone":"⩴","colone":"≔","coloneq":"≔","comma":",","commat":"@","comp":"∁","compfn":"∘","complement":"∁","complexes":"ℂ","cong":"≅","congdot":"⩭","Congruent":"≡","conint":"∮","Conint":"∯","ContourIntegral":"∮","copf":"𝕔","Copf":"ℂ","coprod":"∐","Coproduct":"∐","copy":"©","COPY":"©","copysr":"℗","CounterClockwiseContourIntegral":"∳","crarr":"↵","cross":"✗","Cross":"⨯","Cscr":"𝒞","cscr":"𝒸","csub":"⫏","csube":"⫑","csup":"⫐","csupe":"⫒","ctdot":"⋯","cudarrl":"⤸","cudarrr":"⤵","cuepr":"⋞","cuesc":"⋟","cularr":"↶","cularrp":"⤽","cupbrcap":"⩈","cupcap":"⩆","CupCap":"≍","cup":"∪","Cup":"⋓","cupcup":"⩊","cupdot":"⊍","cupor":"⩅","cups":"∪︀","curarr":"↷","curarrm":"⤼","curlyeqprec":"⋞","curlyeqsucc":"⋟","curlyvee":"⋎","curlywedge":"⋏","curren":"¤","curvearrowleft":"↶","curvearrowright":"↷","cuvee":"⋎","cuwed":"⋏","cwconint":"∲","cwint":"∱","cylcty":"⌭","dagger":"†","Dagger":"‡","daleth":"ℸ","darr":"↓","Darr":"↡","dArr":"⇓","dash":"‐","Dashv":"⫤","dashv":"⊣","dbkarow":"⤏","dblac":"˝","Dcaron":"Ď","dcaron":"ď","Dcy":"Д","dcy":"д","ddagger":"‡","ddarr":"⇊","DD":"ⅅ","dd":"ⅆ","DDotrahd":"⤑","ddotseq":"⩷","deg":"°","Del":"∇","Delta":"Δ","delta":"δ","demptyv":"⦱","dfisht":"⥿","Dfr":"𝔇","dfr":"𝔡","dHar":"⥥","dharl":"⇃","dharr":"⇂","DiacriticalAcute":"´","DiacriticalDot":"˙","DiacriticalDoubleAcute":"˝","DiacriticalGrave":"`","DiacriticalTilde":"˜","diam":"⋄","diamond":"⋄","Diamond":"⋄","diamondsuit":"♦","diams":"♦","die":"¨","DifferentialD":"ⅆ","digamma":"ϝ","disin":"⋲","div":"÷","divide":"÷","divideontimes":"⋇","divonx":"⋇","DJcy":"Ђ","djcy":"ђ","dlcorn":"⌞","dlcrop":"⌍","dollar":"$","Dopf":"𝔻","dopf":"𝕕","Dot":"¨","dot":"˙","DotDot":"⃜","doteq":"≐","doteqdot":"≑","DotEqual":"≐","dotminus":"∸","dotplus":"∔","dotsquare":"⊡","doublebarwedge":"⌆","DoubleContourIntegral":"∯","DoubleDot":"¨","DoubleDownArrow":"⇓","DoubleLeftArrow":"⇐","DoubleLeftRightArrow":"⇔","DoubleLeftTee":"⫤","DoubleLongLeftArrow":"⟸","DoubleLongLeftRightArrow":"⟺","DoubleLongRightArrow":"⟹","DoubleRightArrow":"⇒","DoubleRightTee":"⊨","DoubleUpArrow":"⇑","DoubleUpDownArrow":"⇕","DoubleVerticalBar":"∥","DownArrowBar":"⤓","downarrow":"↓","DownArrow":"↓","Downarrow":"⇓","DownArrowUpArrow":"⇵","DownBreve":"̑","downdownarrows":"⇊","downharpoonleft":"⇃","downharpoonright":"⇂","DownLeftRightVector":"⥐","DownLeftTeeVector":"⥞","DownLeftVectorBar":"⥖","DownLeftVector":"↽","DownRightTeeVector":"⥟","DownRightVectorBar":"⥗","DownRightVector":"⇁","DownTeeArrow":"↧","DownTee":"⊤","drbkarow":"⤐","drcorn":"⌟","drcrop":"⌌","Dscr":"𝒟","dscr":"𝒹","DScy":"Ѕ","dscy":"ѕ","dsol":"⧶","Dstrok":"Đ","dstrok":"đ","dtdot":"⋱","dtri":"▿","dtrif":"▾","duarr":"⇵","duhar":"⥯","dwangle":"⦦","DZcy":"Џ","dzcy":"џ","dzigrarr":"⟿","Eacute":"É","eacute":"é","easter":"⩮","Ecaron":"Ě","ecaron":"ě","Ecirc":"Ê","ecirc":"ê","ecir":"≖","ecolon":"≕","Ecy":"Э","ecy":"э","eDDot":"⩷","Edot":"Ė","edot":"ė","eDot":"≑","ee":"ⅇ","efDot":"≒","Efr":"𝔈","efr":"𝔢","eg":"⪚","Egrave":"È","egrave":"è","egs":"⪖","egsdot":"⪘","el":"⪙","Element":"∈","elinters":"⏧","ell":"ℓ","els":"⪕","elsdot":"⪗","Emacr":"Ē","emacr":"ē","empty":"∅","emptyset":"∅","EmptySmallSquare":"◻","emptyv":"∅","EmptyVerySmallSquare":"▫","emsp13":" ","emsp14":" ","emsp":" ","ENG":"Ŋ","eng":"ŋ","ensp":" ","Eogon":"Ę","eogon":"ę","Eopf":"𝔼","eopf":"𝕖","epar":"⋕","eparsl":"⧣","eplus":"⩱","epsi":"ε","Epsilon":"Ε","epsilon":"ε","epsiv":"ϵ","eqcirc":"≖","eqcolon":"≕","eqsim":"≂","eqslantgtr":"⪖","eqslantless":"⪕","Equal":"⩵","equals":"=","EqualTilde":"≂","equest":"≟","Equilibrium":"⇌","equiv":"≡","equivDD":"⩸","eqvparsl":"⧥","erarr":"⥱","erDot":"≓","escr":"ℯ","Escr":"ℰ","esdot":"≐","Esim":"⩳","esim":"≂","Eta":"Η","eta":"η","ETH":"Ð","eth":"ð","Euml":"Ë","euml":"ë","euro":"€","excl":"!","exist":"∃","Exists":"∃","expectation":"ℰ","exponentiale":"ⅇ","ExponentialE":"ⅇ","fallingdotseq":"≒","Fcy":"Ф","fcy":"ф","female":"♀","ffilig":"ﬃ","fflig":"ﬀ","ffllig":"ﬄ","Ffr":"𝔉","ffr":"𝔣","filig":"ﬁ","FilledSmallSquare":"◼","FilledVerySmallSquare":"▪","fjlig":"fj","flat":"♭","fllig":"ﬂ","fltns":"▱","fnof":"ƒ","Fopf":"𝔽","fopf":"𝕗","forall":"∀","ForAll":"∀","fork":"⋔","forkv":"⫙","Fouriertrf":"ℱ","fpartint":"⨍","frac12":"½","frac13":"⅓","frac14":"¼","frac15":"⅕","frac16":"⅙","frac18":"⅛","frac23":"⅔","frac25":"⅖","frac34":"¾","frac35":"⅗","frac38":"⅜","frac45":"⅘","frac56":"⅚","frac58":"⅝","frac78":"⅞","frasl":"⁄","frown":"⌢","fscr":"𝒻","Fscr":"ℱ","gacute":"ǵ","Gamma":"Γ","gamma":"γ","Gammad":"Ϝ","gammad":"ϝ","gap":"⪆","Gbreve":"Ğ","gbreve":"ğ","Gcedil":"Ģ","Gcirc":"Ĝ","gcirc":"ĝ","Gcy":"Г","gcy":"г","Gdot":"Ġ","gdot":"ġ","ge":"≥","gE":"≧","gEl":"⪌","gel":"⋛","geq":"≥","geqq":"≧","geqslant":"⩾","gescc":"⪩","ges":"⩾","gesdot":"⪀","gesdoto":"⪂","gesdotol":"⪄","gesl":"⋛︀","gesles":"⪔","Gfr":"𝔊","gfr":"𝔤","gg":"≫","Gg":"⋙","ggg":"⋙","gimel":"ℷ","GJcy":"Ѓ","gjcy":"ѓ","gla":"⪥","gl":"≷","glE":"⪒","glj":"⪤","gnap":"⪊","gnapprox":"⪊","gne":"⪈","gnE":"≩","gneq":"⪈","gneqq":"≩","gnsim":"⋧","Gopf":"𝔾","gopf":"𝕘","grave":"`","GreaterEqual":"≥","GreaterEqualLess":"⋛","GreaterFullEqual":"≧","GreaterGreater":"⪢","GreaterLess":"≷","GreaterSlantEqual":"⩾","GreaterTilde":"≳","Gscr":"𝒢","gscr":"ℊ","gsim":"≳","gsime":"⪎","gsiml":"⪐","gtcc":"⪧","gtcir":"⩺","gt":">","GT":">","Gt":"≫","gtdot":"⋗","gtlPar":"⦕","gtquest":"⩼","gtrapprox":"⪆","gtrarr":"⥸","gtrdot":"⋗","gtreqless":"⋛","gtreqqless":"⪌","gtrless":"≷","gtrsim":"≳","gvertneqq":"≩︀","gvnE":"≩︀","Hacek":"ˇ","hairsp":" ","half":"½","hamilt":"ℋ","HARDcy":"Ъ","hardcy":"ъ","harrcir":"⥈","harr":"↔","hArr":"⇔","harrw":"↭","Hat":"^","hbar":"ℏ","Hcirc":"Ĥ","hcirc":"ĥ","hearts":"♥","heartsuit":"♥","hellip":"…","hercon":"⊹","hfr":"𝔥","Hfr":"ℌ","HilbertSpace":"ℋ","hksearow":"⤥","hkswarow":"⤦","hoarr":"⇿","homtht":"∻","hookleftarrow":"↩","hookrightarrow":"↪","hopf":"𝕙","Hopf":"ℍ","horbar":"―","HorizontalLine":"─","hscr":"𝒽","Hscr":"ℋ","hslash":"ℏ","Hstrok":"Ħ","hstrok":"ħ","HumpDownHump":"≎","HumpEqual":"≏","hybull":"⁃","hyphen":"‐","Iacute":"Í","iacute":"í","ic":"⁣","Icirc":"Î","icirc":"î","Icy":"И","icy":"и","Idot":"İ","IEcy":"Е","iecy":"е","iexcl":"¡","iff":"⇔","ifr":"𝔦","Ifr":"ℑ","Igrave":"Ì","igrave":"ì","ii":"ⅈ","iiiint":"⨌","iiint":"∭","iinfin":"⧜","iiota":"℩","IJlig":"Ĳ","ijlig":"ĳ","Imacr":"Ī","imacr":"ī","image":"ℑ","ImaginaryI":"ⅈ","imagline":"ℐ","imagpart":"ℑ","imath":"ı","Im":"ℑ","imof":"⊷","imped":"Ƶ","Implies":"⇒","incare":"℅","in":"∈","infin":"∞","infintie":"⧝","inodot":"ı","intcal":"⊺","int":"∫","Int":"∬","integers":"ℤ","Integral":"∫","intercal":"⊺","Intersection":"⋂","intlarhk":"⨗","intprod":"⨼","InvisibleComma":"⁣","InvisibleTimes":"⁢","IOcy":"Ё","iocy":"ё","Iogon":"Į","iogon":"į","Iopf":"𝕀","iopf":"𝕚","Iota":"Ι","iota":"ι","iprod":"⨼","iquest":"¿","iscr":"𝒾","Iscr":"ℐ","isin":"∈","isindot":"⋵","isinE":"⋹","isins":"⋴","isinsv":"⋳","isinv":"∈","it":"⁢","Itilde":"Ĩ","itilde":"ĩ","Iukcy":"І","iukcy":"і","Iuml":"Ï","iuml":"ï","Jcirc":"Ĵ","jcirc":"ĵ","Jcy":"Й","jcy":"й","Jfr":"𝔍","jfr":"𝔧","jmath":"ȷ","Jopf":"𝕁","jopf":"𝕛","Jscr":"𝒥","jscr":"𝒿","Jsercy":"Ј","jsercy":"ј","Jukcy":"Є","jukcy":"є","Kappa":"Κ","kappa":"κ","kappav":"ϰ","Kcedil":"Ķ","kcedil":"ķ","Kcy":"К","kcy":"к","Kfr":"𝔎","kfr":"𝔨","kgreen":"ĸ","KHcy":"Х","khcy":"х","KJcy":"Ќ","kjcy":"ќ","Kopf":"𝕂","kopf":"𝕜","Kscr":"𝒦","kscr":"𝓀","lAarr":"⇚","Lacute":"Ĺ","lacute":"ĺ","laemptyv":"⦴","lagran":"ℒ","Lambda":"Λ","lambda":"λ","lang":"⟨","Lang":"⟪","langd":"⦑","langle":"⟨","lap":"⪅","Laplacetrf":"ℒ","laquo":"«","larrb":"⇤","larrbfs":"⤟","larr":"←","Larr":"↞","lArr":"⇐","larrfs":"⤝","larrhk":"↩","larrlp":"↫","larrpl":"⤹","larrsim":"⥳","larrtl":"↢","latail":"⤙","lAtail":"⤛","lat":"⪫","late":"⪭","lates":"⪭︀","lbarr":"⤌","lBarr":"⤎","lbbrk":"❲","lbrace":"{","lbrack":"[","lbrke":"⦋","lbrksld":"⦏","lbrkslu":"⦍","Lcaron":"Ľ","lcaron":"ľ","Lcedil":"Ļ","lcedil":"ļ","lceil":"⌈","lcub":"{","Lcy":"Л","lcy":"л","ldca":"⤶","ldquo":"“","ldquor":"„","ldrdhar":"⥧","ldrushar":"⥋","ldsh":"↲","le":"≤","lE":"≦","LeftAngleBracket":"⟨","LeftArrowBar":"⇤","leftarrow":"←","LeftArrow":"←","Leftarrow":"⇐","LeftArrowRightArrow":"⇆","leftarrowtail":"↢","LeftCeiling":"⌈","LeftDoubleBracket":"⟦","LeftDownTeeVector":"⥡","LeftDownVectorBar":"⥙","LeftDownVector":"⇃","LeftFloor":"⌊","leftharpoondown":"↽","leftharpoonup":"↼","leftleftarrows":"⇇","leftrightarrow":"↔","LeftRightArrow":"↔","Leftrightarrow":"⇔","leftrightarrows":"⇆","leftrightharpoons":"⇋","leftrightsquigarrow":"↭","LeftRightVector":"⥎","LeftTeeArrow":"↤","LeftTee":"⊣","LeftTeeVector":"⥚","leftthreetimes":"⋋","LeftTriangleBar":"⧏","LeftTriangle":"⊲","LeftTriangleEqual":"⊴","LeftUpDownVector":"⥑","LeftUpTeeVector":"⥠","LeftUpVectorBar":"⥘","LeftUpVector":"↿","LeftVectorBar":"⥒","LeftVector":"↼","lEg":"⪋","leg":"⋚","leq":"≤","leqq":"≦","leqslant":"⩽","lescc":"⪨","les":"⩽","lesdot":"⩿","lesdoto":"⪁","lesdotor":"⪃","lesg":"⋚︀","lesges":"⪓","lessapprox":"⪅","lessdot":"⋖","lesseqgtr":"⋚","lesseqqgtr":"⪋","LessEqualGreater":"⋚","LessFullEqual":"≦","LessGreater":"≶","lessgtr":"≶","LessLess":"⪡","lesssim":"≲","LessSlantEqual":"⩽","LessTilde":"≲","lfisht":"⥼","lfloor":"⌊","Lfr":"𝔏","lfr":"𝔩","lg":"≶","lgE":"⪑","lHar":"⥢","lhard":"↽","lharu":"↼","lharul":"⥪","lhblk":"▄","LJcy":"Љ","ljcy":"љ","llarr":"⇇","ll":"≪","Ll":"⋘","llcorner":"⌞","Lleftarrow":"⇚","llhard":"⥫","lltri":"◺","Lmidot":"Ŀ","lmidot":"ŀ","lmoustache":"⎰","lmoust":"⎰","lnap":"⪉","lnapprox":"⪉","lne":"⪇","lnE":"≨","lneq":"⪇","lneqq":"≨","lnsim":"⋦","loang":"⟬","loarr":"⇽","lobrk":"⟦","longleftarrow":"⟵","LongLeftArrow":"⟵","Longleftarrow":"⟸","longleftrightarrow":"⟷","LongLeftRightArrow":"⟷","Longleftrightarrow":"⟺","longmapsto":"⟼","longrightarrow":"⟶","LongRightArrow":"⟶","Longrightarrow":"⟹","looparrowleft":"↫","looparrowright":"↬","lopar":"⦅","Lopf":"𝕃","lopf":"𝕝","loplus":"⨭","lotimes":"⨴","lowast":"∗","lowbar":"_","LowerLeftArrow":"↙","LowerRightArrow":"↘","loz":"◊","lozenge":"◊","lozf":"⧫","lpar":"(","lparlt":"⦓","lrarr":"⇆","lrcorner":"⌟","lrhar":"⇋","lrhard":"⥭","lrm":"‎","lrtri":"⊿","lsaquo":"‹","lscr":"𝓁","Lscr":"ℒ","lsh":"↰","Lsh":"↰","lsim":"≲","lsime":"⪍","lsimg":"⪏","lsqb":"[","lsquo":"‘","lsquor":"‚","Lstrok":"Ł","lstrok":"ł","ltcc":"⪦","ltcir":"⩹","lt":"<","LT":"<","Lt":"≪","ltdot":"⋖","lthree":"⋋","ltimes":"⋉","ltlarr":"⥶","ltquest":"⩻","ltri":"◃","ltrie":"⊴","ltrif":"◂","ltrPar":"⦖","lurdshar":"⥊","luruhar":"⥦","lvertneqq":"≨︀","lvnE":"≨︀","macr":"¯","male":"♂","malt":"✠","maltese":"✠","Map":"⤅","map":"↦","mapsto":"↦","mapstodown":"↧","mapstoleft":"↤","mapstoup":"↥","marker":"▮","mcomma":"⨩","Mcy":"М","mcy":"м","mdash":"—","mDDot":"∺","measuredangle":"∡","MediumSpace":" ","Mellintrf":"ℳ","Mfr":"𝔐","mfr":"𝔪","mho":"℧","micro":"µ","midast":"*","midcir":"⫰","mid":"∣","middot":"·","minusb":"⊟","minus":"−","minusd":"∸","minusdu":"⨪","MinusPlus":"∓","mlcp":"⫛","mldr":"…","mnplus":"∓","models":"⊧","Mopf":"𝕄","mopf":"𝕞","mp":"∓","mscr":"𝓂","Mscr":"ℳ","mstpos":"∾","Mu":"Μ","mu":"μ","multimap":"⊸","mumap":"⊸","nabla":"∇","Nacute":"Ń","nacute":"ń","nang":"∠⃒","nap":"≉","napE":"⩰̸","napid":"≋̸","napos":"ŉ","napprox":"≉","natural":"♮","naturals":"ℕ","natur":"♮","nbsp":" ","nbump":"≎̸","nbumpe":"≏̸","ncap":"⩃","Ncaron":"Ň","ncaron":"ň","Ncedil":"Ņ","ncedil":"ņ","ncong":"≇","ncongdot":"⩭̸","ncup":"⩂","Ncy":"Н","ncy":"н","ndash":"–","nearhk":"⤤","nearr":"↗","neArr":"⇗","nearrow":"↗","ne":"≠","nedot":"≐̸","NegativeMediumSpace":"​","NegativeThickSpace":"​","NegativeThinSpace":"​","NegativeVeryThinSpace":"​","nequiv":"≢","nesear":"⤨","nesim":"≂̸","NestedGreaterGreater":"≫","NestedLessLess":"≪","NewLine":"\\n","nexist":"∄","nexists":"∄","Nfr":"𝔑","nfr":"𝔫","ngE":"≧̸","nge":"≱","ngeq":"≱","ngeqq":"≧̸","ngeqslant":"⩾̸","nges":"⩾̸","nGg":"⋙̸","ngsim":"≵","nGt":"≫⃒","ngt":"≯","ngtr":"≯","nGtv":"≫̸","nharr":"↮","nhArr":"⇎","nhpar":"⫲","ni":"∋","nis":"⋼","nisd":"⋺","niv":"∋","NJcy":"Њ","njcy":"њ","nlarr":"↚","nlArr":"⇍","nldr":"‥","nlE":"≦̸","nle":"≰","nleftarrow":"↚","nLeftarrow":"⇍","nleftrightarrow":"↮","nLeftrightarrow":"⇎","nleq":"≰","nleqq":"≦̸","nleqslant":"⩽̸","nles":"⩽̸","nless":"≮","nLl":"⋘̸","nlsim":"≴","nLt":"≪⃒","nlt":"≮","nltri":"⋪","nltrie":"⋬","nLtv":"≪̸","nmid":"∤","NoBreak":"⁠","NonBreakingSpace":" ","nopf":"𝕟","Nopf":"ℕ","Not":"⫬","not":"¬","NotCongruent":"≢","NotCupCap":"≭","NotDoubleVerticalBar":"∦","NotElement":"∉","NotEqual":"≠","NotEqualTilde":"≂̸","NotExists":"∄","NotGreater":"≯","NotGreaterEqual":"≱","NotGreaterFullEqual":"≧̸","NotGreaterGreater":"≫̸","NotGreaterLess":"≹","NotGreaterSlantEqual":"⩾̸","NotGreaterTilde":"≵","NotHumpDownHump":"≎̸","NotHumpEqual":"≏̸","notin":"∉","notindot":"⋵̸","notinE":"⋹̸","notinva":"∉","notinvb":"⋷","notinvc":"⋶","NotLeftTriangleBar":"⧏̸","NotLeftTriangle":"⋪","NotLeftTriangleEqual":"⋬","NotLess":"≮","NotLessEqual":"≰","NotLessGreater":"≸","NotLessLess":"≪̸","NotLessSlantEqual":"⩽̸","NotLessTilde":"≴","NotNestedGreaterGreater":"⪢̸","NotNestedLessLess":"⪡̸","notni":"∌","notniva":"∌","notnivb":"⋾","notnivc":"⋽","NotPrecedes":"⊀","NotPrecedesEqual":"⪯̸","NotPrecedesSlantEqual":"⋠","NotReverseElement":"∌","NotRightTriangleBar":"⧐̸","NotRightTriangle":"⋫","NotRightTriangleEqual":"⋭","NotSquareSubset":"⊏̸","NotSquareSubsetEqual":"⋢","NotSquareSuperset":"⊐̸","NotSquareSupersetEqual":"⋣","NotSubset":"⊂⃒","NotSubsetEqual":"⊈","NotSucceeds":"⊁","NotSucceedsEqual":"⪰̸","NotSucceedsSlantEqual":"⋡","NotSucceedsTilde":"≿̸","NotSuperset":"⊃⃒","NotSupersetEqual":"⊉","NotTilde":"≁","NotTildeEqual":"≄","NotTildeFullEqual":"≇","NotTildeTilde":"≉","NotVerticalBar":"∤","nparallel":"∦","npar":"∦","nparsl":"⫽⃥","npart":"∂̸","npolint":"⨔","npr":"⊀","nprcue":"⋠","nprec":"⊀","npreceq":"⪯̸","npre":"⪯̸","nrarrc":"⤳̸","nrarr":"↛","nrArr":"⇏","nrarrw":"↝̸","nrightarrow":"↛","nRightarrow":"⇏","nrtri":"⋫","nrtrie":"⋭","nsc":"⊁","nsccue":"⋡","nsce":"⪰̸","Nscr":"𝒩","nscr":"𝓃","nshortmid":"∤","nshortparallel":"∦","nsim":"≁","nsime":"≄","nsimeq":"≄","nsmid":"∤","nspar":"∦","nsqsube":"⋢","nsqsupe":"⋣","nsub":"⊄","nsubE":"⫅̸","nsube":"⊈","nsubset":"⊂⃒","nsubseteq":"⊈","nsubseteqq":"⫅̸","nsucc":"⊁","nsucceq":"⪰̸","nsup":"⊅","nsupE":"⫆̸","nsupe":"⊉","nsupset":"⊃⃒","nsupseteq":"⊉","nsupseteqq":"⫆̸","ntgl":"≹","Ntilde":"Ñ","ntilde":"ñ","ntlg":"≸","ntriangleleft":"⋪","ntrianglelefteq":"⋬","ntriangleright":"⋫","ntrianglerighteq":"⋭","Nu":"Ν","nu":"ν","num":"#","numero":"№","numsp":" ","nvap":"≍⃒","nvdash":"⊬","nvDash":"⊭","nVdash":"⊮","nVDash":"⊯","nvge":"≥⃒","nvgt":">⃒","nvHarr":"⤄","nvinfin":"⧞","nvlArr":"⤂","nvle":"≤⃒","nvlt":"<⃒","nvltrie":"⊴⃒","nvrArr":"⤃","nvrtrie":"⊵⃒","nvsim":"∼⃒","nwarhk":"⤣","nwarr":"↖","nwArr":"⇖","nwarrow":"↖","nwnear":"⤧","Oacute":"Ó","oacute":"ó","oast":"⊛","Ocirc":"Ô","ocirc":"ô","ocir":"⊚","Ocy":"О","ocy":"о","odash":"⊝","Odblac":"Ő","odblac":"ő","odiv":"⨸","odot":"⊙","odsold":"⦼","OElig":"Œ","oelig":"œ","ofcir":"⦿","Ofr":"𝔒","ofr":"𝔬","ogon":"˛","Ograve":"Ò","ograve":"ò","ogt":"⧁","ohbar":"⦵","ohm":"Ω","oint":"∮","olarr":"↺","olcir":"⦾","olcross":"⦻","oline":"‾","olt":"⧀","Omacr":"Ō","omacr":"ō","Omega":"Ω","omega":"ω","Omicron":"Ο","omicron":"ο","omid":"⦶","ominus":"⊖","Oopf":"𝕆","oopf":"𝕠","opar":"⦷","OpenCurlyDoubleQuote":"“","OpenCurlyQuote":"‘","operp":"⦹","oplus":"⊕","orarr":"↻","Or":"⩔","or":"∨","ord":"⩝","order":"ℴ","orderof":"ℴ","ordf":"ª","ordm":"º","origof":"⊶","oror":"⩖","orslope":"⩗","orv":"⩛","oS":"Ⓢ","Oscr":"𝒪","oscr":"ℴ","Oslash":"Ø","oslash":"ø","osol":"⊘","Otilde":"Õ","otilde":"õ","otimesas":"⨶","Otimes":"⨷","otimes":"⊗","Ouml":"Ö","ouml":"ö","ovbar":"⌽","OverBar":"‾","OverBrace":"⏞","OverBracket":"⎴","OverParenthesis":"⏜","para":"¶","parallel":"∥","par":"∥","parsim":"⫳","parsl":"⫽","part":"∂","PartialD":"∂","Pcy":"П","pcy":"п","percnt":"%","period":".","permil":"‰","perp":"⊥","pertenk":"‱","Pfr":"𝔓","pfr":"𝔭","Phi":"Φ","phi":"φ","phiv":"ϕ","phmmat":"ℳ","phone":"☎","Pi":"Π","pi":"π","pitchfork":"⋔","piv":"ϖ","planck":"ℏ","planckh":"ℎ","plankv":"ℏ","plusacir":"⨣","plusb":"⊞","pluscir":"⨢","plus":"+","plusdo":"∔","plusdu":"⨥","pluse":"⩲","PlusMinus":"±","plusmn":"±","plussim":"⨦","plustwo":"⨧","pm":"±","Poincareplane":"ℌ","pointint":"⨕","popf":"𝕡","Popf":"ℙ","pound":"£","prap":"⪷","Pr":"⪻","pr":"≺","prcue":"≼","precapprox":"⪷","prec":"≺","preccurlyeq":"≼","Precedes":"≺","PrecedesEqual":"⪯","PrecedesSlantEqual":"≼","PrecedesTilde":"≾","preceq":"⪯","precnapprox":"⪹","precneqq":"⪵","precnsim":"⋨","pre":"⪯","prE":"⪳","precsim":"≾","prime":"′","Prime":"″","primes":"ℙ","prnap":"⪹","prnE":"⪵","prnsim":"⋨","prod":"∏","Product":"∏","profalar":"⌮","profline":"⌒","profsurf":"⌓","prop":"∝","Proportional":"∝","Proportion":"∷","propto":"∝","prsim":"≾","prurel":"⊰","Pscr":"𝒫","pscr":"𝓅","Psi":"Ψ","psi":"ψ","puncsp":" ","Qfr":"𝔔","qfr":"𝔮","qint":"⨌","qopf":"𝕢","Qopf":"ℚ","qprime":"⁗","Qscr":"𝒬","qscr":"𝓆","quaternions":"ℍ","quatint":"⨖","quest":"?","questeq":"≟","quot":"\\"","QUOT":"\\"","rAarr":"⇛","race":"∽̱","Racute":"Ŕ","racute":"ŕ","radic":"√","raemptyv":"⦳","rang":"⟩","Rang":"⟫","rangd":"⦒","range":"⦥","rangle":"⟩","raquo":"»","rarrap":"⥵","rarrb":"⇥","rarrbfs":"⤠","rarrc":"⤳","rarr":"→","Rarr":"↠","rArr":"⇒","rarrfs":"⤞","rarrhk":"↪","rarrlp":"↬","rarrpl":"⥅","rarrsim":"⥴","Rarrtl":"⤖","rarrtl":"↣","rarrw":"↝","ratail":"⤚","rAtail":"⤜","ratio":"∶","rationals":"ℚ","rbarr":"⤍","rBarr":"⤏","RBarr":"⤐","rbbrk":"❳","rbrace":"}","rbrack":"]","rbrke":"⦌","rbrksld":"⦎","rbrkslu":"⦐","Rcaron":"Ř","rcaron":"ř","Rcedil":"Ŗ","rcedil":"ŗ","rceil":"⌉","rcub":"}","Rcy":"Р","rcy":"р","rdca":"⤷","rdldhar":"⥩","rdquo":"”","rdquor":"”","rdsh":"↳","real":"ℜ","realine":"ℛ","realpart":"ℜ","reals":"ℝ","Re":"ℜ","rect":"▭","reg":"®","REG":"®","ReverseElement":"∋","ReverseEquilibrium":"⇋","ReverseUpEquilibrium":"⥯","rfisht":"⥽","rfloor":"⌋","rfr":"𝔯","Rfr":"ℜ","rHar":"⥤","rhard":"⇁","rharu":"⇀","rharul":"⥬","Rho":"Ρ","rho":"ρ","rhov":"ϱ","RightAngleBracket":"⟩","RightArrowBar":"⇥","rightarrow":"→","RightArrow":"→","Rightarrow":"⇒","RightArrowLeftArrow":"⇄","rightarrowtail":"↣","RightCeiling":"⌉","RightDoubleBracket":"⟧","RightDownTeeVector":"⥝","RightDownVectorBar":"⥕","RightDownVector":"⇂","RightFloor":"⌋","rightharpoondown":"⇁","rightharpoonup":"⇀","rightleftarrows":"⇄","rightleftharpoons":"⇌","rightrightarrows":"⇉","rightsquigarrow":"↝","RightTeeArrow":"↦","RightTee":"⊢","RightTeeVector":"⥛","rightthreetimes":"⋌","RightTriangleBar":"⧐","RightTriangle":"⊳","RightTriangleEqual":"⊵","RightUpDownVector":"⥏","RightUpTeeVector":"⥜","RightUpVectorBar":"⥔","RightUpVector":"↾","RightVectorBar":"⥓","RightVector":"⇀","ring":"˚","risingdotseq":"≓","rlarr":"⇄","rlhar":"⇌","rlm":"‏","rmoustache":"⎱","rmoust":"⎱","rnmid":"⫮","roang":"⟭","roarr":"⇾","robrk":"⟧","ropar":"⦆","ropf":"𝕣","Ropf":"ℝ","roplus":"⨮","rotimes":"⨵","RoundImplies":"⥰","rpar":")","rpargt":"⦔","rppolint":"⨒","rrarr":"⇉","Rrightarrow":"⇛","rsaquo":"›","rscr":"𝓇","Rscr":"ℛ","rsh":"↱","Rsh":"↱","rsqb":"]","rsquo":"’","rsquor":"’","rthree":"⋌","rtimes":"⋊","rtri":"▹","rtrie":"⊵","rtrif":"▸","rtriltri":"⧎","RuleDelayed":"⧴","ruluhar":"⥨","rx":"℞","Sacute":"Ś","sacute":"ś","sbquo":"‚","scap":"⪸","Scaron":"Š","scaron":"š","Sc":"⪼","sc":"≻","sccue":"≽","sce":"⪰","scE":"⪴","Scedil":"Ş","scedil":"ş","Scirc":"Ŝ","scirc":"ŝ","scnap":"⪺","scnE":"⪶","scnsim":"⋩","scpolint":"⨓","scsim":"≿","Scy":"С","scy":"с","sdotb":"⊡","sdot":"⋅","sdote":"⩦","searhk":"⤥","searr":"↘","seArr":"⇘","searrow":"↘","sect":"§","semi":";","seswar":"⤩","setminus":"∖","setmn":"∖","sext":"✶","Sfr":"𝔖","sfr":"𝔰","sfrown":"⌢","sharp":"♯","SHCHcy":"Щ","shchcy":"щ","SHcy":"Ш","shcy":"ш","ShortDownArrow":"↓","ShortLeftArrow":"←","shortmid":"∣","shortparallel":"∥","ShortRightArrow":"→","ShortUpArrow":"↑","shy":"­","Sigma":"Σ","sigma":"σ","sigmaf":"ς","sigmav":"ς","sim":"∼","simdot":"⩪","sime":"≃","simeq":"≃","simg":"⪞","simgE":"⪠","siml":"⪝","simlE":"⪟","simne":"≆","simplus":"⨤","simrarr":"⥲","slarr":"←","SmallCircle":"∘","smallsetminus":"∖","smashp":"⨳","smeparsl":"⧤","smid":"∣","smile":"⌣","smt":"⪪","smte":"⪬","smtes":"⪬︀","SOFTcy":"Ь","softcy":"ь","solbar":"⌿","solb":"⧄","sol":"/","Sopf":"𝕊","sopf":"𝕤","spades":"♠","spadesuit":"♠","spar":"∥","sqcap":"⊓","sqcaps":"⊓︀","sqcup":"⊔","sqcups":"⊔︀","Sqrt":"√","sqsub":"⊏","sqsube":"⊑","sqsubset":"⊏","sqsubseteq":"⊑","sqsup":"⊐","sqsupe":"⊒","sqsupset":"⊐","sqsupseteq":"⊒","square":"□","Square":"□","SquareIntersection":"⊓","SquareSubset":"⊏","SquareSubsetEqual":"⊑","SquareSuperset":"⊐","SquareSupersetEqual":"⊒","SquareUnion":"⊔","squarf":"▪","squ":"□","squf":"▪","srarr":"→","Sscr":"𝒮","sscr":"𝓈","ssetmn":"∖","ssmile":"⌣","sstarf":"⋆","Star":"⋆","star":"☆","starf":"★","straightepsilon":"ϵ","straightphi":"ϕ","strns":"¯","sub":"⊂","Sub":"⋐","subdot":"⪽","subE":"⫅","sube":"⊆","subedot":"⫃","submult":"⫁","subnE":"⫋","subne":"⊊","subplus":"⪿","subrarr":"⥹","subset":"⊂","Subset":"⋐","subseteq":"⊆","subseteqq":"⫅","SubsetEqual":"⊆","subsetneq":"⊊","subsetneqq":"⫋","subsim":"⫇","subsub":"⫕","subsup":"⫓","succapprox":"⪸","succ":"≻","succcurlyeq":"≽","Succeeds":"≻","SucceedsEqual":"⪰","SucceedsSlantEqual":"≽","SucceedsTilde":"≿","succeq":"⪰","succnapprox":"⪺","succneqq":"⪶","succnsim":"⋩","succsim":"≿","SuchThat":"∋","sum":"∑","Sum":"∑","sung":"♪","sup1":"¹","sup2":"²","sup3":"³","sup":"⊃","Sup":"⋑","supdot":"⪾","supdsub":"⫘","supE":"⫆","supe":"⊇","supedot":"⫄","Superset":"⊃","SupersetEqual":"⊇","suphsol":"⟉","suphsub":"⫗","suplarr":"⥻","supmult":"⫂","supnE":"⫌","supne":"⊋","supplus":"⫀","supset":"⊃","Supset":"⋑","supseteq":"⊇","supseteqq":"⫆","supsetneq":"⊋","supsetneqq":"⫌","supsim":"⫈","supsub":"⫔","supsup":"⫖","swarhk":"⤦","swarr":"↙","swArr":"⇙","swarrow":"↙","swnwar":"⤪","szlig":"ß","Tab":"\\t","target":"⌖","Tau":"Τ","tau":"τ","tbrk":"⎴","Tcaron":"Ť","tcaron":"ť","Tcedil":"Ţ","tcedil":"ţ","Tcy":"Т","tcy":"т","tdot":"⃛","telrec":"⌕","Tfr":"𝔗","tfr":"𝔱","there4":"∴","therefore":"∴","Therefore":"∴","Theta":"Θ","theta":"θ","thetasym":"ϑ","thetav":"ϑ","thickapprox":"≈","thicksim":"∼","ThickSpace":"  ","ThinSpace":" ","thinsp":" ","thkap":"≈","thksim":"∼","THORN":"Þ","thorn":"þ","tilde":"˜","Tilde":"∼","TildeEqual":"≃","TildeFullEqual":"≅","TildeTilde":"≈","timesbar":"⨱","timesb":"⊠","times":"×","timesd":"⨰","tint":"∭","toea":"⤨","topbot":"⌶","topcir":"⫱","top":"⊤","Topf":"𝕋","topf":"𝕥","topfork":"⫚","tosa":"⤩","tprime":"‴","trade":"™","TRADE":"™","triangle":"▵","triangledown":"▿","triangleleft":"◃","trianglelefteq":"⊴","triangleq":"≜","triangleright":"▹","trianglerighteq":"⊵","tridot":"◬","trie":"≜","triminus":"⨺","TripleDot":"⃛","triplus":"⨹","trisb":"⧍","tritime":"⨻","trpezium":"⏢","Tscr":"𝒯","tscr":"𝓉","TScy":"Ц","tscy":"ц","TSHcy":"Ћ","tshcy":"ћ","Tstrok":"Ŧ","tstrok":"ŧ","twixt":"≬","twoheadleftarrow":"↞","twoheadrightarrow":"↠","Uacute":"Ú","uacute":"ú","uarr":"↑","Uarr":"↟","uArr":"⇑","Uarrocir":"⥉","Ubrcy":"Ў","ubrcy":"ў","Ubreve":"Ŭ","ubreve":"ŭ","Ucirc":"Û","ucirc":"û","Ucy":"У","ucy":"у","udarr":"⇅","Udblac":"Ű","udblac":"ű","udhar":"⥮","ufisht":"⥾","Ufr":"𝔘","ufr":"𝔲","Ugrave":"Ù","ugrave":"ù","uHar":"⥣","uharl":"↿","uharr":"↾","uhblk":"▀","ulcorn":"⌜","ulcorner":"⌜","ulcrop":"⌏","ultri":"◸","Umacr":"Ū","umacr":"ū","uml":"¨","UnderBar":"_","UnderBrace":"⏟","UnderBracket":"⎵","UnderParenthesis":"⏝","Union":"⋃","UnionPlus":"⊎","Uogon":"Ų","uogon":"ų","Uopf":"𝕌","uopf":"𝕦","UpArrowBar":"⤒","uparrow":"↑","UpArrow":"↑","Uparrow":"⇑","UpArrowDownArrow":"⇅","updownarrow":"↕","UpDownArrow":"↕","Updownarrow":"⇕","UpEquilibrium":"⥮","upharpoonleft":"↿","upharpoonright":"↾","uplus":"⊎","UpperLeftArrow":"↖","UpperRightArrow":"↗","upsi":"υ","Upsi":"ϒ","upsih":"ϒ","Upsilon":"Υ","upsilon":"υ","UpTeeArrow":"↥","UpTee":"⊥","upuparrows":"⇈","urcorn":"⌝","urcorner":"⌝","urcrop":"⌎","Uring":"Ů","uring":"ů","urtri":"◹","Uscr":"𝒰","uscr":"𝓊","utdot":"⋰","Utilde":"Ũ","utilde":"ũ","utri":"▵","utrif":"▴","uuarr":"⇈","Uuml":"Ü","uuml":"ü","uwangle":"⦧","vangrt":"⦜","varepsilon":"ϵ","varkappa":"ϰ","varnothing":"∅","varphi":"ϕ","varpi":"ϖ","varpropto":"∝","varr":"↕","vArr":"⇕","varrho":"ϱ","varsigma":"ς","varsubsetneq":"⊊︀","varsubsetneqq":"⫋︀","varsupsetneq":"⊋︀","varsupsetneqq":"⫌︀","vartheta":"ϑ","vartriangleleft":"⊲","vartriangleright":"⊳","vBar":"⫨","Vbar":"⫫","vBarv":"⫩","Vcy":"В","vcy":"в","vdash":"⊢","vDash":"⊨","Vdash":"⊩","VDash":"⊫","Vdashl":"⫦","veebar":"⊻","vee":"∨","Vee":"⋁","veeeq":"≚","vellip":"⋮","verbar":"|","Verbar":"‖","vert":"|","Vert":"‖","VerticalBar":"∣","VerticalLine":"|","VerticalSeparator":"❘","VerticalTilde":"≀","VeryThinSpace":" ","Vfr":"𝔙","vfr":"𝔳","vltri":"⊲","vnsub":"⊂⃒","vnsup":"⊃⃒","Vopf":"𝕍","vopf":"𝕧","vprop":"∝","vrtri":"⊳","Vscr":"𝒱","vscr":"𝓋","vsubnE":"⫋︀","vsubne":"⊊︀","vsupnE":"⫌︀","vsupne":"⊋︀","Vvdash":"⊪","vzigzag":"⦚","Wcirc":"Ŵ","wcirc":"ŵ","wedbar":"⩟","wedge":"∧","Wedge":"⋀","wedgeq":"≙","weierp":"℘","Wfr":"𝔚","wfr":"𝔴","Wopf":"𝕎","wopf":"𝕨","wp":"℘","wr":"≀","wreath":"≀","Wscr":"𝒲","wscr":"𝓌","xcap":"⋂","xcirc":"◯","xcup":"⋃","xdtri":"▽","Xfr":"𝔛","xfr":"𝔵","xharr":"⟷","xhArr":"⟺","Xi":"Ξ","xi":"ξ","xlarr":"⟵","xlArr":"⟸","xmap":"⟼","xnis":"⋻","xodot":"⨀","Xopf":"𝕏","xopf":"𝕩","xoplus":"⨁","xotime":"⨂","xrarr":"⟶","xrArr":"⟹","Xscr":"𝒳","xscr":"𝓍","xsqcup":"⨆","xuplus":"⨄","xutri":"△","xvee":"⋁","xwedge":"⋀","Yacute":"Ý","yacute":"ý","YAcy":"Я","yacy":"я","Ycirc":"Ŷ","ycirc":"ŷ","Ycy":"Ы","ycy":"ы","yen":"¥","Yfr":"𝔜","yfr":"𝔶","YIcy":"Ї","yicy":"ї","Yopf":"𝕐","yopf":"𝕪","Yscr":"𝒴","yscr":"𝓎","YUcy":"Ю","yucy":"ю","yuml":"ÿ","Yuml":"Ÿ","Zacute":"Ź","zacute":"ź","Zcaron":"Ž","zcaron":"ž","Zcy":"З","zcy":"з","Zdot":"Ż","zdot":"ż","zeetrf":"ℨ","ZeroWidthSpace":"​","Zeta":"Ζ","zeta":"ζ","zfr":"𝔷","Zfr":"ℨ","ZHcy":"Ж","zhcy":"ж","zigrarr":"⇝","zopf":"𝕫","Zopf":"ℤ","Zscr":"𝒵","zscr":"𝓏","zwj":"‍","zwnj":"‌"}');
-
-/***/ }),
-
-/***/ 7802:
-/***/ ((module) => {
-
-"use strict";
-module.exports = JSON.parse('{"Aacute":"Á","aacute":"á","Acirc":"Â","acirc":"â","acute":"´","AElig":"Æ","aelig":"æ","Agrave":"À","agrave":"à","amp":"&","AMP":"&","Aring":"Å","aring":"å","Atilde":"Ã","atilde":"ã","Auml":"Ä","auml":"ä","brvbar":"¦","Ccedil":"Ç","ccedil":"ç","cedil":"¸","cent":"¢","copy":"©","COPY":"©","curren":"¤","deg":"°","divide":"÷","Eacute":"É","eacute":"é","Ecirc":"Ê","ecirc":"ê","Egrave":"È","egrave":"è","ETH":"Ð","eth":"ð","Euml":"Ë","euml":"ë","frac12":"½","frac14":"¼","frac34":"¾","gt":">","GT":">","Iacute":"Í","iacute":"í","Icirc":"Î","icirc":"î","iexcl":"¡","Igrave":"Ì","igrave":"ì","iquest":"¿","Iuml":"Ï","iuml":"ï","laquo":"«","lt":"<","LT":"<","macr":"¯","micro":"µ","middot":"·","nbsp":" ","not":"¬","Ntilde":"Ñ","ntilde":"ñ","Oacute":"Ó","oacute":"ó","Ocirc":"Ô","ocirc":"ô","Ograve":"Ò","ograve":"ò","ordf":"ª","ordm":"º","Oslash":"Ø","oslash":"ø","Otilde":"Õ","otilde":"õ","Ouml":"Ö","ouml":"ö","para":"¶","plusmn":"±","pound":"£","quot":"\\"","QUOT":"\\"","raquo":"»","reg":"®","REG":"®","sect":"§","shy":"­","sup1":"¹","sup2":"²","sup3":"³","szlig":"ß","THORN":"Þ","thorn":"þ","times":"×","Uacute":"Ú","uacute":"ú","Ucirc":"Û","ucirc":"û","Ugrave":"Ù","ugrave":"ù","uml":"¨","Uuml":"Ü","uuml":"ü","Yacute":"Ý","yacute":"ý","yen":"¥","yuml":"ÿ"}');
-
-/***/ }),
-
-/***/ 2228:
-/***/ ((module) => {
-
-"use strict";
-module.exports = JSON.parse('{"amp":"&","apos":"\'","gt":">","lt":"<","quot":"\\""}');
 
 /***/ }),
 
@@ -18918,14 +8520,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 
 "use strict";
 module.exports = require("assert");;
-
-/***/ }),
-
-/***/ 6417:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("crypto");;
 
 /***/ }),
 
@@ -19001,35 +8595,11 @@ module.exports = require("stream");;
 
 /***/ }),
 
-/***/ 4304:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("string_decoder");;
-
-/***/ }),
-
-/***/ 8213:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("timers");;
-
-/***/ }),
-
 /***/ 4016:
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("tls");;
-
-/***/ }),
-
-/***/ 3867:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("tty");;
 
 /***/ }),
 
@@ -19140,9 +8710,8 @@ var __webpack_exports__ = {};
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2186);
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var telegraf__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(6790);
-/* harmony import */ var rss_parser__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(6946);
-/* harmony import */ var rss_parser__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(rss_parser__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(5438);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_1__);
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -19154,48 +8723,47 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 
 
-
 const GITHUB_TOKEN = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('GITHUB_TOKEN');
 const TELEGRAM_TOKEN = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('TELEGRAM_TOKEN');
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const telegraf = new telegraf__WEBPACK_IMPORTED_MODULE_1__/* .Telegraf */ .mC(TELEGRAM_TOKEN);
-            const rss = new rss_parser__WEBPACK_IMPORTED_MODULE_2__({
-                customFields: {
-                    item: [
-                        ['media:content', 'media:content', { keepArray: true }],
-                    ]
-                }
-            });
-            const feed = yield rss.parseURL('https://andrewlock.net/rss.xml');
-            for (const item of feed.items) {
-                const creator = item.creator;
-                const title = item.title;
-                const link = item.link;
-                const content = item.content;
-                const image = getImage(item['media:content']);
-                const data = { creator, title, link, content, image };
-                const json = JSON.stringify(data, null, 4); // Indented 4 spaces
-                console.log(json);
-                console.log();
-                const chatId = -1001767919878;
-                // await telegraf.telegram.sendMessage(chatId, message.join('\n\n'), {
-                //   parse_mode: 'Markdown',
-                // });
-                if (image == undefined)
-                    continue;
-                var message = [];
-                message.push(`<b>${creator}</b>`);
-                message.push(`<b><a href="${link}">${title}</a></b>`);
-                message.push(content);
-                yield telegraf.telegram.sendPhoto(chatId, image, {
-                    caption: message.join('\n'),
-                    parse_mode: 'HTML',
-                });
-                const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
-                yield sleep(1000);
-            }
+            // const telegraf = new Telegraf(TELEGRAM_TOKEN);
+            // const rss = new Parser({
+            //   customFields: {
+            //     item: [
+            //       ['media:content', 'media:content', { keepArray: true }],
+            //     ]
+            //   }
+            // });
+            // const feed = await rss.parseURL('https://andrewlock.net/rss.xml')
+            // for (const item of feed.items) {
+            //   const creator = item.creator;
+            //   const title = item.title;
+            //   const link = item.link;
+            //   const content = item.content;
+            //   const image = getImage(item['media:content'])
+            //   const data = { creator, title, link, content, image };
+            //   const json = JSON.stringify(data, null, 4); // Indented 4 spaces
+            //   console.log(json);
+            //   console.log();
+            //   const chatId = -1001767919878;
+            //   // await telegraf.telegram.sendMessage(chatId, message.join('\n\n'), {
+            //   //   parse_mode: 'Markdown',
+            //   // });
+            //   if (image == undefined)
+            //     continue;
+            //   var message = [];
+            //   message.push(`<b>${creator}</b>`);
+            //   message.push(`<b><a href="${link}">${title}</a></b>`);
+            //   message.push(content);
+            //   await telegraf.telegram.sendPhoto(chatId, image, {
+            //     caption: message.join('\n'),
+            //     parse_mode: 'HTML',
+            //   });
+            //   const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+            //   await sleep(1000);
+            // }
             // const octokit = github.getOctokit(GITHUB_TOKEN);
             // const repo = await octokit.repos.get({
             //   owner: 'ThreeMammals',
@@ -19203,6 +8771,10 @@ function main() {
             // });
             // const json = JSON.stringify(repo, null, 4); // Indented 4 spaces
             // console.log(json);
+            const octokit = _actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit(GITHUB_TOKEN);
+            const json = JSON.stringify(_actions_github__WEBPACK_IMPORTED_MODULE_1__.context, null, 4);
+            console.log(json);
+            console.log();
         }
         catch (error) {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);

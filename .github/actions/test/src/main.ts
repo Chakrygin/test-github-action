@@ -10,56 +10,56 @@ const TELEGRAM_TOKEN = core.getInput('TELEGRAM_TOKEN');
 async function main() {
   try {
 
-    const telegraf = new Telegraf(TELEGRAM_TOKEN);
+    // const telegraf = new Telegraf(TELEGRAM_TOKEN);
 
-    const rss = new Parser({
-      customFields: {
-        item: [
-          ['media:content', 'media:content', { keepArray: true }],
-        ]
-      }
-    });
+    // const rss = new Parser({
+    //   customFields: {
+    //     item: [
+    //       ['media:content', 'media:content', { keepArray: true }],
+    //     ]
+    //   }
+    // });
 
-    const feed = await rss.parseURL('https://andrewlock.net/rss.xml')
+    // const feed = await rss.parseURL('https://andrewlock.net/rss.xml')
 
-    for (const item of feed.items) {
-      const creator = item.creator;
-      const title = item.title;
-      const link = item.link;
-      const content = item.content;
-      const image = getImage(item['media:content'])
+    // for (const item of feed.items) {
+    //   const creator = item.creator;
+    //   const title = item.title;
+    //   const link = item.link;
+    //   const content = item.content;
+    //   const image = getImage(item['media:content'])
 
-      const data = { creator, title, link, content, image };
+    //   const data = { creator, title, link, content, image };
 
-      const json = JSON.stringify(data, null, 4); // Indented 4 spaces
-      console.log(json);
-      console.log();
+    //   const json = JSON.stringify(data, null, 4); // Indented 4 spaces
+    //   console.log(json);
+    //   console.log();
 
 
 
-      const chatId = -1001767919878;
+    //   const chatId = -1001767919878;
 
-      // await telegraf.telegram.sendMessage(chatId, message.join('\n\n'), {
-      //   parse_mode: 'Markdown',
-      // });
+    //   // await telegraf.telegram.sendMessage(chatId, message.join('\n\n'), {
+    //   //   parse_mode: 'Markdown',
+    //   // });
 
-      if (image == undefined)
-        continue;
+    //   if (image == undefined)
+    //     continue;
 
-      var message = [];
-      message.push(`<b>${creator}</b>`);
-      message.push(`<b><a href="${link}">${title}</a></b>`);
-      message.push(content);
+    //   var message = [];
+    //   message.push(`<b>${creator}</b>`);
+    //   message.push(`<b><a href="${link}">${title}</a></b>`);
+    //   message.push(content);
 
-      await telegraf.telegram.sendPhoto(chatId, image, {
-        caption: message.join('\n'),
-        parse_mode: 'HTML',
-      });
+    //   await telegraf.telegram.sendPhoto(chatId, image, {
+    //     caption: message.join('\n'),
+    //     parse_mode: 'HTML',
+    //   });
 
-      const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+    //   const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
-      await sleep(1000);
-    }
+    //   await sleep(1000);
+    // }
 
 
 
@@ -75,6 +75,13 @@ async function main() {
     // const json = JSON.stringify(repo, null, 4); // Indented 4 spaces
 
     // console.log(json);
+
+
+    const octokit = github.getOctokit(GITHUB_TOKEN);
+
+    const json = JSON.stringify(github.context, null, 4);
+    console.log(json);
+    console.log();
 
   } catch (error: any) {
     core.setFailed(error.message)
