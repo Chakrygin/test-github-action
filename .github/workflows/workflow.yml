@@ -1,7 +1,6 @@
 name: Hello
 
 on:
-  push: {}
   schedule:
     - cron: '*/15 * * * *'
 
