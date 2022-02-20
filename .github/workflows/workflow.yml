@@ -1,6 +1,9 @@
 name: Hello
 
-on: [push]
+on:
+  push: {}
+  schedule:
+    - cron: '*/15 * * * *'
 
 jobs:
   Hello:
