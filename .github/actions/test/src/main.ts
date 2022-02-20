@@ -83,6 +83,16 @@ async function main() {
     console.log(json);
     console.log();
 
+    var commit = await octokit.repos.getCommit({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      ref: github.context.ref,
+    })
+
+    const json2 = JSON.stringify(commit, null, 4);
+    console.log(json2);
+    console.log();
+
   } catch (error: any) {
     core.setFailed(error.message)
   }

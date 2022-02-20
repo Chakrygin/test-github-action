@@ -8775,6 +8775,14 @@ function main() {
             const json = JSON.stringify(_actions_github__WEBPACK_IMPORTED_MODULE_1__.context, null, 4);
             console.log(json);
             console.log();
+            var commit = yield octokit.repos.getCommit({
+                owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
+                repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+                ref: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.ref,
+            });
+            const json2 = JSON.stringify(commit, null, 4);
+            console.log(json2);
+            console.log();
         }
         catch (error) {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
