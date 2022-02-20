@@ -1,8 +1,11 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import * as exec from '@actions/exec'
 
 import { Telegraf } from 'telegraf'
 import * as Parser from 'rss-parser'
+
+import * as fs from 'fs'
 
 const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
 const TELEGRAM_TOKEN = core.getInput('TELEGRAM_TOKEN');
@@ -76,6 +79,9 @@ async function main() {
 
     // console.log(json);
 
+    if (!fs.existsSync("test")) {
+      fs.mkdirSync("test");
+    }
 
     const octokit = github.getOctokit(GITHUB_TOKEN);
 
@@ -83,15 +89,43 @@ async function main() {
     console.log(json);
     console.log();
 
-    var commit = await octokit.repos.getCommit({
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      ref: github.context.ref,
-    })
+    fs.writeFileSync("test/context.txt", json)
 
-    const json2 = JSON.stringify(commit, null, 4);
-    console.log(json2);
-    console.log();
+    try {
+      var commit = await octokit.repos.getCommit({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        ref: github.context.ref,
+      });
+
+      const json2 = JSON.stringify(commit, null, 4);
+      console.log(json2);
+      console.log();
+
+      fs.writeFileSync("test/commit.txt", json2)
+    }
+    catch
+    {
+    }
+
+    const options: exec.ExecOptions = {};
+    options.listeners = {
+      stdout: (data: Buffer) => {
+        console.log(data.toString())
+      },
+      stderr: (data: Buffer) => {
+        console.log(data.toString())
+      }
+    };
+
+    var owner = github.context.repo.owner;
+    var repo = github.context.repo.repo;
+
+    await exec.exec('git', ["config", "--global", "user.name", "Automated Publisher"], options);
+    await exec.exec('git', ["config", "--global", "user.email", "actions@users.noreply.github.com"], options);
+    await exec.exec('git', ["commit", "-am", "user.email", "Commit message..."], options);
+    await exec.exec('git', ["remote", "set-url", "origin", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);
+    await exec.exec('git', ["push"], options);
 
   } catch (error: any) {
     core.setFailed(error.message)
