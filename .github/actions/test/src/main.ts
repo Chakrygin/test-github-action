@@ -91,22 +91,17 @@ async function main() {
 
     fs.writeFileSync("test/context.txt", json)
 
-    try {
-      var commit = await octokit.repos.getCommit({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-        ref: github.context.ref,
-      });
+    var commit = await octokit.repos.getCommit({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      ref: github.context.ref,
+    });
 
-      const json2 = JSON.stringify(commit, null, 4);
-      console.log(json2);
-      console.log();
+    const json2 = JSON.stringify(commit, null, 4);
+    console.log(json2);
+    console.log();
 
-      fs.writeFileSync("test/commit.txt", json2)
-    }
-    catch
-    {
-    }
+    fs.writeFileSync("test/commit.txt", json2)
 
     const options: exec.ExecOptions = {};
     options.listeners = {
@@ -121,8 +116,9 @@ async function main() {
     var owner = github.context.repo.owner;
     var repo = github.context.repo.repo;
 
-    await exec.exec('git', ["config", "--global", "user.name", "Automated Publisher"], options);
-    await exec.exec('git', ["config", "--global", "user.email", "actions@users.noreply.github.com"], options);
+
+    await exec.exec('git', ["config", "--global", "user.name", commit.data.commit.author?.name!], options);
+    await exec.exec('git', ["config", "--global", "user.email", commit.data.commit.author?.email!], options);
     await exec.exec('git', ["add", "--all"]);
     await exec.exec('git', ["commit", "-m", "Commit message..."], options);
     await exec.exec('git', ["remote", "set-url", "origin", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);

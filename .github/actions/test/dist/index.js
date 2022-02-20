@@ -10023,6 +10023,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 const GITHUB_TOKEN = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('GITHUB_TOKEN');
 const TELEGRAM_TOKEN = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('TELEGRAM_TOKEN');
 function main() {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // const telegraf = new Telegraf(TELEGRAM_TOKEN);
@@ -10076,19 +10077,15 @@ function main() {
             console.log(json);
             console.log();
             fs__WEBPACK_IMPORTED_MODULE_3__.writeFileSync("test/context.txt", json);
-            try {
-                var commit = yield octokit.repos.getCommit({
-                    owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-                    repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-                    ref: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.ref,
-                });
-                const json2 = JSON.stringify(commit, null, 4);
-                console.log(json2);
-                console.log();
-                fs__WEBPACK_IMPORTED_MODULE_3__.writeFileSync("test/commit.txt", json2);
-            }
-            catch (_a) {
-            }
+            var commit = yield octokit.repos.getCommit({
+                owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
+                repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+                ref: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.ref,
+            });
+            const json2 = JSON.stringify(commit, null, 4);
+            console.log(json2);
+            console.log();
+            fs__WEBPACK_IMPORTED_MODULE_3__.writeFileSync("test/commit.txt", json2);
             const options = {};
             options.listeners = {
                 stdout: (data) => {
@@ -10100,8 +10097,8 @@ function main() {
             };
             var owner = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner;
             var repo = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo;
-            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["config", "--global", "user.name", "Automated Publisher"], options);
-            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["config", "--global", "user.email", "actions@users.noreply.github.com"], options);
+            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["config", "--global", "user.name", (_a = commit.data.commit.author) === null || _a === void 0 ? void 0 : _a.name], options);
+            yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["config", "--global", "user.email", (_b = commit.data.commit.author) === null || _b === void 0 ? void 0 : _b.email], options);
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["add", "--all"]);
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["commit", "-m", "Commit message..."], options);
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["remote", "set-url", "origin", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);
