@@ -116,6 +116,7 @@ async function main() {
     var owner = github.context.repo.owner;
     var repo = github.context.repo.repo;
 
+    github.context
 
     await exec.exec('git', ["config", "--global", "user.name", commit.data.commit.author?.name!], options);
     await exec.exec('git', ["config", "--global", "user.email", commit.data.commit.author?.email!], options);

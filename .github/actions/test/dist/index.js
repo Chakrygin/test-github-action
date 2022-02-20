@@ -10097,6 +10097,7 @@ function main() {
             };
             var owner = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner;
             var repo = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo;
+            _actions_github__WEBPACK_IMPORTED_MODULE_1__.context;
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["config", "--global", "user.name", (_a = commit.data.commit.author) === null || _a === void 0 ? void 0 : _a.name], options);
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["config", "--global", "user.email", (_b = commit.data.commit.author) === null || _b === void 0 ? void 0 : _b.email], options);
             yield _actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec('git', ["add", "--all"]);
