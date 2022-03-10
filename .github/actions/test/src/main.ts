@@ -13,6 +13,9 @@ const TELEGRAM_TOKEN = core.getInput('TELEGRAM_TOKEN');
 async function main() {
   try {
 
+    print('process.env', process.env)
+    print('github.context', github.context)
+
     // const telegraf = new Telegraf(TELEGRAM_TOKEN);
 
     // const rss = new Parser({
@@ -79,66 +82,72 @@ async function main() {
 
     // console.log(json);
 
-    if (!fs.existsSync("test")) {
-      fs.mkdirSync("test");
-    }
+    // if (!fs.existsSync("test")) {
+    //   fs.mkdirSync("test");
+    // }
 
-    const octokit = github.getOctokit(GITHUB_TOKEN);
+    // const octokit = github.getOctokit(GITHUB_TOKEN);
 
-    const json = JSON.stringify(github.context, null, 4);
-    console.log(json);
-    console.log();
+    // const json = JSON.stringify(github.context, null, 4);
+    // console.log(json);
+    // console.log();
 
-    fs.writeFileSync("test/context.txt", json)
+    // fs.writeFileSync("test/context.txt", json)
 
-    var commit = await octokit.repos.getCommit({
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      ref: github.context.ref,
-    });
+    // var commit = await octokit.repos.getCommit({
+    //   owner: github.context.repo.owner,
+    //   repo: github.context.repo.repo,
+    //   ref: github.context.ref,
+    // });
 
-    const json2 = JSON.stringify(commit, null, 4);
-    console.log(json2);
-    console.log();
+    // const json2 = JSON.stringify(commit, null, 4);
+    // console.log(json2);
+    // console.log();
 
-    fs.writeFileSync("test/commit.txt", json2)
+    // fs.writeFileSync("test/commit.txt", json2)
 
-    const options: exec.ExecOptions = {};
-    options.listeners = {
-      stdout: (data: Buffer) => {
-        console.log(data.toString())
-      },
-      stderr: (data: Buffer) => {
-        console.log(data.toString())
-      }
-    };
+    // const options: exec.ExecOptions = {};
+    // options.listeners = {
+    //   stdout: (data: Buffer) => {
+    //     console.log(data.toString())
+    //   },
+    //   stderr: (data: Buffer) => {
+    //     console.log(data.toString())
+    //   }
+    // };
 
-    var owner = github.context.repo.owner;
-    var repo = github.context.repo.repo;
+    // var owner = github.context.repo.owner;
+    // var repo = github.context.repo.repo;
 
-    github.context
+    // github.context
 
-    await exec.exec('git', ["config", "--global", "user.name", commit.data.commit.author?.name!], options);
-    await exec.exec('git', ["config", "--global", "user.email", commit.data.commit.author?.email!], options);
-    await exec.exec('git', ["add", "--all"]);
-    await exec.exec('git', ["commit", "-m", "Commit message..."], options);
-    await exec.exec('git', ["remote", "set-url", "origin", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);
-    await exec.exec('git', ["push"], options);
+    // await exec.exec('git', ["config", "--global", "user.name", commit.data.commit.author?.name!], options);
+    // await exec.exec('git', ["config", "--global", "user.email", commit.data.commit.author?.email!], options);
+    // await exec.exec('git', ["add", "--all"]);
+    // await exec.exec('git', ["commit", "-m", "Commit message..."], options);
+    // await exec.exec('git', ["remote", "set-url", "origin", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);
+    // await exec.exec('git', ["push"], options);
 
   } catch (error: any) {
     core.setFailed(error.message)
   }
 }
 
-function getImage(content: any[]): string | undefined {
-  for (const item of content) {
-    const $ = item['$'];
-    const url: string = $['url'];
-    const medium: string = $['medium'];
-    if (medium == 'image') {
-      return url;
-    }
-  }
+function print(name: string, value: any) {
+  const json = JSON.stringify(value, null, 4);
+  console.log(name + ': ' + json);
+  console.log();
 }
+
+// function getImage(content: any[]): string | undefined {
+//   for (const item of content) {
+//     const $ = item['$'];
+//     const url: string = $['url'];
+//     const medium: string = $['medium'];
+//     if (medium == 'image') {
+//       return url;
+//     }
+//   }
+// }
 
 main();
