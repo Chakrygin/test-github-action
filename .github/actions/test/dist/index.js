@@ -9608,20 +9608,10 @@ exports.push = exports.commit = exports.diff = exports.add = exports.config = vo
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const exec = __importStar(__nccwpck_require__(1514));
-const options = {
-    listeners: {
-        stdout: (data) => {
-            console.log(data.toString());
-        },
-        stderr: (data) => {
-            console.log(data.toString());
-        }
-    },
-};
 function config(name, email) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield exec.exec('git', ["config", "--global", "user.name", name], options);
-        yield exec.exec('git', ["config", "--global", "user.email", email], options);
+        yield exec.exec('git', ["config", "--global", "user.name", name]);
+        yield exec.exec('git', ["config", "--global", "user.email", email]);
     });
 }
 exports.config = config;
@@ -9633,14 +9623,16 @@ function add() {
 exports.add = add;
 function diff() {
     return __awaiter(this, void 0, void 0, function* () {
-        const code = yield exec.exec('git', ["diff", "--staged", "--quiet"], Object.assign(Object.assign({}, options), { ignoreReturnCode: true }));
+        const code = yield exec.exec('git', ["diff", "--staged", "--quiet"], {
+            ignoreReturnCode: true
+        });
         return code > 0;
     });
 }
 exports.diff = diff;
 function commit(message) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield exec.exec('git', ["commit", "--message", message], options);
+        yield exec.exec('git', ["commit", "--message", message]);
     });
 }
 exports.commit = commit;
@@ -9650,8 +9642,8 @@ function push() {
         const owner = github.context.repo.owner;
         const repo = github.context.repo.repo;
         const origin = `https://x-access-token:${token}@github.com/${owner}/${repo}`;
-        yield exec.exec('git', ["remote", "set-url", "origin", origin], options);
-        yield exec.exec('git', ["push"], options);
+        yield exec.exec('git', ["remote", "set-url", "origin", origin]);
+        yield exec.exec('git', ["push"]);
     });
 }
 exports.push = push;
