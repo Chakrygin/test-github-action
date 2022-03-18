@@ -7,126 +7,42 @@ import * as Parser from 'rss-parser'
 
 import * as fs from 'fs'
 
+import * as git from './git'
+
 const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
 const TELEGRAM_TOKEN = core.getInput('TELEGRAM_TOKEN');
 
 async function main() {
   try {
 
-    print('process.env', process.env)
-    print('github.context', github.context)
+    print('process.env', process.env);
+    print('github.context', github.context);
 
-    // const telegraf = new Telegraf(TELEGRAM_TOKEN);
+    var data = new Date().toISOString();
 
-    // const rss = new Parser({
-    //   customFields: {
-    //     item: [
-    //       ['media:content', 'media:content', { keepArray: true }],
-    //     ]
-    //   }
-    // });
+    var c1 = await git.add('--all');
+    console.log("git.add('--all'): " + c1);
 
-    // const feed = await rss.parseURL('https://andrewlock.net/rss.xml')
+    if (!fs.existsSync('data')) {
+      fs.mkdirSync('data');
+    }
 
-    // for (const item of feed.items) {
-    //   const creator = item.creator;
-    //   const title = item.title;
-    //   const link = item.link;
-    //   const content = item.content;
-    //   const image = getImage(item['media:content'])
+    if (!fs.existsSync('data2')) {
+      fs.mkdirSync('data2');
+    }
 
-    //   const data = { creator, title, link, content, image };
+    fs.writeFileSync('data2/test.txt', data);
 
-    //   const json = JSON.stringify(data, null, 4); // Indented 4 spaces
-    //   console.log(json);
-    //   console.log();
+    var c2 = await git.add('data/*');
+    console.log("git.add('data/*'): " + c2);
 
+    fs.writeFileSync('data/test.txt', data);
 
+    var c3 = await git.add('data/*');
+    console.log("git.add('data/*'): " + c3);
 
-    //   const chatId = -1001767919878;
-
-    //   // await telegraf.telegram.sendMessage(chatId, message.join('\n\n'), {
-    //   //   parse_mode: 'Markdown',
-    //   // });
-
-    //   if (image == undefined)
-    //     continue;
-
-    //   var message = [];
-    //   message.push(`<b>${creator}</b>`);
-    //   message.push(`<b><a href="${link}">${title}</a></b>`);
-    //   message.push(content);
-
-    //   await telegraf.telegram.sendPhoto(chatId, image, {
-    //     caption: message.join('\n'),
-    //     parse_mode: 'HTML',
-    //   });
-
-    //   const sleep = (waitTimeInMs: any) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
-
-    //   await sleep(1000);
-    // }
-
-
-
-
-
-    // const octokit = github.getOctokit(GITHUB_TOKEN);
-
-    // const repo = await octokit.repos.get({
-    //   owner: 'ThreeMammals',
-    //   repo: 'Ocelot'
-    // });
-
-    // const json = JSON.stringify(repo, null, 4); // Indented 4 spaces
-
-    // console.log(json);
-
-    // if (!fs.existsSync("test")) {
-    //   fs.mkdirSync("test");
-    // }
-
-    // const octokit = github.getOctokit(GITHUB_TOKEN);
-
-    // const json = JSON.stringify(github.context, null, 4);
-    // console.log(json);
-    // console.log();
-
-    // fs.writeFileSync("test/context.txt", json)
-
-    // var commit = await octokit.repos.getCommit({
-    //   owner: github.context.repo.owner,
-    //   repo: github.context.repo.repo,
-    //   ref: github.context.ref,
-    // });
-
-    // const json2 = JSON.stringify(commit, null, 4);
-    // console.log(json2);
-    // console.log();
-
-    // fs.writeFileSync("test/commit.txt", json2)
-
-    // const options: exec.ExecOptions = {};
-    // options.listeners = {
-    //   stdout: (data: Buffer) => {
-    //     console.log(data.toString())
-    //   },
-    //   stderr: (data: Buffer) => {
-    //     console.log(data.toString())
-    //   }
-    // };
-
-    // var owner = github.context.repo.owner;
-    // var repo = github.context.repo.repo;
-
-    // github.context
-
-    // await exec.exec('git', ["config", "--global", "user.name", commit.data.commit.author?.name!], options);
-    // await exec.exec('git', ["config", "--global", "user.email", commit.data.commit.author?.email!], options);
-    // await exec.exec('git', ["add", "--all"]);
-    // await exec.exec('git', ["commit", "-m", "Commit message..."], options);
-    // await exec.exec('git', ["remote", "set-url", "origin", `https://x-access-token:${GITHUB_TOKEN}@github.com/${owner}/${repo}`], options);
-    // await exec.exec('git', ["push"], options);
+    await git.commit("Message: " + data);
+    await git.push();
 
   } catch (error: any) {
     core.setFailed(error.message)
