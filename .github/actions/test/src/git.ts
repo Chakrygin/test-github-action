@@ -23,7 +23,7 @@ export async function add(): Promise<number> {
 }
 
 export async function diff(): Promise<boolean> {
-  const code = await exec.exec('git', ["diff", "--quiet", "--exit-code"], {
+  const code = await exec.exec('git', ["diff", "--staged", "--quiet"], {
     ...options,
     ignoreReturnCode: true
   });

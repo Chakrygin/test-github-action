@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Launch Test",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "./.github/actions/test/src/main.ts",
+      "cwd": "${workspaceFolder}",
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "./.github/actions/test/node_modules/ts-node/register"
+      ],
+      "sourceMaps": true,
+      "protocol": "inspector",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "console": "integratedTerminal",
+      "envFile": "${env:USERPROFILE}/envs/${workspaceFolderBasename}.env",
+    }
+  ]
+}
