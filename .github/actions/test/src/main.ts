@@ -41,6 +41,7 @@ async function main() {
     var c3 = await git.add('data/*');
     console.log("git.add('data/*'): " + c3);
 
+    await git.config('GitHub Actions', 'actions@github.com')
     await git.commit("Message: " + data);
     await git.push();
 

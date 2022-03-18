@@ -2,13 +2,14 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as exec from '@actions/exec'
 
-const options: exec.ExecOptions = {};
-options.listeners = {
-  stdout: (data: Buffer) => {
-    console.log(data.toString())
-  },
-  stderr: (data: Buffer) => {
-    console.error(data.toString())
+const options: exec.ExecOptions = {
+  listeners: {
+    stdout: (data: Buffer) => {
+      console.log(data.toString());
+    },
+    stderr: (data: Buffer) => {
+      console.log(data.toString());
+    }
   }
 };
 
@@ -18,7 +19,7 @@ export async function config(name: string, email: string): Promise<void> {
 }
 
 export async function add(path: string): Promise<number> {
-  return await exec.exec('git', ["add", "--all"]);
+  return await exec.exec('git', ["add", path]);
 }
 
 export async function commit(message: string) {

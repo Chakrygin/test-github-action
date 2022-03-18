@@ -9979,7 +9979,7 @@ var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(5747);
 // EXTERNAL MODULE: ./node_modules/@actions/exec/lib/exec.js
-var lib_exec = __nccwpck_require__(1514);
+var exec = __nccwpck_require__(1514);
 ;// CONCATENATED MODULE: ./src/git.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -9993,13 +9993,14 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-const options = {};
-options.listeners = {
-    stdout: (data) => {
-        console.log(data.toString());
-    },
-    stderr: (data) => {
-        console.error(data.toString());
+const options = {
+    listeners: {
+        stdout: (data) => {
+            console.log(data.toString());
+        },
+        stderr: (data) => {
+            console.log(data.toString());
+        }
     }
 };
 function config(name, email) {
@@ -10010,12 +10011,12 @@ function config(name, email) {
 }
 function add(path) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield lib_exec.exec('git', ["add", "--all"]);
+        return yield exec.exec('git', ["add", path]);
     });
 }
 function commit(message) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield lib_exec.exec('git', ["commit", "--message", message], options);
+        yield exec.exec('git', ["commit", "--message", message], options);
     });
 }
 function push() {
@@ -10024,8 +10025,8 @@ function push() {
         const owner = github.context.repo.owner;
         const repo = github.context.repo.repo;
         const origin = `https://x-access-token:${token}@github.com/${owner}/${repo}`;
-        yield lib_exec.exec('git', ["remote", "set-url", "origin", origin], options);
-        yield lib_exec.exec('git', ["push"], options);
+        yield exec.exec('git', ["remote", "set-url", "origin", origin], options);
+        yield exec.exec('git', ["push"], options);
     });
 }
 
@@ -10065,6 +10066,7 @@ function main() {
             external_fs_.writeFileSync('data/test.txt', data);
             var c3 = yield add('data/*');
             console.log("git.add('data/*'): " + c3);
+            yield config('GitHub Actions', 'actions@github.com');
             yield commit("Message: " + data);
             yield push();
         }
