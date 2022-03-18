@@ -10016,7 +10016,7 @@ function add() {
 }
 function diff() {
     return __awaiter(this, void 0, void 0, function* () {
-        const code = yield exec.exec('git', ["diff", "--quiet"], Object.assign(Object.assign({}, options), { ignoreReturnCode: true }));
+        const code = yield exec.exec('git', ["diff", "--quiet", "--exit-code"], Object.assign(Object.assign({}, options), { ignoreReturnCode: true }));
         return code > 0;
     });
 }
