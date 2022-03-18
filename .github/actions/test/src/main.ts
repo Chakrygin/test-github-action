@@ -15,35 +15,24 @@ const TELEGRAM_TOKEN = core.getInput('TELEGRAM_TOKEN');
 async function main() {
   try {
 
-    print('process.env', process.env);
-    print('github.context', github.context);
-
-    var data = new Date().toISOString();
-
-    var c1 = await git.add('--all');
-    console.log("git.add('--all'): " + c1);
-
     if (!fs.existsSync('data')) {
       fs.mkdirSync('data');
     }
 
-    if (!fs.existsSync('data2')) {
-      fs.mkdirSync('data2');
-    }
-
-    fs.writeFileSync('data2/test.txt', data);
-
-    var c2 = await git.add('data/*');
-    console.log("git.add('data/*'): " + c2);
-
+    var data = new Date().toISOString();
     fs.writeFileSync('data/test.txt', data);
 
-    var c3 = await git.add('data/*');
-    console.log("git.add('data/*'): " + c3);
+    await git.add();
 
-    await git.config('GitHub Actions', 'actions@github.com')
-    await git.commit("Message: " + data);
-    await git.push();
+    var changed = await git.diff();
+    if (changed) {
+      await git.config('GitHub Actions', 'actions@github.com');
+      await git.commit("Message: " + data);
+      await git.push();
+    }
+
+    // print('process.env', process.env);
+    // print('github.context', github.context);
 
   } catch (error: any) {
     core.setFailed(error.message)
