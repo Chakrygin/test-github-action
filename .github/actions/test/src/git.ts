@@ -10,7 +10,7 @@ const options: exec.ExecOptions = {
     stderr: (data: Buffer) => {
       console.log(data.toString());
     }
-  }
+  },
 };
 
 export async function config(name: string, email: string): Promise<void> {
@@ -18,8 +18,17 @@ export async function config(name: string, email: string): Promise<void> {
   await exec.exec('git', ["config", "--global", "user.email", email], options);
 }
 
-export async function add(path: string): Promise<number> {
-  return await exec.exec('git', ["add", path]);
+export async function add(): Promise<number> {
+  return await exec.exec('git', ["add", '--all']);
+}
+
+export async function diff(): Promise<boolean> {
+  const code = await exec.exec('git', ["diff", "--quiet"], {
+    ...options,
+    ignoreReturnCode: true
+  });
+
+  return code > 0;
 }
 
 export async function commit(message: string) {

@@ -9974,10 +9974,10 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(2186);
-// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
-var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(5747);
+// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
+var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: ./node_modules/@actions/exec/lib/exec.js
 var exec = __nccwpck_require__(1514);
 ;// CONCATENATED MODULE: ./src/git.ts
@@ -10001,7 +10001,7 @@ const options = {
         stderr: (data) => {
             console.log(data.toString());
         }
-    }
+    },
 };
 function config(name, email) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -10009,9 +10009,15 @@ function config(name, email) {
         yield exec.exec('git', ["config", "--global", "user.email", email], options);
     });
 }
-function add(path) {
+function add() {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield exec.exec('git', ["add", path]);
+        return yield exec.exec('git', ["add", '--all']);
+    });
+}
+function diff() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const code = yield exec.exec('git', ["diff", "--quiet"], Object.assign(Object.assign({}, options), { ignoreReturnCode: true }));
+        return code > 0;
     });
 }
 function commit(message) {
@@ -10043,32 +10049,25 @@ var main_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arg
 
 
 
-
 const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
 const TELEGRAM_TOKEN = core.getInput('TELEGRAM_TOKEN');
 function main() {
     return main_awaiter(this, void 0, void 0, function* () {
         try {
-            print('process.env', process.env);
-            print('github.context', github.context);
-            var data = new Date().toISOString();
-            var c1 = yield add('--all');
-            console.log("git.add('--all'): " + c1);
             if (!external_fs_.existsSync('data')) {
                 external_fs_.mkdirSync('data');
             }
-            if (!external_fs_.existsSync('data2')) {
-                external_fs_.mkdirSync('data2');
-            }
-            external_fs_.writeFileSync('data2/test.txt', data);
-            var c2 = yield add('data/*');
-            console.log("git.add('data/*'): " + c2);
+            var data = new Date().toISOString();
             external_fs_.writeFileSync('data/test.txt', data);
-            var c3 = yield add('data/*');
-            console.log("git.add('data/*'): " + c3);
-            yield config('GitHub Actions', 'actions@github.com');
-            yield commit("Message: " + data);
-            yield push();
+            yield add();
+            var changed = yield diff();
+            if (changed) {
+                yield config('GitHub Actions', 'actions@github.com');
+                yield commit("Message: " + data);
+                yield push();
+            }
+            // print('process.env', process.env);
+            // print('github.context', github.context);
         }
         catch (error) {
             core.setFailed(error.message);
