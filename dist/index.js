@@ -5702,6 +5702,9 @@ const axios_1 = __importDefault(__nccwpck_require__(6545));
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            if (!fs_1.default.existsSync('data')) {
+                fs_1.default.mkdirSync('data');
+            }
             const response1 = yield axios_1.default.get('https://www.youtube.com/playlist?list=PLbxr_aGL4q3SpQ9GRn2jv-NEpvN23CUC5');
             fs_1.default.writeFileSync('data\\playlist.html', response1.data);
             const response2 = yield axios_1.default.get('https://www.youtube.com/c/DotNetRu/playlists');

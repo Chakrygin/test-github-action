@@ -12,6 +12,10 @@ import * as cheerio from 'cheerio'
 async function main() {
   try {
 
+    if (!fs.existsSync('data')) {
+      fs.mkdirSync('data');
+    }
+
     const response1 = await axios.get('https://www.youtube.com/playlist?list=PLbxr_aGL4q3SpQ9GRn2jv-NEpvN23CUC5');
     fs.writeFileSync('data\\playlist.html', response1.data);
 
