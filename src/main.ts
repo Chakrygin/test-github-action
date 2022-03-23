@@ -17,10 +17,10 @@ async function main() {
     }
 
     const response1 = await axios.get('https://www.youtube.com/playlist?list=PLbxr_aGL4q3SpQ9GRn2jv-NEpvN23CUC5');
-    fs.writeFileSync('data\\playlist.html', response1.data);
+    fs.writeFileSync('data/playlist.html', response1.data);
 
     const response2 = await axios.get('https://www.youtube.com/c/DotNetRu/playlists');
-    fs.writeFileSync('data\\playlists.html', response2.data);
+    fs.writeFileSync('data/playlists.html', response2.data);
 
     // console.log(response.data);
 
@@ -46,6 +46,5 @@ function print(name: string, value: any) {
   console.log(name + ': ' + json);
   console.log();
 }
-
 
 main();
