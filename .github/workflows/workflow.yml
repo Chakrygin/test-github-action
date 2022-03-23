@@ -12,3 +12,11 @@ jobs:
 
       - name: Test GitHub Action
         uses: ./
+
+      # https://github.com/marketplace/actions/add-commit
+      - name: Commit
+        uses: EndBug/add-and-commit@v9.0.0
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          add: data
+          message: Commit scrape results
