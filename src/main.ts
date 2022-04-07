@@ -14,16 +14,16 @@ import * as cheerio from 'cheerio'
 async function main() {
   try {
 
-    await testPlaylist();
-    await testPlaylists();
+    // await testPlaylist();
+    // await testPlaylists();
 
     // const token = process.env.TELEGRAM_TOKEN ?? '';
     // const chatId = process.env.TELEGRAM_CHAT_ID ?? '';
 
     // var telegram = new Telegram(token);
 
-    // print('process.env', process.env);
-    // print('github.context', github.context);
+    await print('process.env', process.env);
+    await print('github.context', github.context);
 
   } catch (error: any) {
     core.setFailed(error.message)
@@ -93,10 +93,11 @@ function write(file: string, data: string) {
   fs.writeFileSync(filepath, data);
 }
 
-function print(name: string, value: any) {
-  const json = JSON.stringify(value, null, 4);
-  console.log(name + ': ' + json);
-  console.log();
+async function print(name: string, value: any) {
+  await core.group(name, async () => {
+    const json = JSON.stringify(value, null, 2);
+    core.info(json);
+  });
 }
 
 main();
