@@ -22,6 +22,15 @@ async function main() {
 
     // var telegram = new Telegram(token);
 
+    core.info("This is information message.");
+    core.warning("This is warning message.");
+    core.error("This is error message.");
+    core.debug("This is debug message");
+
+    core.notice("This is notice message",  {
+      title: 'Title',
+    });
+
     await print('process.env', process.env);
     await print('github.context', github.context);
 

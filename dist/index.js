@@ -30874,6 +30874,13 @@ function main() {
             // const token = process.env.TELEGRAM_TOKEN ?? '';
             // const chatId = process.env.TELEGRAM_CHAT_ID ?? '';
             // var telegram = new Telegram(token);
+            core.info("This is information message.");
+            core.warning("This is warning message.");
+            core.error("This is error message.");
+            core.debug("This is debug message");
+            core.notice("This is notice message", {
+                title: 'Title',
+            });
             yield print('process.env', process.env);
             yield print('github.context', github.context);
         }
