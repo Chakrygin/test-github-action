@@ -2,6 +2,8 @@ import * as core from '@actions/core'
 
 import moment from 'moment'
 
+import 'moment/locale/ru'
+
 async function main() {
   try {
 
