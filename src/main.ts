@@ -6,7 +6,9 @@ async function main() {
   try {
 
     const response = await axios.get('https://radiodotnet.mave.digital/', {
-      responseType: 'text'
+      responseType: 'text',
+      transformRequest: [],
+      transformResponse: [],
     });
 
     console.log(response.data);
