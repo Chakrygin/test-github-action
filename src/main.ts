@@ -1,17 +1,15 @@
-import * as core from '@actions/core'
+import * as core from '@actions/core';
 
-import moment from 'moment'
-
-import 'moment/locale/ru'
+import axios from 'axios';
 
 async function main() {
   try {
 
-    const m1 = moment('2022-05-25').locale('en')
-    console.log(m1.format('LL'));
+    const response = await axios.get('https://radiodotnet.mave.digital/');
+    const json = JSON.stringify(response, null, 2);
 
-    const m2 = moment('2022-05-25').locale('ru')
-    console.log(m2.format('LL'));
+    console.log(json);
+    console.log();
 
   }
   catch (error: any) {
