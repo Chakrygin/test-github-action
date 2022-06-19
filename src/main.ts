@@ -5,6 +5,8 @@ import axios from 'axios';
 async function main() {
   try {
 
+    const d = axios.defaults;
+
     const response = await axios.get('https://radiodotnet.mave.digital/');
     const json = JSON.stringify(response, null, 2);
 
