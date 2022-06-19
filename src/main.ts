@@ -12,6 +12,9 @@ async function main() {
       transformRequest: [],
       transformResponse: [],
       maxContentLength: 1024 * 1024 * 1024,
+      headers: {
+        'Accept': 'text/plain',
+      }
     });
 
     console.log(response.data);
