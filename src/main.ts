@@ -5,7 +5,8 @@ import axios from 'axios';
 async function main() {
   try {
 
-    const response = await axios.get('https://radiodotnet.mave.digital/', {
+    // const response = await axios.get('https://radiodotnet.mave.digital/', {
+    const response = await axios.get('https://bookclub-dotnet.mave.digital/', {
       responseType: 'text',
       transformRequest: [],
       transformResponse: [],
