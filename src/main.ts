@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 async function main() {
   try {
@@ -19,6 +19,18 @@ async function main() {
 
   }
   catch (error: any) {
+    if (error instanceof AxiosError) {
+      console.log('code', error.code);
+      console.log('isAxiosError', error.isAxiosError);
+      console.log('message', error.message);
+      console.log('name', error.name);
+      console.log('request', error.request);
+      console.log('response', error.response);
+      console.log('stack', error.stack);
+      console.log('status', error.status);
+      console.log('JSON', error.toJSON());
+    }
+
     core.setFailed(error.message)
   }
 }
