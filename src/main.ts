@@ -5,6 +5,8 @@ import axios, { AxiosError } from 'axios';
 async function main() {
   try {
 
+    axios.defaults.transitional = undefined;
+
     // const response = await axios.get('https://radiodotnet.mave.digital/', {
     // const response = await axios.get('https://bookclub-dotnet.mave.digital/', {
     const response = await axios.get('https://radiodotnet.mave.digital/', {
@@ -14,7 +16,8 @@ async function main() {
       maxContentLength: 1024 * 1024 * 1024,
       headers: {
         'Accept': 'text/plain',
-      }
+      },
+      transitional: undefined,
     });
 
     console.log(response.data);
