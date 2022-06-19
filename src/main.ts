@@ -9,16 +9,7 @@ async function main() {
 
     // const response = await axios.get('https://radiodotnet.mave.digital/', {
     // const response = await axios.get('https://bookclub-dotnet.mave.digital/', {
-    const response = await axios.get('https://radiodotnet.mave.digital/', {
-      responseType: 'text',
-      transformRequest: [],
-      transformResponse: [],
-      maxContentLength: 1024 * 1024 * 1024,
-      headers: {
-        'Accept': 'text/plain',
-      },
-      transitional: undefined,
-    });
+    const response = await axios.get('https://radiodotnet.mave.digital/');
 
     console.log(response.data);
     console.log();
