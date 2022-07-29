@@ -10,6 +10,10 @@ async function main() {
 
     axios.defaults.timeout = 60 * 1000;
     axios.defaults.transitional = undefined;
+    axios.defaults.headers.common = {
+      'Accept': 'text/html',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.71',
+    };
 
     const response = await axios.get('https://dotnetcoretutorials.com/');
 
