@@ -1,15 +1,19 @@
 import * as core from '@actions/core';
 
 import axios, { AxiosError } from 'axios';
+import axiosRetry from 'axios-retry';
+
+axiosRetry(axios, { retries: 5, retryDelay: axiosRetry.exponentialDelay });
 
 async function main() {
   try {
 
+    axios.defaults.timeout = 60 * 1000;
     axios.defaults.transitional = undefined;
 
     // const response = await axios.get('https://radiodotnet.mave.digital/', {
     // const response = await axios.get('https://bookclub-dotnet.mave.digital/', {
-    const response = await axios.get('https://radiodotnet.mave.digital/');
+    const response = await axios.get('https://dotnetcoretutorials.com/');
 
     console.log(response.data);
     console.log();
