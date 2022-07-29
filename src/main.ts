@@ -11,8 +11,6 @@ async function main() {
     axios.defaults.timeout = 60 * 1000;
     axios.defaults.transitional = undefined;
 
-    // const response = await axios.get('https://radiodotnet.mave.digital/', {
-    // const response = await axios.get('https://bookclub-dotnet.mave.digital/', {
     const response = await axios.get('https://dotnetcoretutorials.com/');
 
     console.log(response.data);
