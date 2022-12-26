@@ -1,1 +1,1 @@
-(()=>{"use strict";if(typeof __nccwpck_require__!=="undefined")__nccwpck_require__.ab=__dirname+"/";var e={};const _={};console.log(_.test);module.exports=e})();
+(()=>{"use strict";if(typeof __nccwpck_require__!=="undefined")__nccwpck_require__.ab=__dirname+"/";var e={};const _={};console.log(_.foo.bar);module.exports=e})();

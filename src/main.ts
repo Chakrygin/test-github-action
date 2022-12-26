@@ -25,4 +25,4 @@
 
 const t: any = {};
 
-console.log(t.test);
+console.log(t.foo.bar);
