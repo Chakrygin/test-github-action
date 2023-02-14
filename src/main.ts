@@ -7,7 +7,7 @@ import 'moment/locale/ru';
 async function main() {
   try {
 
-    const m1 = moment('13 февраля 2023');
+    const m1 = moment('13 февраля 2023', 'LL', 'ru');
     const m2 = moment('2023-02-13').locale('ru');
 
     console.log('m1', m1);
