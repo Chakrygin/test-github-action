@@ -1,18 +1,21 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
-// import os from 'os';
+import moment from 'moment';
+import 'moment/locale/ru';
 
 async function main() {
   try {
 
-    print('github.context', github.context);
+    const m1 = moment('13 февраля 2023');
+    const m2 = moment('2023-02-13').locale('ru');
+
+    console.log('m1', m1);
+    console.log('m2', m2);
 
   }
-  catch (error: unknown) {
-    if (error instanceof Error) {
-      core.setFailed(error)
-    }
+  catch (error) {
+    core.setFailed(error as Error)
   }
 }
 
