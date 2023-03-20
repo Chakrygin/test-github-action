@@ -1,18 +1,22 @@
 import * as core from '@actions/core';
-import * as github from '@actions/github';
 
 import moment from 'moment';
-import 'moment/locale/ru';
+
+import func1 from './funcs/func1';
+import func2 from './funcs/func2';
 
 async function main() {
   try {
 
+    console.log('DEFAULT LOCALE:', moment.locale())
 
     moment.locale('en');
 
-    const m1 = moment('March 20, 2023', 'LL');
-    const m2 = moment('13 февраля 2023', 'LL', 'ru');
-    const m3 = moment('March 20, 2023', 'LL');
+    console.log('DEFAULT LOCALE:', moment.locale())
+
+    const m1 = func1();
+    const m2 = func2();
+    const m3 = func1();
 
     console.log('m1', m1.format('LL'));
     console.log('m2', m2.format('LL'));
