@@ -7,14 +7,16 @@ import 'moment/locale/ru';
 async function main() {
   try {
 
+
     moment.locale('en');
 
-    const m1 = moment('13 февраля 2023', 'LL', 'ru');
-    const m2 = moment('March 20, 2023', 'LL');
-    // const m2 = moment('2023-02-13').locale('ru');
+    const m1 = moment('March 20, 2023', 'LL');
+    const m2 = moment('13 февраля 2023', 'LL', 'ru');
+    const m3 = moment('March 20, 2023', 'LL');
 
     console.log('m1', m1.format('LL'));
     console.log('m2', m2.format('LL'));
+    console.log('m3', m3.format('LL'));
 
   }
   catch (error) {
