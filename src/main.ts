@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 
 import moment from 'moment';
-import 'moment/locale/ru';
+// import 'moment/locale/ru';
 
 async function main() {
   try {
