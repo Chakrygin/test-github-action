@@ -6,6 +6,8 @@ import 'moment/locale/ru';
 async function main() {
   try {
 
+    moment.locale('en');
+
     const s = '13 февраля 2023';
 
     const d = moment(s, 'LL', 'ru');
