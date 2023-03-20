@@ -8,7 +8,7 @@ import { func_ru } from './funcs/func_ru';
 async function main() {
   try {
 
-    await app([func_en, func_ru]);
+    await app([func_ru, func_en]);
 
   }
   catch (error) {
