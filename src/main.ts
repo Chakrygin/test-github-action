@@ -8,16 +8,9 @@ async function main() {
 
     moment.locale('en');
 
-    const d1 = moment('March 20, 2023', 'LL');
-
-    console.log(d1);
-    console.log(d1.locale());
-
-    const d2 = moment('13 февраля 2023', 'LL', 'ru');
-
-    console.log(d2);
-    console.log(d2.locale());
-
+    for await (const m of getMoments()) {
+      console.log(m.format('LL'));
+    }
 
   }
   catch (error) {
@@ -25,9 +18,12 @@ async function main() {
   }
 }
 
-function print(name: string, value: unknown) {
-  const json = JSON.stringify(value, null, 2);
-  core.info(name + ': ' + json + '\n');
+async function* getMoments(): AsyncGenerator<moment.Moment> {
+  console.log('locale', moment.locale());
+  console.log('locales', moment.locales());
+
+  yield moment('March 20, 2023', 'LL');
+  yield moment('13 февраля 2023', 'LL', 'ru');
 }
 
 main();
