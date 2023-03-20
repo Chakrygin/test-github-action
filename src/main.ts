@@ -8,12 +8,15 @@ async function main() {
 
     moment.locale('en');
 
-    const s = '13 февраля 2023';
+    const d1 = moment('March 20, 2023', 'LL');
 
-    const d = moment(s, 'LL', 'ru');
+    console.log(d1);
+    console.log(d1.locale());
 
-    console.log(d);
-    console.log(d.locale());
+    const d2 = moment('13 февраля 2023', 'LL', 'ru');
+
+    console.log(d2);
+    console.log(d2.locale());
 
 
   }
