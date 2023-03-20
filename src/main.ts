@@ -1,16 +1,14 @@
 import * as core from '@actions/core';
 
-import moment from 'moment';
-import 'moment/locale/ru';
+import { app } from './app';
+
+import { func_en } from './funcs/func_en';
+import { func_ru } from './funcs/func_ru';
 
 async function main() {
   try {
 
-    moment.locale('en');
-
-    for await (const m of getMoments()) {
-      console.log(m.format('LL'));
-    }
+    await app([func_en, func_ru]);
 
   }
   catch (error) {
@@ -18,12 +16,4 @@ async function main() {
   }
 }
 
-async function* getMoments(): AsyncGenerator<moment.Moment> {
-  console.log('locale', moment.locale());
-  console.log('locales', moment.locales());
-
-  yield moment('March 20, 2023', 'LL');
-  yield moment('13 февраля 2023', 'LL', 'ru');
-}
-
-main();
+void main();
