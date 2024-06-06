@@ -1,2 +1,1 @@
-# test-github-action
- 
+# TypeScript GitHub Action

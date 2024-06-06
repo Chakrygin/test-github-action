@@ -2,27 +2,20 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "pwa-node",
+      "name": "Launch",
+      "type": "node",
       "request": "launch",
-      "name": "Launch Test",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "./src/main.ts",
+      "console": "integratedTerminal",
+      "program": "src/main.ts",
       "cwd": "${workspaceFolder}",
       "runtimeArgs": [
-        "--nolazy",
-        "-r",
-        "./node_modules/ts-node/register"
+        "--experimental-specifier-resolution=node",
+        "--loader",
+        "ts-node/esm"
       ],
-      "sourceMaps": true,
-      "protocol": "inspector",
-      "resolveSourceMapLocations": [
-        "${workspaceFolder}/**",
-        "!**/node_modules/**"
+      "skipFiles": [
+        "<node_internals>/**",
       ],
-      "console": "integratedTerminal",
-      "envFile": "${env:USERPROFILE}/envs/${workspaceFolderBasename}.env",
-    }
+    },
   ]
 }

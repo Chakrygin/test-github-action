@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "strict": true,
+  },
+  "include": [
+    "core",
+    "src",
+    "tests",
+    "eslint.config.js",
+    "jest.config.js"
+  ]
+}

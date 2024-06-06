@@ -1,19 +1,18 @@
-import * as core from '@actions/core';
+import * as core from '@actions/core'
 
-import { app } from './app';
+import { hello } from '../core/hello'
+import { test } from './foo/bar';
 
-import { func_en } from './funcs/func_en';
-import { func_ru } from './funcs/func_ru';
+function main() {
+  const message = hello('GitHub Action');
+  core.info(message);
 
-async function main() {
-  try {
+  const s = 'asasd';
+  test('Hello!');
 
-    await app([func_ru, func_en]);
+  const obj = { 'foo' : 42 };
 
-  }
-  catch (error) {
-    core.setFailed(error as Error)
-  }
+  console.log(obj);
 }
 
 void main();

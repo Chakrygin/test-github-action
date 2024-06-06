@@ -1,0 +1,9 @@
+{
+  // ESLint Settings
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  // Jest Settings
+  "jest.runMode": "on-demand",
+}
